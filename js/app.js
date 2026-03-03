@@ -5933,4 +5933,4 @@ document.addEventListener("click", (e)=>{
   targetLangSelect.value = state.reading.targetLang;
 
   loadCatalog().then(()=>go({name:"catalog"}, {push:false}));
-})();placeholder
+})();
