@@ -6,8 +6,8 @@
 (function(global){
 
 // ── Worker endpoints ──────────────────────────────────────────────
-const WORKER_TRANSLATE_URL = "https://books-4git-hab.englishclubsales.workers.dev/translate";
-const WORKER_TTS_URL       = "https://books-4git-hab.englishclubsales.workers.dev/tts";
+const WORKER_TRANSLATE_URL = "https://books-git-hab.englishclubsales.workers.dev/translate";
+const WORKER_TTS_URL       = "https://books-git-hab.englishclubsales.workers.dev/tts";
 
 // ── LibreTranslate ────────────────────────────────────────────────
 const LIBRETRANSLATE_URL     = "https://libretranslate.com/translate";
