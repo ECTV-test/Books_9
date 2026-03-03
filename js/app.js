@@ -2806,7 +2806,7 @@ async function loadCatalog(){
   }
 }
 
-function _Config.normalizeLevel(lv){
+function _normalizeLevel(lv){
   lv = String(lv||"original").trim().toLowerCase();
   if(lv === "orig") lv = "original";
   if(lv === "a0") lv = "a1"; // defensive
@@ -4281,7 +4281,7 @@ function startAudioWordHighlight({ audio, paraIdx, text, mode, spans }){
 }
 
 
-function Config.langToLocale(code){
+function langToLocale(code){
   const c = String(code||"").toLowerCase();
   if(c==="uk") return "uk-UA";
   if(c==="ru") return "ru-RU";
