@@ -91,6 +91,19 @@
         </div>
       </div>
 
+      <!-- Фон сторінки читання -->
+      <div class="row">
+        <div>
+          <div><b>Фон сторінки</b></div>
+          <small>режим «Читати»</small>
+        </div>
+        <div class="pageBgSeg">
+          <button class="pageBgBtn active" data-bg="auto"  title="Авто (тема)">A</button>
+          <button class="pageBgBtn"        data-bg="warm"  title="Тепло-кремовий">☀</button>
+          <button class="pageBgBtn"        data-bg="white" title="Білий">W</button>
+        </div>
+      </div>
+
       <div class="row" id="rowTapTranslate">
         <div>
           <div><b>Переклад</b></div>
@@ -284,33 +297,17 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════
-       Скрипты — строго в этом порядке
-  ════════════════════════════════════════════════ -->
-
-  <!-- 1. i18n — первым, всё зависит от него -->
+  <!-- Скрипты — строго в этом порядке -->
   <script src="js/i18n.js?v=2"></script>
-
-  <!-- 2. Конфиг — URLs, константы, языки, голоса -->
   <script src="js/config.js?v=2"></script>
-
-  <!-- 3. Core — DOM-free state прогресса -->
   <script src="js/core.js?v=2"></script>
-
-  <!-- 4. Store — глобальный UI state -->
   <script src="js/store.js?v=2"></script>
-
-  <!-- 5. Storage менеджеры — прогресс и закладки -->
   <script src="js/progress.js?v=1"></script>
   <script src="js/bookmarks.js?v=1"></script>
-
-  <!-- 6. Сервисы -->
   <script src="js/services/books.js?v=2"></script>
   <script src="js/services/translate.js?v=2"></script>
   <script src="js/services/tts.js?v=2"></script>
-
-  <!-- 7. Приложение — последним -->
-  <script src="js/app.js?v=3" defer></script>
+  <script src="js/app.js?v=4" defer></script>
 
 </body>
 </html>
