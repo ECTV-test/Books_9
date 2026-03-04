@@ -3436,6 +3436,29 @@ document.addEventListener("click", (e)=>{
 /* ---------------------------
    Init
 --------------------------- */
+// ── Кнопки фона страницы чтения (A / ☀ / W) ──
+document.addEventListener("click", (e)=>{
+  const btn = e.target.closest(".pageBgBtn");
+  if(!btn) return;
+  const bg = btn.dataset.bg;
+  document.body.classList.remove("pageBgWarm", "pageBgWhite");
+  if(bg === "warm")  document.body.classList.add("pageBgWarm");
+  if(bg === "white") document.body.classList.add("pageBgWhite");
+  try{ localStorage.setItem("pageBg", bg); }catch(e){}
+  document.querySelectorAll(".pageBgBtn").forEach(b=>b.classList.toggle("active", b.dataset.bg === bg));
+});
+
+// Restore pageBg on load
+(function(){
+  try{
+    const saved = localStorage.getItem("pageBg") || "auto";
+    document.body.classList.remove("pageBgWarm", "pageBgWhite");
+    if(saved === "warm")  document.body.classList.add("pageBgWarm");
+    if(saved === "white") document.body.classList.add("pageBgWhite");
+    document.querySelectorAll(".pageBgBtn").forEach(b=>b.classList.toggle("active", b.dataset.bg === saved));
+  }catch(e){}
+})();
+
 (function init(){
   // Ensure theme patch is applied before first render (fix missing frames before entering book)
   Config.TARGET_LANGS.forEach(l=>{
