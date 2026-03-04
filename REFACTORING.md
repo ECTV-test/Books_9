@@ -11,7 +11,7 @@
 
 | До | После | Разница |
 |---|---|---|
-| 6069 строк | ~3793 строк | **−2276 строк (−37%)** |
+| 6069 строк | 3754 строки | **−2315 строк (−38%)** |
 | 1 файл | 10 модулей | логическая структура |
 
 ---
@@ -50,93 +50,121 @@
 - `findByContext`, `hasAny`
 
 Правило: **только localStorage/sessionStorage, без DOM, без state**.
-UI-функции (`saveReadingProgress`, `applyBookmarkMarks`) остались в app.js — они зависят от DOM.
-
-**Баг-фикс:** после `BookmarkManager.add/remove` добавлен вызов `applyBookmarkMarks()` — точка закладки теперь появляется сразу.
+UI-функции (`saveReadingProgress`, `applyBookmarkMarks`) остались в app.js.
 
 ### ✅ Блок 5 — Загрузка книг → `js/services/books.js`
 
 **`BooksService.loadCatalog(fallbackList, normalizeFn)`** — полная логика с fallback
-**`BooksService.loadBook(id, lang, level, uiLang, fallbackList, normalizeFn)`** — реальная логика:
+**`BooksService.loadBook(id, lang, level, uiLang, fallbackList, normalizeFn)`**:
 - Уровни: `levels/<level>/book.<lang>.txt`
 - Fallback-цепочка текста (7 вариантов)
-- Chapters: `levels/<level>/chapters.json`
-- Описание: `desc.<uiLang>.txt`
-- Внутренний кэш (`Map`) без `state`
-
-`state.bookCache` удалён — кэш теперь в `BooksService`.
+- Chapters, описание, внутренний кэш (`Map`) без `state`
 
 ### ✅ Блок 6 — Рендеры экранов → `js/views/`
 
-Три экрана вынесены из app.js в отдельные файлы по принципу **один файл = один экран**:
+**`js/views/catalog.js`** (~217 строк) — `renderTopbar` + `renderCatalog`
+**`js/views/library.js`** (~393 строк) — `renderLibrary`
+**`js/views/details.js`** (~196 строк) — `renderDetails`
 
-**`js/views/catalog.js`** (~217 строк)
-- `renderTopbar(title)` — шапка
-- `renderCatalog()` — главный экран каталога книг
-
-**`js/views/library.js`** (~393 строк)
-- `renderLibrary()` — экран «Моя библиотека» (прогресс, закладки)
-
-**`js/views/details.js`** (~196 строк)
-- `renderDetails()` — экран деталей книги (выбор языка, уровня, старт чтения)
-
-**Результат:** `-781 строка` из app.js (4574 → 3793)
+Результат: `-781 строка` из app.js (4574 → 3793)
 
 Функции `renderReader`, `renderBiReader`, `renderParagraph` остались в app.js — слишком много зависимостей на локальные переменные TTS-движка.
 
-**Также исправлено в этой сессии:**
-- **Баг-фикс topbar (Listen mode):** кнопки растягивались по краям → `.listenTop .ltLeft/.ltRight` получили `flex:0 0 auto`
-- **Баг-фикс смена языка интерфейса:** при смене языка в дропдауне UI не обновлялся → добавлен вызов `applyUiLang()` после `I18n.setUiLang()`
+### ✅ Блок 7 — Чистка багов и мёртвого кода (3793 → 3754)
+
+**Баги исправлены:**
+- `lineObserver`, `biProgressObserver` — не объявлены `let`, работали как неявные глобальные → объявлены явно
+- `idx` в `pauseReading` — брал переменную из чужого TTS-scope → заменён на `getCursorIndex()`
+- `idx` в `stopReading` — то же → убран, fallback на 0
+- `routeName` в `saveReadingProgress` ~строка 1014 — undefined переменная → заменён на `mode`
+- `store.js` в `index.html` — подключался впустую, `Store.*` нигде не вызывается → убран из подключения (файл остался как задел на React)
+
+**Мёртвый код удалён:**
+- `langToBcp47()` — нигде не вызывалась
+- `_escHtml()` — дубликат `escapeHtml()`, единственный вызов переключён
+- `startDeterministicHighlight()` — legacy speechSynthesis highlight, заменён на `startAudioWordHighlight()` (RAF)
+- `resumeReading()` — нигде не вызывалась, `startReading()` используется напрямую
 
 ---
 
-## Баги найдены и исправлены в процессе
+## Таблица всех исправленных багов
 
 | Баг | Причина | Исправление |
 |---|---|---|
-| Точка закладки не появлялась сразу | `BookmarkManager.add()` не вызывал `applyBookmarkMarks()` | Добавлен вызов после add/remove |
-| Переход из библиотеки попадал не на ту строку | `go()` не передавал `level`/`sourceLang` в `BooksService.loadBook` | `route.level` и `route.sourceLang` теперь приоритетны |
-| Главная показывала старый прогресс | `getPkgProgress` вызывался без `level`, мёртвые `typeof` guards | Убраны guards, добавлен level |
-| Индикатор уровня у плеера | Отсутствовал | Добавлен `_updatePlayerLevel()` |
-| Кнопки topbar в Listen mode растягивались | `flex` без `flex:0 0 auto` | Исправлен CSS `.listenTop` |
-| Смена языка UI не обновляла интерфейс | `applyUiLang()` не вызывался после смены | Добавлен вызов в обработчик `change` |
+| Точка закладки не появлялась сразу | `BookmarkManager.add()` не вызывал `applyBookmarkMarks()` | Добавлен вызов |
+| Переход из библиотеки — не та строка | `go()` не передавал `level`/`sourceLang` | `route.level` и `route.sourceLang` приоритетны |
+| Главная — старый прогресс | `getPkgProgress` без `level` | Добавлен level |
+| Индикатор уровня у плеера отсутствовал | — | Добавлен `_updatePlayerLevel()` |
+| Кнопки topbar в Listen mode растягивались | `flex` без `flex:0 0 auto` | Исправлен CSS |
+| Смена языка UI не обновляла интерфейс | `applyUiLang()` не вызывался | Добавлен вызов |
+| `lineObserver`/`biProgressObserver` неявные глобальные | Не объявлены `let` | Объявлены явно |
+| `idx` в `pauseReading`/`stopReading` — чужой scope | Утечка из TTS loop | Заменён на `getCursorIndex()` / убран |
+| `routeName` в `saveReadingProgress` — undefined | Переменная из другой функции | Заменён на `mode` |
+
+---
+
+## 🔴 Открытые задачи UI (следующая сессия)
+
+### 1. Фон страницы — кнопки A / ☀ / W не работают
+Кнопки в HTML **уже есть** в режимах Reader/BiReader, но **ничего не делают**.
+Нужно: при клике менять CSS-переменную `--pageBg` на `<body>` + сохранять в `localStorage`.
+- **A** — Белый: `#ffffff`
+- **☀** — Тёплый: `#f5f0e8`
+- **W** — Бумажный: `#e8e0c8`
+
+Затронет: `css/theme.css` (добавить переменную `--pageBg`) + обработчик в `app.js`.
+
+### 2. Верхняя полоса в Reader/BiReader — обрывается по краям
+Header не растянут до краёв (в отличие от нижнего плеера).
+Нужно: `width: 100%`, `left: 0`, `right: 0` для `.listenTop` / `.readTopBar`, убрать лишние отступы.
+
+### 3. Кнопки topbar — не по центру строки
+Кнопки (≡ ‹ заголовок ≡ 🔖 ⋯ ⚙︎) не выровнены по высоте.
+Нужно: `align-items: center` + одинаковый `height` у контейнера и кнопок.
+Ориентир: нижний плеер как образец вертикального центрирования.
+
+### 4. Глобальная кнопка смены темы (на всех экранах)
+Сейчас тема только через ⚙︎ → Night toggle.
+Нужно: отдельная кнопка с тремя режимами — **Авто** (следит за `prefers-color-scheme`) / **Светлая** / **Тёмная**.
+Должна быть доступна на всех экранах: каталог, библиотека, детали, reader, bireader.
+Выбор сохраняется в `localStorage`. При "Авто" — слушать `matchMedia('prefers-color-scheme')`.
 
 ---
 
 ## Структура файлов сейчас
 
 ```
-index.html          ← подключает всё в правильном порядке
+index.html          ← store.js убран из подключения
 css/
-  styles.css        ← основные стили
-  theme.css         ← ✅ NEW: светлая/тёмная тема, CSS-переменные
+  styles.css
+  theme.css         ← светлая/тёмная тема, CSS-переменные
 js/
-  i18n.js           ← ✅ переводы интерфейса (I18n.*)
-  config.js         ← ✅ константы, URLs, языки, голоса (Config.*)
-  core.js           ← DOM-free state прогресса (без изменений)
-  store.js          ← глобальный UI state (без изменений)
-  progress.js       ← ✅ storage прогресса (ProgressManager.*)
-  bookmarks.js      ← ✅ storage закладок (BookmarkManager.*)
+  i18n.js           ← I18n.*
+  config.js         ← Config.*
+  core.js           ← без изменений
+  store.js          ← задел на React, не подключён к app.js
+  progress.js       ← ProgressManager.*
+  bookmarks.js      ← BookmarkManager.*
   services/
-    books.js        ← ✅ загрузка книг (BooksService.*)
-    translate.js    ← ✅ переводы (TranslateService.*)
-    tts.js          ← TTS озвучивание (без изменений)
+    books.js        ← BooksService.*
+    translate.js    ← TranslateService.*
+    tts.js          ← без изменений
   views/
-    catalog.js      ← ✅ NEW: renderTopbar + renderCatalog (~217 строк)
-    library.js      ← ✅ NEW: renderLibrary (~393 строк)
-    details.js      ← ✅ NEW: renderDetails (~196 строк)
-  app.js            ← UI, рендеры читалки, навигация (3793 строк, было 6069)
+    catalog.js      ← renderCatalog (~217 строк)
+    library.js      ← renderLibrary (~393 строк)
+    details.js      ← renderDetails (~196 строк)
+  app.js            ← 3754 строки (было 6069)
 ```
 
 ---
 
-## Порядок подключения в index.html (важно!)
+## Порядок подключения в index.html
 
 ```html
 <script src="js/i18n.js?v=2"></script>
 <script src="js/config.js?v=2"></script>
 <script src="js/core.js?v=2"></script>
-<script src="js/store.js?v=2"></script>
+<!-- store.js убран — не используется -->
 <script src="js/progress.js?v=1"></script>
 <script src="js/bookmarks.js?v=1"></script>
 <script src="js/services/books.js?v=2"></script>
@@ -145,22 +173,16 @@ js/
 <script src="js/views/catalog.js?v=1"></script>
 <script src="js/views/library.js?v=1"></script>
 <script src="js/views/details.js?v=1"></script>
-<script src="js/app.js?v=5" defer></script>
+<script src="js/app.js?v=6" defer></script>
 ```
 
 ---
 
-## Что ещё планируется
+## Что дальше (приоритеты)
 
-### Блок 7 — renderReader / renderBiReader (высокий риск)
-Зависят на десятки локальных переменных TTS-движка (`openaiAudio`, `openaiLineIndex`, etc.).
-**Решение:** вынести только в рамках полной React-миграции, не раньше.
-
-### Будущее
-- [ ] Серверный кэш аудио (Cloudflare R2 или KV)
-- [ ] Миграция на React (сервисы уже готовы — без DOM)
-- [ ] Flutter (те же сервисы портируются в Dart)
-- [ ] Supabase как бэкенд для прогресса и закладок
+1. **UI фиксы** (следующая сессия, низкий риск) — 4 задачи выше в разделе "Открытые задачи"
+2. **Блок 8 — `js/views/reader.js`** — вынести `renderReader` + `renderBiReader` (~304 строки), средний риск
+3. **Закуска:** React-миграция (store.js ждёт), Flutter, Supabase, Cloudflare R2
 
 ---
 
