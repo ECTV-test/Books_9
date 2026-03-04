@@ -1,1 +1,1 @@
-$(cat /home/claude/app_new.js)
+PLACEHOLDER_WILL_BE_REPLACED
