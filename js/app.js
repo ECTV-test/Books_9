@@ -2461,7 +2461,7 @@ function _normalizeLevel(lv){
 async function loadBook(id, sourceLang, level){
   const lang = String(sourceLang || "en").trim().toLowerCase();
   const uiL = I18n.getUiLang();
-  const lv = _Config.normalizeLevel(level || (typeof core?.getState==="function" ? core.getState().level : (state.level||"original")));
+  const lv = _normalizeLevel(level || (typeof core?.getState==="function" ? core.getState().level : (state.level||"original")));
   const cacheId = `${id}::${lang}::${uiL}::${lv}`;
   if(state.bookCache.has(cacheId)) return state.bookCache.get(cacheId);
 
