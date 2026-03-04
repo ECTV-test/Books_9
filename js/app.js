@@ -124,334 +124,13 @@ const state = {
 /* ---------------------------
    UI language / i18n (stage 1)
 --------------------------- */
-const UI_STR = {
-  en: {
-    tabs_books: "Books",
-    tabs_library: "My Library",
-    lib_in_progress: "In progress",
-    lib_finished: "Finished",
-    lib_bookmarks: "Bookmarks",
-    btn_back: "Back",
-    btn_all: "All",
-    all_bookmarks_title: "All bookmarks",
-    btn_play_from_here: "Play from here",
-    settings_title: "Settings",
-    settings_text: "Text",
-    settings_audio: "Audio",
-    ui_lang_label: "Interface language",
-    ui_lang_hint: "",
-    bookmark: "Bookmark",
-    speak: "Speak",
-    modal_continue: "Continue from last stop",
-    modal_start_bookmark: "Start from bookmark",
-    modal_cancel: "Cancel",
-    continue_reading: "Continue reading",
-    genre_fantasy: "Fantasy",
-    genre_detectives: "Detectives",
-    genre_science: "Science",
-    genre_romance: "Romance",
-    genre_history: "History",
-    genre_kids: "Kids",
-    details_btn_read: "Read",
-    details_btn_listen: "Listen",
-    details_level: "Level",
-    details_book_lang: "Book language",
-    details_trans_lang: "Translation language",
-    start_playback_title: "Start playback",
-    start_playback_desc: "You opened a bookmark. Where should we start?",
-    bookmarks_all: "All",
-    ui_language: "Interface language",
-    ui_language_hint: "",
-    settings_tab_text: "Text",
-    settings_tab_audio: "Audio",
-    mode_listen: "Listen",
-    mode_read: "Read",
-    level_original: "Original",
-    pages: "pages",
-    admin_title: "Dev / Admin",
-    admin_translation_provider: "Translation provider",
-    admin_translation_provider_hint: "for line translations",
-    admin_voice_gender: "Voice gender",
-    admin_voice_gender_hint: "male / female",
-    admin_voice: "Voice",
-    admin_voice_hint: "built-in OpenAI",
-    admin_voice_prompt: "Voice prompt",
-    admin_voice_prompt_hint: "instructions",
-    admin_no_cache: "No cache",
-    admin_no_cache_hint: "ignore Worker cache",
-    admin_clear_tts_cache: "Clear TTS cache",
-        chapters_title: "Chapters",
-    btn_close: "Close",
-    no_chapters: "No chapters in this book.",
-admin_clear_tr_cache: "Clear translation cache",
-  
-    translation_lang_label: "Translation language",
-    translation_lang_hint: "LibreTranslate target",
-    font_size_label: "Text size",
-    font_size_hint: "A− / A+",
-    hl_color_label: "Highlight color",
-    hl_color_hint: "Default / Yellow",
-    tap_translate_label: "Translation",
-    tap_translate_hint: "on tap / click",
-    line_translate_label: "Line translation",
-    line_translate_hint: "show under text",
-    theme_label: "Theme",
-    theme_hint: "night mode",
-    active_row_label: "Highlight",
-    active_row_hint: "active row",
-    swap_lang_label: "Swap languages",
-    swap_lang_hint: "Read mode only",
-    voice_gender_label: "Voice gender",
-    voice_gender_hint: "male / female",
-    male: "Male",
-    female: "Female",
-    speed_label: "Reading speed",
-    slow: "Slow",
-    normal: "Normal",
-    fast: "Fast",
-    normal_speed_hint: "Normal speed is your current value (100).",
-    close: "Close",
-    dev_clear_tts: "🧹 Clear voice cache",
-    dev_clear_tr: "🧹 Clear translation cache",
-    no_cache_label: "No cache",
-    no_cache_hint: "ignore Worker cache",
-    voice_label: "Voice",
-    voice_hint: "built-in OpenAI",
-    voice_prompt_label: "Voice prompt",
-    voice_prompt_hint: "instructions",
-    translation_provider_label: "Translation provider",
-    translation_provider_hint: "for line translation",
-    dev_hint_1: "Translation: LibreTranslate (public service). If you see 429 — that’s a limit. The code pauses and asks you to wait.",
-    dev_hint_2: "For security, the OpenAI key is stored in Worker (secret). GitHub Pages stays static.",
-    hl_color_default: "Default",
-    hl_color_yellow: "Yellow",
-    all_bookmarks_title: "All bookmarks",
-},
-  uk: {
-    tabs_books: "Книги",
-    tabs_library: "Моя бібліотека",
-    lib_in_progress: "В процесі",
-    lib_finished: "Завершено",
-    lib_bookmarks: "Закладки",
-    btn_back: "Назад",
-    btn_all: "Усі",
-    all_bookmarks_title: "Усі закладки",
-    btn_play_from_here: "Грати звідси",
-    settings_title: "Налаштування",
-    settings_text: "Текст",
-    settings_audio: "Аудіо",
-    ui_lang_label: "Мова інтерфейсу",
-    ui_lang_hint: "",
-    bookmark: "Закладка",
-    speak: "Озвучити",
-    modal_continue: "Продовжити з місця зупинки",
-    modal_start_bookmark: "Почати із закладки",
-    modal_cancel: "Скасувати",
-    continue_reading: "Продовжити читання",
-    genre_fantasy: "Фентезі",
-    genre_detectives: "Детективи",
-    genre_science: "Наука",
-    genre_romance: "Романтика",
-    genre_history: "Історія",
-    genre_kids: "Дитяче",
-    details_btn_read: "Читати",
-    details_btn_listen: "Слухати",
-    details_level: "Рівень",
-    details_book_lang: "Мова книги",
-    details_trans_lang: "Мова перекладу",
-    start_playback_title: "Почати відтворення",
-    start_playback_desc: "Ви відкрили закладку. Звідки почати?",
-    bookmarks_all: "Усі",
-    ui_language: "Мова інтерфейсу",
-    ui_language_hint: "",
-    settings_tab_text: "Текст",
-    settings_tab_audio: "Аудіо",
-    mode_listen: "Слухати",
-    mode_read: "Читати",
-    level_original: "Оригінал",
-    pages: "стор.",
-    admin_title: "Dev / Адмін",
-    admin_translation_provider: "Провайдер перекладу",
-    admin_translation_provider_hint: "для перекладу рядків",
-    admin_voice_gender: "Стать голосу",
-    admin_voice_gender_hint: "чоловічий / жіночий",
-    admin_voice: "Голос",
-    admin_voice_hint: "вбудовані OpenAI",
-    admin_voice_prompt: "Промпт голосу",
-    admin_voice_prompt_hint: "інструкції",
-    admin_no_cache: "Без кешу",
-    admin_no_cache_hint: "ігнорувати кеш Worker",
-    admin_clear_tts_cache: "Очистити кеш озвучення",
-    admin_clear_tr_cache: "Очистити кеш перекладу",
-    chapters_title: "Глави",
-    btn_close: "Закрити",
-    no_chapters: "У цій книзі немає глав.",
-  
-    translation_lang_label: "Мова перекладу",
-    translation_lang_hint: "LibreTranslate target",
-    font_size_label: "Розмір тексту",
-    font_size_hint: "A− / A+",
-    hl_color_label: "Колір підсвітки",
-    hl_color_hint: "Звичайна / Жовта",
-    tap_translate_label: "Переклад",
-    tap_translate_hint: "по кліку / тапу",
-    line_translate_label: "Переклад рядком",
-    line_translate_hint: "показувати під текстом",
-    theme_label: "Тема",
-    theme_hint: "нічний режим",
-    active_row_label: "Підсвітка",
-    active_row_hint: "активний рядок",
-    swap_lang_label: "Поміняти мови",
-    swap_lang_hint: "лише режим “Читати”",
-    voice_gender_label: "Стать голосу",
-    voice_gender_hint: "чоловічий / жіночий",
-    male: "Чоловічий",
-    female: "Жіночий",
-    speed_label: "Швидкість читання",
-    slow: "Повільно",
-    normal: "Нормально",
-    fast: "Швидко",
-    normal_speed_hint: "Нормальна швидкість — це поточне значення (100).",
-    close: "Закрити",
-    dev_clear_tts: "🧹 Очистити кеш озвучення",
-    dev_clear_tr: "🧹 Очистити кеш перекладу",
-    no_cache_label: "Без кешу",
-    no_cache_hint: "ігнорувати кеш Worker",
-    voice_label: "Голос",
-    voice_hint: "вбудовані OpenAI",
-    voice_prompt_label: "Промпт голосу",
-    voice_prompt_hint: "інструкції",
-    translation_provider_label: "Провайдер перекладу",
-    translation_provider_hint: "для перекладу рядків",
-    dev_hint_1: "Переклад: LibreTranslate (публічний сервіс). Якщо бачиш 429 — це ліміт. Код ставить паузу і просить зачекати.",
-    dev_hint_2: "Для безпеки ключ OpenAI зберігається у Worker (secret). GitHub Pages залишається статичним.",
-    hl_color_default: "Звичайна",
-    hl_color_yellow: "Жовта",
-    all_bookmarks_title: "Усі закладки",
-},
-  ru: {
-    tabs_books: "Книги",
-    tabs_library: "Моя библиотека",
-    lib_in_progress: "В процессе",
-    lib_finished: "Завершено",
-    lib_bookmarks: "Закладки",
-    btn_back: "Назад",
-    btn_all: "Все",
-    all_bookmarks_title: "Все закладки",
-    btn_play_from_here: "Играть отсюда",
-    settings_title: "Настройки",
-    settings_text: "Текст",
-    settings_audio: "Аудио",
-    ui_lang_label: "Язык интерфейса",
-    ui_lang_hint: "",
-    bookmark: "Закладка",
-    speak: "Озвучить",
-    modal_continue: "Продолжить с места остановки",
-    modal_start_bookmark: "Начать с закладки",
-    modal_cancel: "Отмена",
-    continue_reading: "Продолжить чтение",
-    genre_fantasy: "Фэнтези",
-    genre_detectives: "Детективы",
-    genre_science: "Наука",
-    genre_romance: "Романтика",
-    genre_history: "История",
-    genre_kids: "Детское",
-    details_btn_read: "Читать",
-    details_btn_listen: "Слушать",
-    details_level: "Уровень",
-    details_book_lang: "Язык книги",
-    details_trans_lang: "Язык перевода",
-    start_playback_title: "Начать воспроизведение",
-    start_playback_desc: "Вы открыли закладку. Откуда начать?",
-    bookmarks_all: "Все",
-    ui_language: "Язык интерфейса",
-    ui_language_hint: "",
-    settings_tab_text: "Текст",
-    settings_tab_audio: "Аудио",
-    mode_listen: "Слушать",
-    mode_read: "Читать",
-    level_original: "Оригинал",
-    pages: "стр.",
-    admin_title: "Dev / Админ",
-    admin_translation_provider: "Провайдер перевода",
-    admin_translation_provider_hint: "для перевода строк",
-    admin_voice_gender: "Пол голоса",
-    admin_voice_gender_hint: "мужской / женский",
-    admin_voice: "Голос",
-    admin_voice_hint: "встроенные OpenAI",
-    admin_voice_prompt: "Промпт голоса",
-    admin_voice_prompt_hint: "инструкции",
-    admin_no_cache: "Без кеша",
-    admin_no_cache_hint: "игнорировать кеш Worker",
-    admin_clear_tts_cache: "Очистить кеш озвучки",
-    admin_clear_tr_cache: "Очистить кеш перевода",
-  
-    translation_lang_label: "Язык перевода",
-    translation_lang_hint: "LibreTranslate target",
-    font_size_label: "Размер текста",
-    font_size_hint: "A− / A+",
-    hl_color_label: "Цвет подсветки",
-    hl_color_hint: "Обычная / Жёлтая",
-    tap_translate_label: "Перевод",
-    tap_translate_hint: "по клику / тапу",
-    line_translate_label: "Перевод строкой",
-    line_translate_hint: "показывать под текстом",
-    theme_label: "Тема",
-    theme_hint: "ночной режим",
-    active_row_label: "Подсветка",
-    active_row_hint: "активная строка",
-    swap_lang_label: "Поменять языки",
-    swap_lang_hint: "только режим “Читать”",
-    voice_gender_label: "Пол голоса",
-    voice_gender_hint: "мужской / женский",
-    male: "Мужской",
-    female: "Женский",
-    speed_label: "Скорость чтения",
-    slow: "Медленно",
-    normal: "Нормально",
-    fast: "Быстро",
-    normal_speed_hint: "Нормальная скорость — это текущее значение (100).",
-    chapters_title: "Главы",
-    close: "Закрыть",
-    dev_clear_tts: "🧹 Очистить кеш озвучки",
-    dev_clear_tr: "🧹 Очистити кеш перевода",
-    no_cache_label: "Без кеша",
-    no_cache_hint: "игнорировать кеш Worker",
-    voice_label: "Голос",
-    voice_hint: "встроенные OpenAI",
-    voice_prompt_label: "Промпт голоса",
-    voice_prompt_hint: "инструкции",
-    translation_provider_label: "Провайдер перевода",
-    translation_provider_hint: "для перевода строк",
-    dev_hint_1: "Перевод: LibreTranslate (публичный сервис). Если видишь 429 — это лимит. Код ставит паузу и просит подождать.",
-    dev_hint_2: "Для безопасности ключ OpenAI хранится в Worker (secret). GitHub Pages остаётся статичным.",
-    hl_color_default: "Обычная",
-    hl_color_yellow: "Жёлтая",
-    all_bookmarks_title: "Все закладки",
-}
-};
 
-function getDefaultUiLang(){
-  try{
-    const n = (navigator.language||"").toLowerCase();
-    if(n.startsWith("uk")) return "uk";
-    if(n.startsWith("ru")) return "ru";
-  }catch(e){}
-  return "en";
-}
-
-function getUiLang(){
-  try{
-    const ls = localStorage.getItem("uiLang");
-    if(ls && UI_STR[ls]) return ls;
-  }catch(e){}
-  return state?.ui?.lang && UI_STR[state.ui.lang] ? state.ui.lang : getDefaultUiLang();
-}
+/* ── i18n вынесен в i18n.js → используем I18n.* ── */
 
 
 function getBookTitle(book){
   if(!book) return "Book";
-  const uiLang = (typeof getUiLang==="function" ? getUiLang() : "en");
+  const uiLang = I18n.getUiLang();
   const keys = [];
   // exact match for UI language
   keys.push("title_" + uiLang);
@@ -496,74 +175,39 @@ function formatMetaAuthorSeries(b){
 }
 
 
-function t(key, vars){
-  const lang = getUiLang();
-  const dict = UI_STR[lang] || UI_STR.en;
-  let s = dict[key] ?? UI_STR.en[key] ?? key;
-  if(vars && typeof vars === "object"){
-    for(const k in vars){
-      s = s.replaceAll("{"+k+"}", String(vars[k]));
-    }
-  }
-  return s;
-}
-
-function tGenre(name){
-  const raw = String(name||"").trim();
-  if(!raw) return raw;
-  const slug = raw.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g,"");
-  const key = "genre_" + slug;
-  const lang = getUiLang();
-  const dict = UI_STR[lang] || UI_STR.en;
-  if(dict && dict[key]) return dict[key];
-  // common uppercase names like FANTASY / DETECTIVES
-  // try also without underscores
-  return raw;
-}
-
-
-function setUiLang(lang){
-  if(!UI_STR[lang]) lang = "en";
-  state.ui = state.ui || {};
-  state.ui.lang = lang;
-  try{ localStorage.setItem("uiLang", lang); }catch(e){}
-  applyUiLang();
-  try{ go(state.route); }catch(e){ try{ renderLibrary?.(); }catch(e2){} }
-}
-
 function applyUiLang(){
-  const lang = getUiLang();
+  const lang = I18n.getUiLang();
   try{ document.documentElement.lang = lang; }catch(e){}
 
   // Popover
   try{
     const btn = document.getElementById("popPlayFromHere");
-    if(btn) btn.textContent = t("btn_play_from_here");
-    if(btn) btn.title = t("btn_play_from_here");
+    if(btn) btn.textContent = I18n.t("btn_play_from_here");
+    if(btn) btn.title = I18n.t("btn_play_from_here");
   }catch(e){}
   try{
     const b = document.getElementById("popBookmark");
-    if(b) b.title = t("bookmark");
+    if(b) b.title = I18n.t("bookmark");
     const s = document.getElementById("popSpeak");
-    if(s) s.title = t("speak");
+    if(s) s.title = I18n.t("speak");
   }catch(e){}
 
   // Settings sheet static labels
   try{
     const st = document.querySelector("#settings .setTitle");
-    if(st) st.textContent = t("settings_title");
+    if(st) st.textContent = I18n.t("settings_title");
     const tr = document.getElementById("setTabRead");
-    if(tr) tr.textContent = t("settings_text");
+    if(tr) tr.textContent = I18n.t("settings_text");
     const tl = document.getElementById("setTabListen");
-    if(tl) tl.textContent = t("settings_audio");
+    if(tl) tl.textContent = I18n.t("settings_audio");
   }catch(e){}
 
   // UI language row
   try{
     const lbl = document.getElementById("uiLangLabel");
-    if(lbl) lbl.textContent = t("ui_lang_label");
+    if(lbl) lbl.textContent = I18n.t("ui_lang_label");
     const hint = document.getElementById("uiLangHint");
-    if(hint){ const hTxt = t("ui_lang_hint"); hint.textContent = hTxt || ""; hint.style.display = hTxt ? "" : "none"; }
+    if(hint){ const hTxt = I18n.t("ui_lang_hint"); hint.textContent = hTxt || ""; hint.style.display = hTxt ? "" : "none"; }
     const sel = document.getElementById("uiLangSelect");
     if(sel) sel.value = lang;
   }catch(e){}
@@ -571,84 +215,84 @@ function applyUiLang(){
   try{
     const rowTarget = document.getElementById("targetLang")?.closest(".row");
     if(rowTarget){
-      const b=rowTarget.querySelector("b"); if(b) b.textContent = t("translation_lang_label");
-      const sm=rowTarget.querySelector("small"); if(sm) sm.textContent = t("translation_lang_hint");
+      const b=rowTarget.querySelector("b"); if(b) b.textContent = I18n.t("translation_lang_label");
+      const sm=rowTarget.querySelector("small"); if(sm) sm.textContent = I18n.t("translation_lang_hint");
     }
 
     const rowFont = document.getElementById("fontMinus")?.closest(".row");
     if(rowFont){
-      const b=rowFont.querySelector("b"); if(b) b.textContent = t("font_size_label");
-      const sm=rowFont.querySelector("small"); if(sm) sm.textContent = t("font_size_hint");
+      const b=rowFont.querySelector("b"); if(b) b.textContent = I18n.t("font_size_label");
+      const sm=rowFont.querySelector("small"); if(sm) sm.textContent = I18n.t("font_size_hint");
     }
 
     const rowHl = document.getElementById("hlDefault")?.closest(".row");
     if(rowHl){
-      const b=rowHl.querySelector("b"); if(b) b.textContent = t("hl_color_label");
-      const sm=rowHl.querySelector("small"); if(sm) sm.textContent = t("hl_color_hint");
+      const b=rowHl.querySelector("b"); if(b) b.textContent = I18n.t("hl_color_label");
+      const sm=rowHl.querySelector("small"); if(sm) sm.textContent = I18n.t("hl_color_hint");
     }
 
     // Highlight color toggle labels
     if(rowHl){
       const btns = rowHl.querySelectorAll("button");
       if(btns && btns.length>=2){
-        btns[0].textContent = t("hl_color_default");
-        btns[1].textContent = t("hl_color_yellow");
+        btns[0].textContent = I18n.t("hl_color_default");
+        btns[1].textContent = I18n.t("hl_color_yellow");
       }
     }
 
     const rowTap = document.getElementById("tTranslation")?.closest(".row");
     if(rowTap){
-      const b=rowTap.querySelector("b"); if(b) b.textContent = t("tap_translate_label");
-      const sm=rowTap.querySelector("small"); if(sm) sm.textContent = t("tap_translate_hint");
+      const b=rowTap.querySelector("b"); if(b) b.textContent = I18n.t("tap_translate_label");
+      const sm=rowTap.querySelector("small"); if(sm) sm.textContent = I18n.t("tap_translate_hint");
     }
 
     const rowLine = document.getElementById("tLineTranslation")?.closest(".row");
     if(rowLine){
-      const b=rowLine.querySelector("b"); if(b) b.textContent = t("line_translate_label");
-      const sm=rowLine.querySelector("small"); if(sm) sm.textContent = t("line_translate_hint");
+      const b=rowLine.querySelector("b"); if(b) b.textContent = I18n.t("line_translate_label");
+      const sm=rowLine.querySelector("small"); if(sm) sm.textContent = I18n.t("line_translate_hint");
     }
 
     const rowTheme = document.getElementById("tNight")?.closest(".row");
     if(rowTheme){
-      const b=rowTheme.querySelector("b"); if(b) b.textContent = t("theme_label");
-      const sm=rowTheme.querySelector("small"); if(sm) sm.textContent = t("theme_hint");
+      const b=rowTheme.querySelector("b"); if(b) b.textContent = I18n.t("theme_label");
+      const sm=rowTheme.querySelector("small"); if(sm) sm.textContent = I18n.t("theme_hint");
     }
 
     const rowHi = document.getElementById("tHighlight")?.closest(".row");
     if(rowHi){
-      const b=rowHi.querySelector("b"); if(b) b.textContent = t("active_row_label");
-      const sm=rowHi.querySelector("small"); if(sm) sm.textContent = t("active_row_hint");
+      const b=rowHi.querySelector("b"); if(b) b.textContent = I18n.t("active_row_label");
+      const sm=rowHi.querySelector("small"); if(sm) sm.textContent = I18n.t("active_row_hint");
     }
 
     const rowSwap = document.getElementById("tSwap")?.closest(".row");
     if(rowSwap){
-      const b=rowSwap.querySelector("b"); if(b) b.textContent = t("swap_lang_label");
-      const sm=rowSwap.querySelector("small"); if(sm) sm.textContent = t("swap_lang_hint");
+      const b=rowSwap.querySelector("b"); if(b) b.textContent = I18n.t("swap_lang_label");
+      const sm=rowSwap.querySelector("small"); if(sm) sm.textContent = I18n.t("swap_lang_hint");
     }
 
     const rowUG = document.getElementById("uMale")?.closest(".row");
     if(rowUG){
-      const b=rowUG.querySelector("b"); if(b) b.textContent = t("voice_gender_label");
-      const sm=rowUG.querySelector("small"); if(sm) sm.textContent = t("voice_gender_hint");
+      const b=rowUG.querySelector("b"); if(b) b.textContent = I18n.t("voice_gender_label");
+      const sm=rowUG.querySelector("small"); if(sm) sm.textContent = I18n.t("voice_gender_hint");
     }
     const uMale = document.getElementById("uMale");
     const uFemale = document.getElementById("uFemale");
-    if(uMale) uMale.textContent = t("male");
-    if(uFemale) uFemale.textContent = t("female");
+    if(uMale) uMale.textContent = I18n.t("male");
+    if(uFemale) uFemale.textContent = I18n.t("female");
 
     const rowSpeed = document.getElementById("uSpeedSlow")?.closest(".row");
     if(rowSpeed){
-      const b=rowSpeed.querySelector("b"); if(b) b.textContent = t("speed_label");
+      const b=rowSpeed.querySelector("b"); if(b) b.textContent = I18n.t("speed_label");
     }
     const uSpeedSlow = document.getElementById("uSpeedSlow");
     const uSpeedNormal = document.getElementById("uSpeedNormal");
     const uSpeedFast = document.getElementById("uSpeedFast");
-    if(uSpeedSlow) uSpeedSlow.textContent = t("slow");
-    if(uSpeedNormal) uSpeedNormal.textContent = t("normal");
-    if(uSpeedFast) uSpeedFast.textContent = t("fast");
+    if(uSpeedSlow) uSpeedSlow.textContent = I18n.t("slow");
+    if(uSpeedNormal) uSpeedNormal.textContent = I18n.t("normal");
+    if(uSpeedFast) uSpeedFast.textContent = I18n.t("fast");
 
     const hint = document.querySelector("#settings #setPaneListen .hint");
-    if(hint) hint.textContent = t("normal_speed_hint");
+    if(hint) hint.textContent = I18n.t("normal_speed_hint");
   }catch(e){}
 
   // Dev panel static labels
@@ -656,59 +300,59 @@ function applyUiLang(){
     const dp = document.getElementById("devPanel");
     if(dp){
       const st = dp.querySelector(".setTitle");
-      if(st) st.textContent = t("admin_title");
+      if(st) st.textContent = I18n.t("admin_title");
     }
     const rowProv = document.getElementById("provLibre")?.closest(".row");
     if(rowProv){
-      const b=rowProv.querySelector("b"); if(b) b.textContent = t("translation_provider_label");
-      const sm=rowProv.querySelector("small"); if(sm) sm.textContent = t("translation_provider_hint");
+      const b=rowProv.querySelector("b"); if(b) b.textContent = I18n.t("translation_provider_label");
+      const sm=rowProv.querySelector("small"); if(sm) sm.textContent = I18n.t("translation_provider_hint");
     }
 
     const rowVG = document.getElementById("vMale")?.closest(".row");
     if(rowVG){
-      const b=rowVG.querySelector("b"); if(b) b.textContent = t("voice_gender_label");
-      const sm=rowVG.querySelector("small"); if(sm) sm.textContent = t("voice_gender_hint");
+      const b=rowVG.querySelector("b"); if(b) b.textContent = I18n.t("voice_gender_label");
+      const sm=rowVG.querySelector("small"); if(sm) sm.textContent = I18n.t("voice_gender_hint");
     }
     const vMale = document.getElementById("vMale");
     const vFemale = document.getElementById("vFemale");
-    if(vMale) vMale.textContent = t("male");
-    if(vFemale) vFemale.textContent = t("female");
+    if(vMale) vMale.textContent = I18n.t("male");
+    if(vFemale) vFemale.textContent = I18n.t("female");
 
     const rowVoice = document.getElementById("ttsVoiceSelect")?.closest(".row");
     if(rowVoice){
-      const b=rowVoice.querySelector("b"); if(b) b.textContent = t("voice_label");
-      const sm=rowVoice.querySelector("small"); if(sm) sm.textContent = t("voice_hint");
+      const b=rowVoice.querySelector("b"); if(b) b.textContent = I18n.t("voice_label");
+      const sm=rowVoice.querySelector("small"); if(sm) sm.textContent = I18n.t("voice_hint");
     }
 
     const rowPrompt = document.getElementById("ttsInstructions")?.closest(".row");
     if(rowPrompt){
-      const b=rowPrompt.querySelector("b"); if(b) b.textContent = t("voice_prompt_label");
-      const sm=rowPrompt.querySelector("small"); if(sm) sm.textContent = t("voice_prompt_hint");
+      const b=rowPrompt.querySelector("b"); if(b) b.textContent = I18n.t("voice_prompt_label");
+      const sm=rowPrompt.querySelector("small"); if(sm) sm.textContent = I18n.t("voice_prompt_hint");
     }
 
     const rowNoCache = document.getElementById("tNoCache")?.closest(".row");
     if(rowNoCache){
-      const b=rowNoCache.querySelector("b"); if(b) b.textContent = t("no_cache_label");
-      const sm=rowNoCache.querySelector("small"); if(sm) sm.textContent = t("no_cache_hint");
+      const b=rowNoCache.querySelector("b"); if(b) b.textContent = I18n.t("no_cache_label");
+      const sm=rowNoCache.querySelector("small"); if(sm) sm.textContent = I18n.t("no_cache_hint");
     }
 
     const btnCT = document.getElementById("btnClearTts");
     const btnCR = document.getElementById("btnClearTr");
-    if(btnCT) btnCT.textContent = t("dev_clear_tts");
-    if(btnCR) btnCR.textContent = t("dev_clear_tr");
+    if(btnCT) btnCT.textContent = I18n.t("dev_clear_tts");
+    if(btnCR) btnCR.textContent = I18n.t("dev_clear_tr");
 
     const hint = document.querySelector("#devPanel .hint");
     if(hint){
-      hint.innerHTML = t("dev_hint_1") + "<br/><br/>" + t("dev_hint_2");
+      hint.innerHTML = I18n.t("dev_hint_1") + "<br/><br/>" + I18n.t("dev_hint_2");
     }
   }catch(e){}
 
   // Chapters sheet labels
   try{
     const ct = document.getElementById("chaptersTitle");
-    if(ct) ct.textContent = t("chapters_title");
+    if(ct) ct.textContent = I18n.t("chapters_title");
     const cc = document.getElementById("chaptersClose");
-    if(cc) cc.textContent = t("close");
+    if(cc) cc.textContent = I18n.t("close");
   }catch(e){}
 
 }
@@ -717,7 +361,7 @@ document.addEventListener("change", function(ev){
   try{
     const tEl = ev.target;
     if(tEl && tEl.id === "uiLangSelect"){
-      setUiLang(tEl.value);
+      I18n.setUiLang(tEl.value);
     }
   }catch(e){}
 });
@@ -856,7 +500,7 @@ if(popBookmark){
   // Bookmarks "All" button
   try{
     const allBtn=document.getElementById("bmAllBtn");
-    if(allBtn){ allBtn.textContent = t("all"); allBtn.title = t("all_bookmarks_title"); }
+    if(allBtn){ allBtn.textContent = I18n.t("all"); allBtn.title = I18n.t("all_bookmarks_title"); }
   }catch(e){}
 
 }
@@ -1559,7 +1203,7 @@ function renderChaptersList(){
   if(!chaptersList) return;
   const ch = getChapters();
   if(!ch.length){
-    chaptersList.innerHTML = `<div style="opacity:.6;font-weight:700;padding:8px 2px">${escapeHtml(t('no_chapters'))}</div>`;
+    chaptersList.innerHTML = `<div style="opacity:.6;font-weight:700;padding:8px 2px">${escapeHtml(I18n.t('no_chapters'))}</div>`;
     return;
   }
   // Determine current chapter by current cursor line.
@@ -2520,7 +2164,7 @@ function showBookBookmarksSheet(bookId){
         <div class="bmSheetTitle">${escapeHtml(getBookTitle(b) || "Bookmarks")}</div>
         <div class="bmSheetBtns">
           <button class="bmSheetBtn" id="bmAddBtn" title="Add bookmark">＋</button>
-          <button class="bmSheetBtn" id="bmAllBtn" title="${t('all_bookmarks_title')}">${t('btn_all')}</button>
+          <button class="bmSheetBtn" id="bmAllBtn" title="${I18n.t('all_bookmarks_title')}">${I18n.t('btn_all')}</button>
           <button class="bmSheetBtn" id="bmCloseBtn" title="Close">✕</button>
         </div>
       </div>
@@ -2816,8 +2460,8 @@ function _normalizeLevel(lv){
 
 async function loadBook(id, sourceLang, level){
   const lang = String(sourceLang || "en").trim().toLowerCase();
-  const uiL = getUiLang ? getUiLang() : "en";
-  const lv = _normalizeLevel(level || (typeof core?.getState==="function" ? core.getState().level : (state.level||"original")));
+  const uiL = I18n.getUiLang();
+  const lv = _Config.normalizeLevel(level || (typeof core?.getState==="function" ? core.getState().level : (state.level||"original")));
   const cacheId = `${id}::${lang}::${uiL}::${lv}`;
   if(state.bookCache.has(cacheId)) return state.bookCache.get(cacheId);
 
@@ -2882,7 +2526,7 @@ async function loadBook(id, sourceLang, level){
     // Description as separate files (desc.<uiLang>.txt), optional.
     // Tries desc.<uiLang>.txt -> desc.en.txt -> book.json description fields.
     try{
-      const uiLang = (typeof getUiLang==="function" ? getUiLang() : "en");
+      const uiLang = I18n.getUiLang();
       async function fetchDescFile(fileName){
         const r = await fetch(`${basePath}/${fileName}`, {cache:"no-store"});
         if(!r.ok) return null;
@@ -2978,7 +2622,7 @@ function renderCatalog(){
   // Show progress for the last used language package (if available)
   let contShowPct = contPct;
   let contShowLabel = "";
-  let contLevelLabel = t("level_original");
+  let contLevelLabel = I18n.t("level_original");
   let contMeta1 = "";
   let contMeta2 = "";
 
@@ -2996,7 +2640,7 @@ function renderCatalog(){
     const fallbackLabel = (() => {
       try{
         if(last && last.sourceLang && last.targetLang){
-          const modeTxt = (last.mode && String(last.mode).toLowerCase()==="listen") ? t("mode_listen") : t("mode_read");
+          const modeTxt = (last.mode && String(last.mode).toLowerCase()==="listen") ? I18n.t("mode_listen") : I18n.t("mode_read");
           return `${flagEmoji(last.sourceLang)} ${String(last.sourceLang).toUpperCase()}→${flagEmoji(last.targetLang)} ${String(last.targetLang).toUpperCase()} (${modeTxt})`;
         }
       }catch(e){}
@@ -3031,12 +2675,12 @@ function renderCatalog(){
   app.innerHTML = `
     <div class="wrap homeScreen">
       <div class="appHeader">
-        <button class="tab" id="tabBooks">${t("tabs_books")}</button>
-        <button class="tab muted" id="tabLibrary">${t("tabs_library")}</button>
+        <button class="tab" id="tabBooks">${I18n.t("tabs_books")}</button>
+        <button class="tab muted" id="tabLibrary">${I18n.t("tabs_library")}</button>
       </div>
 
       ${cont ? `
-        <div class="sectionLabel">${t("continue_reading")}</div>
+        <div class="sectionLabel">${I18n.t("continue_reading")}</div>
         <div class="cardWide" id="continueCard" role="button" tabindex="0">
           <div class="coverImg">${cont.cover ? `<img src="${escapeHtml(cont.cover)}" alt="">` : ``}</div>
           <div class="info">
@@ -3055,7 +2699,7 @@ function renderCatalog(){
         return `
           <div class="groupCard">
             <div class="groupTitleRow">
-              <h3 class="groupTitle">${escapeHtml(tGenre(g))}</h3>
+              <h3 class="groupTitle">${escapeHtml(I18n.tGenre(g))}</h3>
               <button class="chevBtn" data-group="${escapeHtml(g)}">›</button>
             </div>
             <div class="hScroll">
@@ -3232,15 +2876,15 @@ function renderLibrary(){
   app.innerHTML = `
     <div class="wrap">
       <div class="appHeader">
-        <button class="tab muted" id="tabBooks">${t("tabs_books")}</button>
-        <button class="tab" id="tabLibrary">${t("tabs_library")}</button>
+        <button class="tab muted" id="tabBooks">${I18n.t("tabs_books")}</button>
+        <button class="tab" id="tabLibrary">${I18n.t("tabs_library")}</button>
       </div>
 
       <div style="padding: 0 18px 8px 18px;">
         <div class="segmented">
-          <button class="libSegBtn ${tab==="progress"?"active":""}" id="libInProgress">${t("lib_in_progress")}</button>
-          <button class="libSegBtn ${tab==="finished"?"active":""}" id="libFinished">${t("lib_finished")}</button>
-          <button class="libSegBtn ${tab==="bookmarks"?"active":""}" id="libBookmarks">${t("lib_bookmarks")}</button>
+          <button class="libSegBtn ${tab==="progress"?"active":""}" id="libInProgress">${I18n.t("lib_in_progress")}</button>
+          <button class="libSegBtn ${tab==="finished"?"active":""}" id="libFinished">${I18n.t("lib_finished")}</button>
+          <button class="libSegBtn ${tab==="bookmarks"?"active":""}" id="libBookmarks">${I18n.t("lib_bookmarks")}</button>
         </div>
       </div>
 
@@ -3253,7 +2897,7 @@ function renderLibrary(){
                 <div style="flex:1; min-width:0;">
                   <div class="bmTitleRow">
                     <p class="bmTitle">${escapeHtml(getBookTitle(b) || "Book")}</p>
-                    ${tab==="bookmarks" && state.ui?.backToBook && state.ui.backToBook.bookId===b.id ? ` <button class="bmBackMini inline" id="backToBookBtn" title="Back to book">↩︎ ${t("btn_back")}</button>` : ``}
+                    ${tab==="bookmarks" && state.ui?.backToBook && state.ui.backToBook.bookId===b.id ? ` <button class="bmBackMini inline" id="backToBookBtn" title="Back to book">↩︎ ${I18n.t("btn_back")}</button>` : ``}
                   </div>
                 </div>
                   ${(()=>{ const _m=[String((b.author||"")||"").trim(), String((b.series||"")||"").trim()].filter(Boolean).join(" • "); return _m? `<p class="bmMeta">${escapeHtml(_m)}</p>` : ``; })()}
@@ -3332,10 +2976,10 @@ function renderLibrary(){
                       const trg = String(x.targetLang||"").toLowerCase();
                       const m = String(x.mode||"read").toLowerCase();
                       const lv = Config.normalizeLevel(x.level||"original");
-                      const modeLabel = t(m==="listen" ? "mode_listen" : "mode_read");
+                      const modeLabel = I18n.t(m==="listen" ? "mode_listen" : "mode_read");
                       const pct = Math.round(Number(x.progress||0));
                       const isResume = !!x.isResume;
-                      const lvLabel = (lv==="original") ? t("level_original") : String(lv).toUpperCase();
+                      const lvLabel = (lv==="original") ? I18n.t("level_original") : String(lv).toUpperCase();
                       const lead = lvLabel;
                       const resumeKey = `${escapeHtml(b.id)}|${escapeHtml(lv)}|${escapeHtml(s)}|${escapeHtml(trg)}|${escapeHtml(m)}`;
                       return `<span class="pkgChip ${isResume?'resume':''}" data-resume="${resumeKey}" role="button" tabindex="0" title="Resume"><span class="lvl">${lead}</span><span class="sep">•</span> ${Config.flagFor(s)} ${s.toUpperCase()} <span class="arrow">→</span> ${Config.flagFor(trg)} ${trg.toUpperCase()} <span class="sep">•</span> <span class="mode">${modeLabel}</span> <span class="sep">•</span> <span class="pct">${pct}%</span></span>`;
@@ -3559,10 +3203,10 @@ function renderDetails(){
   if(!levelNow){ try{ const lp = getLastPkg(b.id); if(lp && lp.level) levelNow = String(lp.level); }catch(e){} }
   levelNow = Config.formatLevelLabel(levelNow || "original");
   const pctNow = Math.max(0, Math.round(Number(savedPct||0)));
-  const pkgLine = `• ${levelNow} • ~${pagesEst} ${t("pages")} • ${pctNow}%${savedLabel?` • ${savedLabel}`:``}`;
+  const pkgLine = `• ${levelNow} • ~${pagesEst} ${I18n.t("pages")} • ${pctNow}%${savedLabel?` • ${savedLabel}`:``}`;
 
 
-  const uiL = getUiLang();
+  const uiL = I18n.getUiLang();
   const desc = (
     (b.description_i18n && (b.description_i18n[uiL] || b.description_i18n[uiL==="uk"?"ua":uiL])) ||
     (uiL==="uk" ? (b.description_ua || b.description_uk) : (uiL==="ru" ? b.description_ru : b.description_en)) ||
@@ -3601,23 +3245,23 @@ function renderDetails(){
 
         <div class="formCard">
           <div class="formRow">
-            <div class="label">${t("details_level")}</div>
-            <button class="pillBtn" id="detailsLevelBtn"><span id="detailsLevelLabel">${escapeHtml(t("level_original"))}</span> <span style="opacity:.6;">▾</span><select id="dLevel" class="selOverlay"></select></button>
+            <div class="label">${I18n.t("details_level")}</div>
+            <button class="pillBtn" id="detailsLevelBtn"><span id="detailsLevelLabel">${escapeHtml(I18n.t("level_original"))}</span> <span style="opacity:.6;">▾</span><select id="dLevel" class="selOverlay"></select></button>
           </div>
           <div class="formRow">
-            <div class="label">${t("details_book_lang")}</div>
+            <div class="label">${I18n.t("details_book_lang")}</div>
             <button class="pillBtn" id="detailsBookLangBtn"><span id="detailsBookFlag">🇬🇧</span><span id="detailsBookLangLabel">English</span> <span style="opacity:.6;">▾</span><select id="dSourceLang" class="selOverlay"></select></button>
           </div>
           <div class="formRow">
-            <div class="label">${t("details_trans_lang")}</div>
+            <div class="label">${I18n.t("details_trans_lang")}</div>
             <button class="pillBtn" id="detailsTransLangBtn"><span id="detailsTransFlag">UA</span><span id="detailsTransLangLabel">Ukrainian</span> <span style="opacity:.6;">▾</span><select id="dTargetLang" class="selOverlay"></select></button>
           </div>
         </div>
 
 
         <div class="bigActions">
-          <button class="bigBtn" id="btnRead">≡ ${t("details_btn_read")}</button>
-          <button class="bigBtn secondary" id="btnListen">🎧 ${t("details_btn_listen")}</button>
+          <button class="bigBtn" id="btnRead">≡ ${I18n.t("details_btn_read")}</button>
+          <button class="bigBtn secondary" id="btnListen">🎧 ${I18n.t("details_btn_listen")}</button>
         </div>
       </div>
     </div>
@@ -3653,7 +3297,7 @@ const __dch = document.getElementById("detailsChapters");
   Config.LEVELS.forEach(l=>{
     const opt = document.createElement("option");
     opt.value = l.code;
-    opt.textContent = (String(l.code).toLowerCase()==='original') ? t('level_original') : l.label;
+    opt.textContent = (String(l.code).toLowerCase()==='original') ? I18n.t('level_original') : l.label;
     lvl.appendChild(opt);
   });
 
@@ -5645,14 +5289,14 @@ function _maybeShowBookmarkPlayChoice(){
     wrap.style.justifyContent = "center";
     wrap.innerHTML = `
       <div style="width:min(440px, calc(100vw - 36px));background:var(--card);color:var(--text);border-radius:18px;padding:16px 16px 14px;box-shadow:0 18px 60px rgba(0,0,0,.25);border:1px solid var(--line);">
-        <div style="font-weight:900;font-size:16px;letter-spacing:.2px;margin-bottom:10px;">${t("start_playback_title")}</div>
+        <div style="font-weight:900;font-size:16px;letter-spacing:.2px;margin-bottom:10px;">${I18n.t("start_playback_title")}</div>
         <div style="color:var(--muted);font-weight:700;font-size:13px;line-height:1.35;margin-bottom:14px;">
-          ${t("start_playback_desc")}
+          ${I18n.t("start_playback_desc")}
         </div>
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <button id="bmChoiceContinue" class="bigBtn" style="width:100%;">${t("modal_continue")}</button>
-          <button id="bmChoiceBookmark" class="bigBtn secondary" style="width:100%;">${t("modal_start_bookmark")}</button>
-          <button id="bmChoiceCancel" class="pillBtn" style="width:100%;">${t("modal_cancel")}</button>
+          <button id="bmChoiceContinue" class="bigBtn" style="width:100%;">${I18n.t("modal_continue")}</button>
+          <button id="bmChoiceBookmark" class="bigBtn secondary" style="width:100%;">${I18n.t("modal_start_bookmark")}</button>
+          <button id="bmChoiceCancel" class="pillBtn" style="width:100%;">${I18n.t("modal_cancel")}</button>
         </div>
       </div>`;
     document.body.appendChild(wrap);
