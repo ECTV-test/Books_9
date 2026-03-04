@@ -1664,9 +1664,25 @@ function showPlayer(){
   player.style.display="block";
   pTitle.textContent = getBookTitle(state.book) || "Reader";
   updateProgressUI();
+  _updatePlayerLevel();
 }
 
 
+
+function _updatePlayerLevel(){
+  try{
+    const lv = String(state.reading.level || "original");
+    let el = document.getElementById("pLevel");
+    if(!el){
+      el = document.createElement("span");
+      el.id = "pLevel";
+      el.style.cssText = "font-size:11px;font-weight:800;letter-spacing:.5px;opacity:.7;margin-left:6px;text-transform:uppercase;";
+      const meta = document.querySelector(".progMeta");
+      if(meta) meta.appendChild(el);
+    }
+    el.textContent = lv === "original" ? "" : lv.toUpperCase();
+  }catch(e){}
+}
 
 function updateModeSwitchUI(){
   try{
@@ -1711,7 +1727,7 @@ function renderCatalog(){
     if(g && g.bookId){
       cont = state.catalog.find(b=>b.id===g.bookId) || null;
       if(cont){
-        const lp = ProgressManager.getPkgProgress(cont.id, g.sourceLang, g.targetLang);
+        const lp = ProgressManager.getPkgProgress(cont.id, g.sourceLang, g.targetLang, g.level||'original');
         if(lp && typeof lp.progress === 'number') contPct = Number(lp.progress||0);
       }
     }
@@ -1870,12 +1886,12 @@ try{
         if(last && String(last.bookId||"")===String(bid||"")){
           state.reading.sourceLang = last.sourceLang || state.reading.sourceLang;
           state.reading.targetLang = last.targetLang || state.reading.targetLang;
-          const pkg = ProgressManager.getPkgProgress(bid, state.reading.sourceLang, state.reading.targetLang);
+          const pkg = ProgressManager.getPkgProgress(bid, state.reading.sourceLang, state.reading.targetLang, last.level||'original');
           const idx = pkg && typeof pkg.activeIndex==="number" ? Number(pkg.activeIndex||0) : 0;
           if(String(last.mode||"")==="read"){
-            go({name:"bireader", bookId: bid, startIndex: idx});
+            go({name:"bireader", bookId: bid, level: last.level||'original', sourceLang: last.sourceLang, targetLang: last.targetLang, startIndex: idx});
           }else{
-            go({name:"reader", bookId: bid, startIndex: idx});
+            go({name:"reader", bookId: bid, level: last.level||'original', sourceLang: last.sourceLang, targetLang: last.targetLang, startIndex: idx});
           }
           return;
         }
@@ -4078,6 +4094,7 @@ function updateProgressUI(){
   const pct = Math.round((state.reading.progress || 0) * 100);
   pPct.textContent = pct + "%";
   pFill.style.width = pct + "%";
+  try{ _updatePlayerLevel(); }catch(e){}
 }
 
 /* ---------------------------
