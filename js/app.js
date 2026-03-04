@@ -451,7 +451,7 @@ function addBookmarkFromPopover(){
     const tr = popCtx.tr || popTrans?.textContent || "";
     const sLang = String(state.reading?.sourceLang || state.book?.sourceLang || "en").trim().toLowerCase();
     const tLang = String(state.reading?.targetLang || "uk").trim().toLowerCase();
-    const m = pkgMode(state.route?.name);
+    const m = ProgressManager.pkgMode(state.route?.name);
 
     let __mode = (popCtx.mode || m);
     let __wi = Number(popCtx.wordIndex ?? -1);
@@ -468,16 +468,16 @@ function addBookmarkFromPopover(){
     const paraIdx = (popCtx.paraIdx ?? 0);
 
     // Toggle: if the bookmark already exists for this exact word/line in current context, remove it.
-    const existing = findBookmarkByContext(bookId, {level, sourceLang, targetLang, mode: __mode, lineIndex, wordIndex: __wi, wordKey: __wk, raw});
+    const existing = BookmarkManager.findByContext(bookId, {level, sourceLang, targetLang, mode: __mode, lineIndex, wordIndex: __wi, wordKey: __wk, raw});
     if(existing && existing.id){
-      removeBookmarkEntry(bookId, existing.id);
+      BookmarkManager.remove(bookId, existing.id);
       try{ updatePopoverBookmarkButton(); }catch(e){}
       // refresh bookmarks tab if visible
       try{ if(state.route?.name === "library" && state.ui?.libraryTab === "bookmarks"){ renderLibrary(); } }catch(e){}
       return;
     }
 
-    addBookmarkEntry({bookId, paraIdx: (Number.isFinite(paraIdx)?Number(paraIdx):0), raw, tr,
+    BookmarkManager.add({bookId, paraIdx: (Number.isFinite(paraIdx)?Number(paraIdx):0), raw, tr,
       lineIndex: (Number.isFinite(lineIndex)?Number(lineIndex):0),
       level, sourceLang, targetLang, mode: __mode, wordIndex: __wi, wordKey: __wk});
 
@@ -818,12 +818,12 @@ function jumpToChapter(chIdx){
     const src = String(state.reading.sourceLang || state.book?.sourceLang || "en").trim().toLowerCase();
     const trg = String(state.reading.targetLang || "uk").trim().toLowerCase();
     const level = Config.normalizeLevel(state.reading.level || "original");
-    const pkgKey = pkgProgressKey(bookId, src, trg, level);
+    const pkgKey = ProgressManager.pkgProgressKey(bookId, src, trg, level);
 
     // Keep previous percent if exists
     let prevProgress = 0;
     try{
-      const prev = getPkgProgress(bookId, src, trg, level);
+      const prev = ProgressManager.getPkgProgress(bookId, src, trg, level);
       if(prev && typeof prev.progress === "number") prevProgress = Number(prev.progress||0);
     }catch(_e){}
 
@@ -831,7 +831,7 @@ function jumpToChapter(chIdx){
     try{ localStorage.setItem(pkgKey, JSON.stringify(pkgPayload)); }
     catch(e){ try{ sessionStorage.setItem(pkgKey, JSON.stringify(pkgPayload)); }catch(_e){} }
 
-    saveLastPkg(bookId, state.route?.name||"details", src, trg);
+    ProgressManager.saveLastPkg(bookId, state.route?.name||"details", src, trg);
   }catch(e){}
   try{ closeChapters(); }catch(e){}
 }
@@ -934,171 +934,6 @@ function effectiveTotalLines(lines){
   }
 }
 
-function progressKey(bookId, mode){
-  return `book_progress::${bookId}::${mode}`;
-}
-
-// NEW: progress per "language package" (bookLang -> translationLang)
-// IMPORTANT: progress must be SHARED between Read and Listen modes for the same book+language pair.
-function pkgMode(routeName){
-  // In this app routing: reader = Listen, bireader = Read
-  if(routeName === "reader") return "listen";
-  if(routeName === "bireader") return "read";
-  return String(routeName||"");
-}
-function pkgProgressKey(bookId, sourceLang, targetLang, level){
-  const s = String(sourceLang||"en").trim().toLowerCase();
-  const t = String(targetLang||"uk").trim().toLowerCase();
-  const lv = Config.normalizeLevel(level||"original");
-  // Keep legacy key for original to preserve existing users data
-  if(lv === "original") return `book_pkg_progress::${String(bookId||"")}::${s}::${t}`;
-  return `book_pkg_progress::${String(bookId||"")}::${s}::${t}::${lv}`;
-}
-function lastPkgKey(bookId){
-  return `book_last_pkg::${bookId}`;
-}
-
-function globalLastInteractionKey(){
-  return "app_last_interaction";
-}
-
-function setGlobalLastInteraction(bookId, mode, sourceLang, targetLang, level){
-  try{
-    const payload={
-      bookId: String(bookId||""),
-      mode: String(mode||"").trim().toLowerCase(),
-      level: Config.normalizeLevel(level||"original"),
-      sourceLang: String(sourceLang||"en").trim().toLowerCase(),
-      targetLang: String(targetLang||"uk").trim().toLowerCase(),
-      ts: Date.now()
-    };
-    localStorage.setItem(globalLastInteractionKey(), JSON.stringify(payload));
-  }catch(e){}
-}
-
-function getGlobalLastInteraction(){
-  try{
-    const s=localStorage.getItem(globalLastInteractionKey());
-    if(!s) return null;
-    const o=JSON.parse(s);
-    if(!o || typeof o!=="object") return null;
-    return o;
-  }catch(e){
-    return null;
-  }
-}
-
-function saveLastPkg(bookId, routeName, sourceLang, targetLang, level){
-  try{
-    const payload = {
-      mode: pkgMode(routeName),
-      level: Config.normalizeLevel(state.reading?.level || "original"),
-      sourceLang: String(sourceLang||"en").trim().toLowerCase(),
-      targetLang: String(targetLang||"uk").trim().toLowerCase(),
-      ts: Date.now()
-    };
-    localStorage.setItem(lastPkgKey(bookId), JSON.stringify(payload));
-    // also update global last interaction used for the home screen and ordering
-    setGlobalLastInteraction(bookId, payload.mode, payload.sourceLang, payload.targetLang, payload.level);
-  }catch(e){}
-}
-
-function getLastPkg(bookId){
-  try{
-    const s = localStorage.getItem(lastPkgKey(bookId));
-    if(!s) return null;
-    const o = JSON.parse(s);
-    if(!o || typeof o !== 'object') return null;
-    return o;
-  }catch(e){
-    return null;
-  }
-}
-
-function getPkgProgress(bookId, sourceLang, targetLang, level){
-  try{
-    const s = String(sourceLang||"en").trim().toLowerCase();
-    const t = String(targetLang||"uk").trim().toLowerCase();
-    const key = pkgProgressKey(bookId, s, t, level);
-    let raw = localStorage.getItem(key) || sessionStorage.getItem(key);
-    if(raw){
-      return JSON.parse(raw);
-    }
-    const lv = Config.normalizeLevel(level||"original");
-    if(lv !== "original") return null;
-
-
-
-    // Backward-compat (older builds stored per-mode keys). If found, pick the latest and migrate.
-    const legacyKeys = [
-      `book_pkg_progress::${bookId}::listen::${s}::${t}`,
-      `book_pkg_progress::${bookId}::read::${s}::${t}`
-    ];
-    let best = null;
-    for(const lk of legacyKeys){
-      try{
-        const v = localStorage.getItem(lk) || sessionStorage.getItem(lk);
-        if(!v) continue;
-        const o = JSON.parse(v);
-        if(o && typeof o === 'object'){
-          if(!best || Number(o.ts||0) > Number(best.ts||0)) best = o;
-        }
-      }catch(_e){}
-    }
-    if(best){
-      // migrate into the new shared key
-      const migrated = {
-        sourceLang: s,
-        targetLang: t,
-        progress: Number(best.progress||0),
-        activeIndex: Number.isFinite(best.activeIndex) ? Number(best.activeIndex) : 0,
-        ts: Number(best.ts||Date.now())
-      };
-      try{ localStorage.setItem(key, JSON.stringify(migrated)); }catch(e){
-        try{ sessionStorage.setItem(key, JSON.stringify(migrated)); }catch(_e){}
-      }
-      return migrated;
-    }
-    return null;
-  }catch(e){
-    return null;
-  }
-}
-
-function listPkgProgress(bookId){
-  // Collect all saved package progresses for this book.
-  const out = [];
-  const prefix = `book_pkg_progress::${bookId}::`;
-  try{
-    const scan = (storage)=>{
-      if(!storage) return;
-      for(let i=0;i<storage.length;i++){
-        const k = storage.key(i);
-        if(!k || !k.startsWith(prefix)) continue;
-        try{
-          const v = storage.getItem(k);
-          if(!v) continue;
-          const o = JSON.parse(v);
-          if(o && typeof o === 'object') out.push(o);
-        }catch(_e){}
-      }
-    };
-    scan(localStorage);
-    scan(sessionStorage);
-  }catch(e){}
-  // Unique by level+source+target+mode, keep latest ts
-  const map = new Map();
-  for(const o of out){
-    const s = String(o.sourceLang||"").toLowerCase();
-    const t = String(o.targetLang||"").toLowerCase();
-    const lv = Config.normalizeLevel(o.level||"original");
-    const m = String(o.mode||"").toLowerCase() || "read";
-    const id = `${lv}::${s}::${t}::${m}`;
-    const prev = map.get(id);
-    if(!prev || Number(o.ts||0) > Number(prev.ts||0)) map.set(id, o);
-  }
-  return Array.from(map.values()).sort((a,b)=>Number(b.ts||0)-Number(a.ts||0));
-}
 function saveReadingProgress(){
   try{
     const bookId = resolveBookId();
@@ -1138,19 +973,19 @@ function saveReadingProgress(){
       if(core){
         const totalLines = Number(effectiveTotalLines(state.book?.text)||0);
         core.setMeta({ totalLines, chapters: (Array.isArray(state.book?.chapters) ? state.book.chapters.map(c=>({index:Number(c.startIndex||0), title:String(c.title||"Chapter")})) : (typeof core.buildChaptersFromLines==="function" ? core.buildChaptersFromLines(state.book?.text||[]) : [])) });
-        core.openBook(bookId, { src: (state.reading.sourceLang||state.book?.sourceLang||"en"), trg: (state.reading.targetLang||"uk"), mode: pkgMode(mode), level: (state.reading.level||"original") });
+        core.openBook(bookId, { src: (state.reading.sourceLang||state.book?.sourceLang||"en"), trg: (state.reading.targetLang||"uk"), mode: ProgressManager.pkgMode(mode), level: (state.reading.level||"original") });
       }
     }catch(e){}
 
     // legacy progress (per mode)
-    sessionStorage.setItem(progressKey(bookId, mode), JSON.stringify(payload));
+    sessionStorage.setItem(ProgressManager.progressKey(bookId, mode), JSON.stringify(payload));
 
     // NEW: progress per language package (book language + translation language) shared across modes
     try{
       const src = String(state.reading.sourceLang || state.book?.sourceLang || "en").trim().toLowerCase();
       const trg = String(state.reading.targetLang || "uk").trim().toLowerCase();
     const level = Config.normalizeLevel(state.reading.level || "original");
-      const pkgKey = pkgProgressKey(bookId, src, trg, level);
+      const pkgKey = ProgressManager.pkgProgressKey(bookId, src, trg, level);
       // capture cursor index for this mode so we can restore per (source→target)
       let activeIndex = 0;
       try{
@@ -1190,7 +1025,7 @@ function saveReadingProgress(){
       try{ localStorage.setItem(pkgKey, JSON.stringify(pkgPayload)); }catch(e){
         try{ sessionStorage.setItem(pkgKey, JSON.stringify(pkgPayload)); }catch(_e){}
       }
-      saveLastPkg(bookId, mode, src, trg, level);
+      ProgressManager.saveLastPkg(bookId, mode, src, trg, level);
     }catch(e){}
   }catch(e){}
 }
@@ -1208,7 +1043,7 @@ function restoreReadingProgress(){
     const level = Config.normalizeLevel(state.reading.level || "original");
 
     // 1) Prefer package progress (sourceLang + targetLang) shared across modes
-    const pkg = getPkgProgress(bookId, src, trg, level);
+    const pkg = ProgressManager.getPkgProgress(bookId, src, trg, level);
     if(pkg && typeof pkg.activeIndex === "number"){
       const idx = Math.max(0, Number(pkg.activeIndex||0));
 
@@ -1245,9 +1080,9 @@ function restoreReadingProgress(){
     }
 
     // 2) If there are *no* package progresses yet (old users), fallback to legacy per-mode progress
-    const hasAnyPkgs = (listPkgProgress(bookId)||[]).length>0;
+    const hasAnyPkgs = (ProgressManager.listPkgProgress(bookId)||[]).length>0;
     if(!hasAnyPkgs){
-      const key = progressKey(bookId, route);
+      const key = ProgressManager.progressKey(bookId, route);
       const raw = sessionStorage.getItem(key);
       if(raw){
         const p = JSON.parse(raw);
@@ -1306,7 +1141,7 @@ function restoreProgressForPair(bookId, src, trg, level){
     }catch(e){}
     // Fallback legacy (no level)
     if(!idx){
-      const pkg = getPkgProgress(bookId, src, trg, level);
+      const pkg = ProgressManager.getPkgProgress(bookId, src, trg, level);
       idx = (pkg && typeof pkg.activeIndex === "number") ? Math.max(0, Number(pkg.activeIndex||0)) : 0;
     }
 
@@ -1348,7 +1183,7 @@ function applyLanguagePairChange(){
     let idx = 0;
     try{
       if(window.core && typeof window.core.openBook==="function"){
-        window.core.openBook(bookId, { src, trg, mode: pkgMode(state.reading.mode||"read"), level });
+        window.core.openBook(bookId, { src, trg, mode: ProgressManager.pkgMode(state.reading.mode||"read"), level });
         const st = window.core.getState();
         idx = (st && typeof st.lineIndex==="number") ? Number(st.lineIndex||0) : 0;
       }
@@ -1366,94 +1201,6 @@ function applyLanguagePairChange(){
 /* ---------------------------
    Bookmarks (per book)
 --------------------------- */
-function bmKey(bookId){ return `bm:${bookId}`; }
-function loadBookmarks(bookId){
-  try{
-    const s = localStorage.getItem(bmKey(bookId)) || sessionStorage.getItem(bmKey(bookId));
-    if(!s) return [];
-    const arr = JSON.parse(s);
-    return Array.isArray(arr) ? arr : [];
-  }catch(e){
-    return [];
-  }
-}
-function saveBookmarks(bookId, arr){
-  try{ localStorage.setItem(bmKey(bookId), JSON.stringify(arr||[])); }catch(e){
-    try{ sessionStorage.setItem(bmKey(bookId), JSON.stringify(arr||[])); }catch(_e){}
-  }
-}
-function addBookmarkEntry({bookId, paraIdx, raw, tr, lineIndex, level, sourceLang, targetLang, mode, wordIndex, wordKey}){
-  if(!bookId) return;
-  const r = String(raw||"").trim();
-  const t = String(tr||"").trim();
-  if(!r && !t) return;
-  const _all = loadBookmarks(bookId);
-  const entry = {
-    id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
-    paraIdx: Number.isFinite(paraIdx) ? Number(paraIdx) : 0,
-    lineIndex: Number.isFinite(lineIndex) ? Number(lineIndex) : (Number.isFinite(paraIdx)?Number(paraIdx):0),
-    level: String(level||"original"),
-    sourceLang: String(sourceLang||"").trim().toLowerCase(),
-    targetLang: String(targetLang||"").trim().toLowerCase(),
-    mode: String(mode||"read"),
-    wordIndex: Number.isFinite(wordIndex) ? Number(wordIndex) : -1,
-    wordKey: String(wordKey||""),
-    raw: r,
-    tr: t,
-    createdAt: Date.now()
-  };
-  // append to full list (do NOT drop other contexts)
-  _all.push(entry);
-  saveBookmarks(bookId, _all);
-  try{ applyBookmarkMarks(); }catch(e){}
-}
-function removeBookmarkEntry(bookId, entryId){
-  if(!bookId || !entryId) return;
-  const list = loadBookmarks(bookId).filter(x=>x && x.id !== entryId);
-  saveBookmarks(bookId, list);
-  try{ applyBookmarkMarks(); }catch(e){}
-}
-
-// Find an existing bookmark for the same context/position (used for toggle UI)
-function findBookmarkByContext(bookId, ctx){
-  try{
-    if(!bookId) return null;
-    const level = String(ctx.level||"original");
-    const src = String(ctx.sourceLang||"").trim().toLowerCase();
-    const trg = String(ctx.targetLang||"").trim().toLowerCase();
-    const mode = String(ctx.mode||"read");
-    const lineIndex = Number.isFinite(ctx.lineIndex) ? Number(ctx.lineIndex) : 0;
-    const wordIndex = Number.isFinite(ctx.wordIndex) ? Number(ctx.wordIndex) : -1;
-    const wordKey = String(ctx.wordKey||"");
-    const rawNorm = normalizeWord(String(ctx.raw||""));
-    const list = loadBookmarks(bookId) || [];
-    const rel = list.filter(b=>{
-      if(!b) return false;
-      return String(b.level||"original")===level
-        && String(b.sourceLang||"").toLowerCase()===src
-        && String(b.targetLang||"").toLowerCase()===trg
-        && String(b.mode||"read")===mode;
-    });
-    if(wordIndex >= 0){
-      // Prefer exact wordKey match, else fall back to wordIndex+lineIndex, else normalized word text match.
-      return rel.find(b=>{
-        if(!b) return false;
-        if(Number(b.lineIndex) !== lineIndex) return false;
-        if(Number(b.wordIndex) >= 0){
-          if(wordKey && String(b.wordKey||"")===wordKey) return true;
-          if(Number(b.wordIndex) === wordIndex) return true;
-        }
-        const bn = normalizeWord(String(b.raw||""));
-        return bn && rawNorm && bn===rawNorm;
-      }) || null;
-    }
-    // line bookmark
-    return rel.find(b=> Number(b.lineIndex)===lineIndex && (Number(b.wordIndex)||-1) < 0 ) || null;
-  }catch(e){
-    return null;
-  }
-}
-
 function updatePopoverBookmarkButton(){
   try{
     if(!popBookmark){ return; }
@@ -1461,7 +1208,7 @@ function updatePopoverBookmarkButton(){
     const bookId = popCtx.bookId || state.book?.id || state.route?.bookId;
     const sLang = String(popCtx.sourceLang || state.reading?.sourceLang || state.book?.sourceLang || "en").trim().toLowerCase();
     const tLang = String(popCtx.targetLang || state.reading?.targetLang || "uk").trim().toLowerCase();
-    const mode = String(popCtx.mode || pkgMode(state.route?.name) || "read");
+    const mode = String(popCtx.mode || ProgressManager.pkgMode(state.route?.name) || "read");
     let wi = Number(popCtx.wordIndex ?? -1);
     let wk = String(popCtx.wordKey||"");
     if(mode==="read"){ wi = -1; wk = ""; }
@@ -1475,7 +1222,7 @@ function updatePopoverBookmarkButton(){
       wordKey: wk,
       raw: String(popCtx.raw||popWord?.textContent||"")
     };
-    const ex = findBookmarkByContext(bookId, ctx);
+    const ex = BookmarkManager.findByContext(bookId, ctx);
     popBookmark.classList.toggle("active", !!(ex && ex.id));
   }catch(e){}
 }
@@ -1486,7 +1233,7 @@ function _bmCurrentCtx(){
     const level = String(state.reading?.level || "original");
     const sourceLang = String(state.reading?.sourceLang || state.book?.sourceLang || "en").trim().toLowerCase();
     const targetLang = String(state.reading?.targetLang || "uk").trim().toLowerCase();
-    const mode = pkgMode(state.route?.name);
+    const mode = ProgressManager.pkgMode(state.route?.name);
     try{ state.ui = state.ui||{}; state.ui.lastBmCtx = {bookId, level, sourceLang, targetLang, mode}; }catch(e){}
     return {bookId, level, sourceLang, targetLang, mode};
   }catch(e){
@@ -1500,7 +1247,7 @@ function applyBookmarkMarks(){
     document.querySelectorAll('.bmWordMark').forEach(el=>el.classList.remove('bmWordMark'));
     const ctx = _bmCurrentCtx();
     if(!ctx.bookId) return;
-    const all = loadBookmarks(ctx.bookId) || [];
+    const all = BookmarkManager.load(ctx.bookId) || [];
     const rel = all.filter(b=>{
       if(!b) return false;
       return String(b.level||"original")===ctx.level
@@ -1559,13 +1306,13 @@ function _bmGetMode(){
   // Prefer current route mapping (reader=based listen, bireader=read) to avoid stale state.reading.mode
   try{
     const rn = String(state.route?.name||"").trim();
-    if(rn==="reader" || rn==="bireader") return pkgMode(rn);
+    if(rn==="reader" || rn==="bireader") return ProgressManager.pkgMode(rn);
   }catch(e){}
   try{
     const m = String(state.reading?.mode||"").trim();
     if(m==="listen" || m==="read") return m;
   }catch(e){}
-  try{ return pkgMode(state.route?.name); }catch(e){ return "read"; }
+  try{ return ProgressManager.pkgMode(state.route?.name); }catch(e){ return "read"; }
 }
 function addBookmarkHere(bookId){
   try{
@@ -1576,12 +1323,12 @@ function addBookmarkHere(bookId){
     const {src, trg} = _bmGetLangPair();
     const mode = _bmGetMode();
     const raw = (state.book?.text && state.book.text[lineIndex]) ? String(state.book.text[lineIndex]) : "";
-    addBookmarkEntry({bookId, paraIdx: lineIndex, raw, tr:"", lineIndex, level, sourceLang: src, targetLang: trg, mode});
+    BookmarkManager.add({bookId, paraIdx: lineIndex, raw, tr:"", lineIndex, level, sourceLang: src, targetLang: trg, mode});
   }catch(e){}
 }
 function _bmFind(bookId, entryId){
   try{
-    const list = loadBookmarks(bookId);
+    const list = BookmarkManager.load(bookId);
     return (list||[]).find(x=>x && x.id===entryId) || null;
   }catch(e){
     return null;
@@ -1613,7 +1360,7 @@ function _bmOpenFromEntry(bookId, entry, play){
       }catch(e){}
       if(!resumeIndex){
         try{
-          const pkg = getPkgProgress(bookId, src, trg, level);
+          const pkg = ProgressManager.getPkgProgress(bookId, src, trg, level);
           if(pkg && typeof pkg.activeIndex==="number") resumeIndex = Math.max(0, Number(pkg.activeIndex||0));
         }catch(e){}
       }
@@ -1635,7 +1382,7 @@ function showBookBookmarksSheet(bookId){
   bookId = bookId || state.book?.id || state.route?.bookId;
   if(!bookId) return;
   const b = (state.book && state.book.id===bookId ? state.book : (state.catalog||[]).find(x=>x.id===bookId)) || state.book || {};
-  const listAll = loadBookmarks(bookId);
+  const listAll = BookmarkManager.load(bookId);
 
   // Current context (level + lang pair + mode) for this book
   let ctxLevel = "original";
@@ -1736,7 +1483,7 @@ function showBookBookmarksSheet(bookId){
       const routeName = (String(mode||'read')==='listen') ? 'reader' : 'bireader';
       let idx = 0;
       try{
-        const pkg = getPkgProgress(bid, src, trg, Config.normalizeLevel(lvl||'original'));
+        const pkg = ProgressManager.getPkgProgress(bid, src, trg, Config.normalizeLevel(lvl||'original'));
         if(pkg && typeof pkg.activeIndex === 'number') idx = Number(pkg.activeIndex||0);
       }catch(e){}
       close();
@@ -1763,15 +1510,11 @@ function showBookBookmarksSheet(bookId){
   wrap.querySelectorAll("[data-bm-del]").forEach(btn=>{
     btn.onclick = ()=>{
       const [bid, eid] = String(btn.getAttribute("data-bm-del")||"").split("::");
-      removeBookmarkEntry(bid, eid);
+      BookmarkManager.remove(bid, eid);
       close();
       showBookBookmarksSheet(bid);
     };
   });
-}
-
-function hasAnyBookmarks(bookId){
-  try{ return loadBookmarks(bookId).length>0; }catch(e){ return false; }
 }
 
 function go(route, {push=true}={}){
@@ -2097,28 +1840,28 @@ function renderCatalog(){
   let cont = null;
   let contPct = 0;
   try{
-    const g = getGlobalLastInteraction();
+    const g = ProgressManager.getGlobalLastInteraction();
     if(g && g.bookId){
       cont = state.catalog.find(b=>b.id===g.bookId) || null;
       if(cont){
-        const lp = getPkgProgress(cont.id, g.sourceLang, g.targetLang);
+        const lp = ProgressManager.getPkgProgress(cont.id, g.sourceLang, g.targetLang);
         if(lp && typeof lp.progress === 'number') contPct = Number(lp.progress||0);
       }
     }
     if(!cont){
       for(const b of state.catalog){
-        const pkgs = listPkgProgress(b.id);
+        const pkgs = ProgressManager.listPkgProgress(b.id);
         if(pkgs && pkgs.length){
           const latest = pkgs[0];
           const ts = Number(latest.ts||0);
-          const bestTs = cont ? Number((listPkgProgress(cont.id)[0]||{}).ts||0) : -1;
+          const bestTs = cont ? Number((ProgressManager.listPkgProgress(cont.id)[0]||{}).ts||0) : -1;
           if(!cont || ts > bestTs){
             cont = b;
             contPct = Number(latest.progress||0);
           }
         }else{
-          const r = JSON.parse(sessionStorage.getItem(progressKey(b.id,'reader') ) || "null");
-          const br = JSON.parse(sessionStorage.getItem(progressKey(b.id,'bireader')) || "null");
+          const r = JSON.parse(sessionStorage.getItem(ProgressManager.progressKey(b.id,'reader') ) || "null");
+          const br = JSON.parse(sessionStorage.getItem(ProgressManager.progressKey(b.id,'bireader')) || "null");
           const p = Math.max(r?.progress||0, br?.progress||0);
           if(p > contPct){
             contPct = p;
@@ -2144,7 +1887,7 @@ function renderCatalog(){
 
     // Safe get last package for this book
     let last = null;
-    try{ last = (typeof getLastPkg === "function") ? getLastPkg(cont.id) : null; }catch(e){ last = null; }
+    try{ last = (typeof getLastPkg === "function") ? ProgressManager.getLastPkg(cont.id) : null; }catch(e){ last = null; }
 
     // Fallback label from current reading state (if any)
     const fallbackLabel = (() => {
@@ -2170,7 +1913,7 @@ function renderCatalog(){
       try{
         if(typeof getPkgProgress === "function"){
           let lp = null;
-          try{ lp = getPkgProgress(cont.id, last.sourceLang, last.targetLang, last.level); }catch(e){ lp = getPkgProgress(cont.id, last.sourceLang, last.targetLang); }
+          try{ lp = ProgressManager.getPkgProgress(cont.id, last.sourceLang, last.targetLang, last.level); }catch(e){ lp = ProgressManager.getPkgProgress(cont.id, last.sourceLang, last.targetLang); }
           if(lp && typeof lp.progress === "number") contShowPct = Number(lp.progress||0);
         }
       }catch(e){}
@@ -2255,12 +1998,12 @@ try{
   if(cont){
     const openCont = ()=>{
       try{
-        const last = getGlobalLastInteraction();
+        const last = ProgressManager.getGlobalLastInteraction();
         const bid = cont.id;
         if(last && String(last.bookId||"")===String(bid||"")){
           state.reading.sourceLang = last.sourceLang || state.reading.sourceLang;
           state.reading.targetLang = last.targetLang || state.reading.targetLang;
-          const pkg = getPkgProgress(bid, state.reading.sourceLang, state.reading.targetLang);
+          const pkg = ProgressManager.getPkgProgress(bid, state.reading.sourceLang, state.reading.targetLang);
           const idx = pkg && typeof pkg.activeIndex==="number" ? Number(pkg.activeIndex||0) : 0;
           if(String(last.mode||"")==="read"){
             go({name:"bireader", bookId: bid, startIndex: idx});
@@ -2307,12 +2050,12 @@ function renderLibrary(){
     let maxP = 0;
     let pkgs = [];
     try{
-      pkgs = listPkgProgress(b.id);
+      pkgs = ProgressManager.listPkgProgress(b.id);
       if(pkgs && pkgs.length){
         maxP = Math.max(...pkgs.map(x=>Number(x.progress||0)));
-        const last = getLastPkg(b.id);
+        const last = ProgressManager.getLastPkg(b.id);
         if(last){
-          const lp = getPkgProgress(b.id, last.sourceLang, last.targetLang, Config.normalizeLevel(last.level||"original"));
+          const lp = ProgressManager.getPkgProgress(b.id, last.sourceLang, last.targetLang, Config.normalizeLevel(last.level||"original"));
           if(lp && typeof lp.progress === "number") mainP = Number(lp.progress||0);
           else mainP = Number(maxP||0);
         }else{
@@ -2324,8 +2067,8 @@ function renderLibrary(){
     if(!pkgs || !pkgs.length){
       let r=null, br=null;
       try{
-        r = JSON.parse(sessionStorage.getItem(progressKey(b.id,'reader')) || "null");
-        br = JSON.parse(sessionStorage.getItem(progressKey(b.id,'bireader')) || "null");
+        r = JSON.parse(sessionStorage.getItem(ProgressManager.progressKey(b.id,'reader')) || "null");
+        br = JSON.parse(sessionStorage.getItem(ProgressManager.progressKey(b.id,'bireader')) || "null");
       }catch(e){}
       maxP = Math.max(Number(r?.progress||0), Number(br?.progress||0));
       mainP = maxP;
@@ -2333,10 +2076,10 @@ function renderLibrary(){
         // Build chips: always put "Resume" (last pkg) first when available
     let chips = [];
     try{
-      const last = getLastPkg(b.id);
+      const last = ProgressManager.getLastPkg(b.id);
       if(last){
         const lv = Config.normalizeLevel(last.level||"original");
-        const lp = getPkgProgress(b.id, last.sourceLang, last.targetLang, lv);
+        const lp = ProgressManager.getPkgProgress(b.id, last.sourceLang, last.targetLang, lv);
         if(lp && typeof lp.progress === "number"){
           chips.push({
             sourceLang: String(last.sourceLang||"").toLowerCase(),
@@ -2379,7 +2122,7 @@ function renderLibrary(){
   if(tab==="bookmarks"){
     bookmarksGroups = list.map(({b})=>({
       b,
-      items: loadBookmarks(b.id)
+      items: BookmarkManager.load(b.id)
     })).filter(g=>g.items && g.items.length);
   }
 
@@ -2555,7 +2298,7 @@ function renderLibrary(){
       const routeName = (String(mode||'read')==='listen') ? 'reader' : 'bireader';
       let idx = 0;
       try{
-        const pkg = getPkgProgress(bookId, src, trg, Config.normalizeLevel(level||'original'));
+        const pkg = ProgressManager.getPkgProgress(bookId, src, trg, Config.normalizeLevel(level||'original'));
         if(pkg && typeof pkg.activeIndex === 'number') idx = Number(pkg.activeIndex||0);
       }catch(e){}
       go({name: routeName, bookId, startIndex: idx});
@@ -2579,7 +2322,7 @@ function renderLibrary(){
         const routeName = (String(mode||'read')==='listen') ? 'reader' : 'bireader';
         let idx = 0;
         try{
-          const pkg = getPkgProgress(bookId, src, trg, Config.normalizeLevel(level||'original'));
+          const pkg = ProgressManager.getPkgProgress(bookId, src, trg, Config.normalizeLevel(level||'original'));
           if(pkg && typeof pkg.activeIndex === 'number') idx = Number(pkg.activeIndex||0);
         }catch(e){}
         go({name: routeName, bookId, startIndex: idx});
@@ -2601,7 +2344,7 @@ function renderLibrary(){
         e.preventDefault();
         e.stopPropagation();
         const [bookId, entryId] = String(btn.dataset.bmPlay||"").split("::");
-        const list = loadBookmarks(bookId);
+        const list = BookmarkManager.load(bookId);
         const it = (list||[]).find(x=>x && x.id===entryId);
         if(it) playOneShotTTS(it.raw || it.tr || "");
       });
@@ -2611,7 +2354,7 @@ function renderLibrary(){
         e.preventDefault();
         e.stopPropagation();
         const [bookId, entryId] = String(btn.dataset.bmGo||"").split("::");
-        const listAll = loadBookmarks(bookId);
+        const listAll = BookmarkManager.load(bookId);
   // When opened from reading modes, show ONLY bookmarks for current context (level + lang pair + mode)
   let list = listAll;
   try{
@@ -2643,7 +2386,7 @@ function renderLibrary(){
           const src = String(it?.sourceLang || state.reading?.sourceLang || "en").trim().toLowerCase();
           const trg = String(it?.targetLang || state.reading?.targetLang || "uk").trim().toLowerCase();
           const level = Config.normalizeLevel(it?.level || state.reading?.level || "original");
-          const prev = getPkgProgress(bookId, src, trg, level);
+          const prev = ProgressManager.getPkgProgress(bookId, src, trg, level);
           const resumeIndex = Number.isFinite(prev?.activeIndex) ? Number(prev.activeIndex) : 0;
 
           state.ui = state.ui || {};
@@ -2665,7 +2408,7 @@ function renderLibrary(){
         e.preventDefault();
         e.stopPropagation();
         const [bookId, entryId] = String(btn.dataset.bmDel||"").split("::");
-        removeBookmarkEntry(bookId, entryId);
+        BookmarkManager.remove(bookId, entryId);
         renderLibrary();
       });
     });
@@ -2681,25 +2424,25 @@ function renderDetails(){
   let savedPct = 0;
   let savedLabel = "";
   try{
-    const last = getLastPkg(b.id);
+    const last = ProgressManager.getLastPkg(b.id);
     if(last){
-      const lp = getPkgProgress(b.id, last.sourceLang, last.targetLang, Config.normalizeLevel(last.level||"original"));
+      const lp = ProgressManager.getPkgProgress(b.id, last.sourceLang, last.targetLang, Config.normalizeLevel(last.level||"original"));
       if(lp && typeof lp.progress === "number"){
         savedPct = Number(lp.progress||0);
         savedLabel = Config.formatPkgLabel(last.sourceLang, last.targetLang, last.mode);
       }
     }
     if(!savedLabel){
-      const pkgs = listPkgProgress(b.id);
+      const pkgs = ProgressManager.listPkgProgress(b.id);
       if(pkgs && pkgs.length){
         const best = pkgs.reduce((a,c)=> (Number(c.progress||0) > Number(a.progress||0) ? c : a), pkgs[0]);
         savedPct = Number(best.progress||0);
         // Package progress is shared across modes; show label using the last used mode if possible.
-        const m = (getLastPkg(b.id)?.mode) || pkgMode(state.route?.name||"reader");
+        const m = (ProgressManager.getLastPkg(b.id)?.mode) || ProgressManager.pkgMode(state.route?.name||"reader");
         savedLabel = Config.formatPkgLabel(best.sourceLang, best.targetLang, m);
       }else{
-        const r = JSON.parse(sessionStorage.getItem(progressKey(b.id,'reader')) || 'null');
-        const br = JSON.parse(sessionStorage.getItem(progressKey(b.id,'bireader')) || 'null');
+        const r = JSON.parse(sessionStorage.getItem(ProgressManager.progressKey(b.id,'reader')) || 'null');
+        const br = JSON.parse(sessionStorage.getItem(ProgressManager.progressKey(b.id,'bireader')) || 'null');
         savedPct = Math.max(Number(r?.progress||0), Number(br?.progress||0));
       }
     }
@@ -2710,7 +2453,7 @@ function renderDetails(){
   const pagesEst = Math.max(1, Math.ceil(totalLinesForPages/_lpp));
   const meta1 = formatMetaAuthorSeries(b);
   let levelNow = String(state.reading.level||"");
-  if(!levelNow){ try{ const lp = getLastPkg(b.id); if(lp && lp.level) levelNow = String(lp.level); }catch(e){} }
+  if(!levelNow){ try{ const lp = ProgressManager.getLastPkg(b.id); if(lp && lp.level) levelNow = String(lp.level); }catch(e){} }
   levelNow = Config.formatLevelLabel(levelNow || "original");
   const pctNow = Math.max(0, Math.round(Number(savedPct||0)));
   const pkgLine = `• ${levelNow} • ~${pagesEst} ${I18n.t("pages")} • ${pctNow}%${savedLabel?` • ${savedLabel}`:``}`;
@@ -3756,7 +3499,7 @@ async function showLineCard(paraIdx){
     const level = Config.normalizeLevel(state.reading?.level || "original");
     const src = String(state.reading?.sourceLang || b.sourceLang || "en").trim().toLowerCase();
     const trg = String(state.reading?.targetLang || "uk").trim().toLowerCase();
-    const mode = pkgMode(state.route?.name);
+    const mode = ProgressManager.pkgMode(state.route?.name);
     const li = Number.isFinite(paraIdx) ? Number(paraIdx) : 0;
     popCtx = { bookId: b.id || state.route?.bookId, paraIdx: li, lineIndex: li, level, sourceLang: src, targetLang: trg, mode, raw, tr: "" };
   }catch(e){
