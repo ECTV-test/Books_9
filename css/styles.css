@@ -1,5 +1,4 @@
 :root{
-      /* Main background (day) */
       --bg:#F5F3EE;
       --card:#ffffff;
       --text:#121826;
@@ -9,17 +8,14 @@
       --primary2:#2aa7ff;
       --shadow:0 10px 28px rgba(16,24,40,.10);
       --radius:18px;
-      /* BiReader background should match Listen mode (use the main app bg) */
       --readerBg:var(--bg);
       --underline: rgba(18,24,38,.35);
-
-      /* highlight theme defaults (blue) */
       --hlWord: rgba(42,167,255,.26);
-
       --fontSize: 22px;
       --lineHeight: 1.9;
-
       --safeBottom: env(safe-area-inset-bottom);
+      /* Фон страницы чтения — переключается кнопкой */
+      --pageBg: transparent;
     }
 
     [data-theme="night"]{
@@ -33,6 +29,12 @@
       --underline: rgba(232,236,245,.28);
       --hlWord: rgba(42,167,255,.22);
     }
+
+    /* Варианты фона страницы */
+    body.pageBgWarm  { --pageBg: #F5F0E8; }
+    body.pageBgWhite { --pageBg: #ffffff; }
+    [data-theme="night"] body.pageBgWarm  { --pageBg: #1a1710; }
+    [data-theme="night"] body.pageBgWhite { --pageBg: #0f1a2f; }
 
     *{box-sizing:border-box}
     body{
@@ -150,7 +152,6 @@
     .dot{width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:6px}
     .metaItem{display:inline-flex;align-items:center;gap:6px}
 
-    /* Details */
     .details{
       display:grid;
       grid-template-columns: 260px 1fr;
@@ -194,26 +195,24 @@
     .btnGhost{background:transparent;border:1px solid var(--line);color:var(--text)}
     .btn:active{transform:translateY(1px)}
 
-    /* Reader */
     .readerStage{
       background:var(--readerBg);
       min-height:calc(100vh - 0px);
       padding:14px 14px 118px;
     }
-    /* BiReader top bar (match the new "Listen" style) */
+
+    /* ── Верхняя панель «Читать» — на всю ширину как плеер ── */
     .readTopBar{
-      max-width:860px;
-      margin:0 auto 12px;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:12px;
-      /* Keep header visible while scrolling (like the player) */
       position: sticky;
       top: 0;
       z-index: 20;
       background: var(--readerBg);
-      padding: 10px 0;
+      padding: 10px 14px;
+      margin: 0 -14px 12px;
     }
     .readTopBar .rtLeft,
     .readTopBar .rtRight{display:flex;align-items:center;gap:10px;min-width:0}
@@ -229,16 +228,16 @@
     .paper{
       max-width:860px;margin:0 auto;
       padding:10px 0 60px;
-      background:transparent;
+      background: var(--pageBg);
       color:var(--text);
+      border-radius: 14px;
     }
-    /* BiReader content should sit on the background without frames */
     .paperInner{
       background:transparent;
       border:none;
       border-radius:0;
       box-shadow:none;
-      padding:0;
+      padding:0 14px;
     }
     .bookTitle{
       text-align:center;
@@ -250,7 +249,7 @@
     }
     @media (max-width: 640px){
       .bookTitle{font-size:34px}
-      .paperInner{padding:0}
+      .paperInner{padding:0 10px}
     }
     .para{
       font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
@@ -262,7 +261,7 @@
     .paraLine{ margin: 0 0 14px; }
     .line{
       font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
-      font-size: calc(var(--fontSize) * 1.12); /* original a bit larger */
+      font-size: calc(var(--fontSize) * 1.12);
       line-height: var(--lineHeight);
       margin: 0;
     }
@@ -271,21 +270,16 @@
       border-radius: 10px;
       padding: 2px 6px;
     }
-        .paraTrans{
+    .paraTrans{
       margin-top: 6px;
-      font-size: var(--fontSize); /* translation same size as previous original */
+      font-size: var(--fontSize);
       line-height: 1.55;
-      color: var(--muted);        /* lighter */
+      color: var(--muted);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
 
-    /* Hide translation line in BiReader */
     body.hideLineTrans .paraLine .paraTrans{display:none !important;}
 
-
-    /* Active highlight colors are controlled via CSS variables:
-       --hlLine (strong) and --hlLineSoft (lighter).
-       They are set in applyHighlightTheme(). */
     .para.activeLine{
       background: var(--hlLine);
       border-radius: 14px;
@@ -303,8 +297,6 @@
       padding: 6px 8px;
       color: var(--text);
     }
-
-    /* Bi-reader highlight when swapLang is enabled (translation becomes strong line) */
     .paraTrans.activeLine{
       background: var(--hlLine);
       border-radius: 14px;
@@ -318,40 +310,38 @@
       display:inline-block;
     }
 
-    /* Bi-reader: when swapLang is enabled, show the spoken line on top */
     body.swapLang .paraLine{
       display:flex;
       flex-direction: column-reverse;
       gap: 6px;
     }
 
+    /* ── Слова: убираем ободок-подчёркивание ── */
     .w{
       display:inline-block;
-      padding:0 2px 2px;
-      border-bottom: 2px solid var(--underline);
+      padding:0 1px;
+      border-radius:6px;
       user-select:none;
-      border-radius:8px;
-      cursor:pointer; /* теперь перевод по клику */
+      cursor:pointer;
     }
-    .w.space{border-bottom-color:transparent;padding:0;cursor:default}
+    .w.space{padding:0;cursor:default}
     .w.active{
       background: var(--hlWord);
-      border-bottom-color: transparent;
     }
 
-
-    /* Listen (Reader) new UI */
     body[data-route="reader"] .readerStage{padding-bottom:110px;}
     .listenStage{max-width:860px;margin:0 auto;padding:18px 18px calc(120px + var(--safeBottom));}
+
+    /* ── Верхняя панель «Слушать» — на всю ширину ── */
     .listenTop{
       display:flex;align-items:center;justify-content:space-between;
       gap:12px;
-      /* Keep header visible while scrolling (like the player) */
       position: sticky;
       top: 0;
       z-index: 20;
       background: var(--readerBg);
-      padding: 10px 0;
+      padding: 10px 18px;
+      margin: -18px -18px 0;
     }
     .listenTop .ltLeft{display:flex;align-items:center;gap:12px;min-width:0}
     .chevBtn{
@@ -395,7 +385,6 @@
     .listenLine.activeLine .para{background:var(--hlLine);border-radius:10px;padding:2px 6px}
     .listenLine.activeLine .paraTrans{background:var(--hlLineSoft);}
 
-    /* Popover actions */
     .popActions{display:flex;gap:10px;justify-content:flex-end;margin-top:10px}
     .popPlay{
       border:none;cursor:pointer;
@@ -404,7 +393,6 @@
       color:white;font-weight:950;
     }
 
-    /* Mode switch (bottom right) */
     .modeSwitch{
       display:inline-flex;align-items:center;gap:8px;
       padding:6px;border-radius:18px;
@@ -420,8 +408,6 @@
     [data-theme="night"] .modeBtn.active{background:rgba(255,255,255,.10)}
     .modeBtn svg{width:20px;height:20px}
 
-
-    /* Bottom player */
     .playerBar{
       position:fixed;left:0;right:0;bottom:0;
       background:rgba(255,255,255,.75);
@@ -477,7 +463,6 @@
       display:inline-flex;align-items:center;justify-content:center;
     }
 
-    /* Popover */
     .popover{
       position:fixed;
       min-width:260px;
@@ -512,7 +497,6 @@
     }
 
     .loading{opacity:.8;font-style:italic}
-    /* Sheets (bottom panels) */
     .sheetBackdrop{
       position:fixed;
       inset:0;
@@ -623,12 +607,37 @@
       min-width:170px;
       font-weight:900;
     }
-  
+
+    /* ── Кнопки выбора фона страницы ── */
+    .pageBgSeg{
+      display:inline-flex;
+      gap:4px;
+      padding:4px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.02);
+    }
+    [data-theme="night"] .pageBgSeg{background:rgba(255,255,255,.03)}
+    .pageBgBtn{
+      border:none;
+      border-radius:10px;
+      width:36px;height:28px;
+      cursor:pointer;
+      font-size:13px;
+      font-weight:900;
+      opacity:.55;
+      transition: opacity .12s, box-shadow .12s;
+      display:inline-flex;align-items:center;justify-content:center;
+    }
+    .pageBgBtn.active{ opacity:1; box-shadow:0 2px 8px rgba(0,0,0,.18); }
+    .pageBgBtn[data-bg="auto"]  { background: #F5F3EE; color: #555; }
+    .pageBgBtn[data-bg="warm"]  { background: #F5F0E8; color: #7a6040; }
+    .pageBgBtn[data-bg="white"] { background: #ffffff; color: #222; border:1px solid rgba(0,0,0,.08); }
+
 /* ===========================
-   Mobile App UI (Books / My Library / Details)
+   Mobile App UI
 =========================== */
 :root{
-  /* Tie "mobile app" palette to the main theme tokens so day/night stays consistent */
   --appBg: var(--bg);
   --appCard: rgba(255,255,255,.55);
   --appCardSolid: var(--card);
@@ -674,7 +683,6 @@ body{ background: var(--appBg); }
   left:0; right:0;
   top: 54vh;
   bottom:0;
-  /* Keep the same app background color (no half-white screen) */
   background: var(--appBg);
   z-index:-1;
 }
@@ -757,9 +765,7 @@ body{ background: var(--appBg); }
   background:#ddd; position:relative;
 }
 .bookTile .tileCover img{ width:100%; height:100%; object-fit:cover; display:block; }
-.bookTile .tileMeta{
-  padding-top:10px;
-}
+.bookTile .tileMeta{ padding-top:10px; }
 .bookTile .tileTitle{ font-weight:900; font-size:18px; margin:0; }
 .bookTile .tileSub{ margin:0; color: var(--appSub); font-weight:700; }
 
@@ -805,7 +811,6 @@ body{ background: var(--appBg); }
 .libraryItem .meta{ margin:0; color: var(--appText55); font-weight:800; }
 [data-theme="night"] .libraryItem .meta{ color: var(--appSub); }
 
-/* Compact language-package progress pills under a book title */
 .pkgRow{ display:flex; flex-wrap:nowrap; gap:10px; margin-top:8px; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
 .pkgRow::-webkit-scrollbar{ display:none; }
 .pkgChip{
@@ -825,42 +830,28 @@ body{ background: var(--appBg); }
   text-overflow:ellipsis;
   cursor:pointer;
 }
-
 .pkgChip:hover{ background: rgba(255,255,255,.78); border:1px solid var(--appInk10); }
 [data-theme="night"] .pkgChip:hover{ background: rgba(255,255,255,.08); }
-
 .pkgChip .pct{ opacity:.75; font-weight:950; }
 .pkgChip .mode{ opacity:.7; font-weight:950; }
 .pkgChip .arrow{ opacity:.7; }
-
 .pkgChip .lvl{ opacity:.8; font-weight:950; }
 .pkgChip.resume{ background: rgba(255,255,255,.9); border:1px solid var(--appInk16); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
 [data-theme="night"] .pkgChip.resume{ background: rgba(255,255,255,.10); border:1px solid var(--appInk16); box-shadow: 0 10px 28px rgba(0,0,0,.35); }
-
 @media (max-width:460px){
   .pkgChip{ font-size:12px; padding:6px 9px; max-width: 220px; }
 }
 
-/* Bookmarks list */
 .bmBook{ margin: 0 18px 18px 18px; }
-.bmHead{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  padding: 10px 0 6px 0;
-}
+.bmHead{ display:flex; align-items:center; gap:14px; padding: 10px 0 6px 0; }
 .bmCover{ width:56px; height:72px; border-radius:16px; overflow:hidden; background:#ddd; }
 .bmCover img{ width:100%; height:100%; object-fit:cover; display:block; }
 .bmTitle{ font-size:22px; font-weight:950; margin:0; line-height:1.15; }
 .bmItems{ display:flex; flex-direction:column; gap:10px; padding: 6px 0 8px 0; }
 .bmItem{
-  display:flex;
-  align-items:flex-start;
-  gap:12px;
-  padding: 12px 14px;
-  border-radius: 18px;
-  background: rgba(255,255,255,.55);
-  border: 1px solid rgba(0,0,0,.06);
+  display:flex; align-items:flex-start; gap:12px;
+  padding: 12px 14px; border-radius: 18px;
+  background: rgba(255,255,255,.55); border: 1px solid rgba(0,0,0,.06);
 }
 .bmMain{ flex:1; min-width:0; }
 .bmLabel{ font-size:13px; font-weight:900; color: rgba(0,0,0,.45); margin:0 0 6px 0; }
@@ -871,51 +862,33 @@ body{ background: var(--appBg); }
 .bmBtn{ border:none; background: rgba(0,0,0,.06); width:44px; height:44px; border-radius:16px; cursor:pointer; font-weight:950; }
 .bmBtn.primary{ background:#000; color:#fff; }
 
-.detailsWrap{
-  padding: 18px;
-}
-.detailsTop{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding: 18px 18px 0 18px;
-}
+.detailsWrap{ padding: 18px; }
+.detailsTop{ display:flex; align-items:center; justify-content:space-between; padding: 18px 18px 0 18px; }
 .iconBtn{
-  border:none;
-  background: rgba(0,0,0,.06);
+  border:none; background: rgba(0,0,0,.06);
   width:44px;height:44px;border-radius:16px;
   display:inline-flex;align-items:center;justify-content:center;
-  cursor:pointer;
-  box-shadow:none;
-  font-weight:950;
-  color: rgba(0,0,0,.75);
+  cursor:pointer; box-shadow:none; font-weight:950; color: rgba(0,0,0,.75);
 }
 .detailsCover{
   width: 66vw; max-width: 320px; margin: 10px auto 16px auto;
-  border-radius: 26px; overflow:hidden; box-shadow:0 20px 44px rgba(0,0,0,.22);
-  background:#ddd;
+  border-radius: 26px; overflow:hidden; box-shadow:0 20px 44px rgba(0,0,0,.22); background:#ddd;
 }
 .detailsCover img{ width:100%; height:auto; display:block; }
 .detailsTitle{ font-size:44px; font-weight:950; text-align:center; margin: 8px 0 6px 0; letter-spacing:-.02em;}
 .detailsMeta{ text-align:center; color: rgba(0,0,0,.45); font-weight:800; margin:0 0 14px 0; font-size:18px;}
 .detailsDesc{
-  background: rgba(255,255,255,.55);
-  white-space: pre-line;
+  background: rgba(255,255,255,.55); white-space: pre-line;
   border-radius: 18px; padding: 14px;
-  color: rgba(0,0,0,.55); font-weight:700; line-height:1.35;
-  border:1px solid rgba(0,0,0,.06);
+  color: rgba(0,0,0,.55); font-weight:700; line-height:1.35; border:1px solid rgba(0,0,0,.06);
 }
 .formCard{
-  margin-top:14px;
-  background: rgba(255,255,255,.55);
-  border-radius: var(--appRadius);
-  border:1px solid rgba(0,0,0,.06);
-  overflow:hidden;
+  margin-top:14px; background: rgba(255,255,255,.55);
+  border-radius: var(--appRadius); border:1px solid rgba(0,0,0,.06); overflow:hidden;
 }
 .formRow{
   display:flex; align-items:center; justify-content:space-between;
-  padding: 16px 16px;
-  border-top: 1px solid rgba(0,0,0,.06);
+  padding: 16px 16px; border-top: 1px solid rgba(0,0,0,.06);
 }
 .formRow:first-child{ border-top:none; }
 .formRow .label{ font-size:20px; font-weight:950; white-space:normal; line-height:1.05; flex:0 0 150px; max-width:150px; }
@@ -924,142 +897,69 @@ body{ background: var(--appBg); }
   padding: 10px 14px; font-weight:900; cursor:pointer;
   display:flex; align-items:center; gap:10px;
   box-shadow:0 10px 20px rgba(0,0,0,.08);
-
-  position:relative;
-  overflow:hidden;
+  position:relative; overflow:hidden;
 }
-/* unify dropdown pill widths */
 .formCard .pillBtn{ justify-content:center; width: clamp(240px, 28vw, 340px); }
-
-
 .pillBtn .selOverlay{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  opacity:0;
-  cursor:pointer;
-  -webkit-appearance:none;
-  appearance:none;
-  border:0;
-  background:transparent;
+  position:absolute; inset:0; width:100%; height:100%;
+  opacity:0; cursor:pointer; -webkit-appearance:none; appearance:none; border:0; background:transparent;
 }
-
-.bigActions{
-  display:flex; gap:14px; margin-top: 14px;
-}
+.bigActions{ display:flex; gap:14px; margin-top: 14px; }
 .bigBtn{
   flex:1; border:none; border-radius: 22px; padding: 18px 16px;
   font-size:22px; font-weight:950; cursor:pointer;
   background: linear-gradient(135deg, rgba(30,136,229,.85), rgba(42,167,255,.95));
-  color:#fff;
-  display:flex; align-items:center; justify-content:center; gap:10px;
+  color:#fff; display:flex; align-items:center; justify-content:center; gap:10px;
 }
-.bigBtn.secondary{
-  background: linear-gradient(135deg, rgba(30,136,229,.55), rgba(42,167,255,.75));
-}
+.bigBtn.secondary{ background: linear-gradient(135deg, rgba(30,136,229,.55), rgba(42,167,255,.75)); }
 @media (min-width: 900px), (orientation: landscape) and (min-width: 720px){
   .detailsGrid{ display:grid; grid-template-columns: 360px 1fr; gap: 22px; align-items:start; }
   .detailsCover{ width:100%; max-width:none; margin: 0; }
   .detailsTitle, .detailsMeta{ text-align:left; }
 }
-  /* Chapter headings (applies across all languages) */
   .listenLine.chapterLine .para{font-weight:950;letter-spacing:.2px;}
   .paraLine.chapterLine .line{font-weight:900;letter-spacing:.2px;}
 
-/* Continue Reading: 3-line layout */
 .cardWide .meta1{ font-weight:900; opacity:.65; margin-top:6px; }
 .cardWide .meta2{ font-weight:800; opacity:.85; margin-top:6px; }
-
-/* Details: 2 meta lines under title */
 .detailsMeta1{ color: var(--muted); font-weight:800; margin-top:8px; }
 .detailsMeta2{ color: var(--muted); font-weight:800; margin-top:6px; }
 
-/* My Library chips: keep single line */
 .bookProgressChips, .progressChipsRow, .progress-chips{
-  display:flex;
-  gap:12px;
-  flex-wrap:nowrap;
-  overflow-x:auto;
-  overflow-y:hidden;
-  white-space:nowrap;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
+  display:flex; gap:12px; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden;
+  white-space:nowrap; -webkit-overflow-scrolling:touch; scrollbar-width:none;
 }
 .bookProgressChips::-webkit-scrollbar, .progressChipsRow::-webkit-scrollbar, .progress-chips::-webkit-scrollbar{ display:none; }
 .progressChip, .progress-chip{ flex:0 0 auto; white-space:nowrap; }
 
-@media (max-width: 520px){
-  .formRow .label{ flex-basis: 150px; font-size:18px; }
-}
+@media (max-width: 520px){ .formRow .label{ flex-basis: 150px; font-size:18px; } }
 
 .pillBtn{ outline: none; }
 .pillBtn:focus-within{ box-shadow:0 0 0 3px rgba(30,136,229,.18), 0 10px 20px rgba(0,0,0,.08); border:1px solid rgba(30,136,229,.25); }
 
-
-/* ===== Bookmarks sheet ===== */
 .bmSheetWrap{
-  position:fixed; inset:0;
-  background: rgba(0,0,0,0.20);
-  display:flex; align-items:flex-end; justify-content:center;
-  padding: 18px;
-  z-index: 9999;
+  position:fixed; inset:0; background: rgba(0,0,0,0.20);
+  display:flex; align-items:flex-end; justify-content:center; padding: 18px; z-index: 9999;
 }
-.bmSheet{
-  width:min(560px, 100%);
-  background: var(--card);
-  border-radius: 24px;
-  box-shadow: 0 18px 60px rgba(0,0,0,0.18);
-  overflow:hidden;
-}
-.bmSheetTop{
-  display:flex; align-items:center; justify-content:space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--line);
-}
-.bmSheetTitle{
-  font-weight: 800;
-  font-size: 18px;
-  white-space: nowrap;
-  overflow:hidden;
-  text-overflow: ellipsis;
-  max-width: 70%;
-}
+.bmSheet{ width:min(560px, 100%); background: var(--card); border-radius: 24px; box-shadow: 0 18px 60px rgba(0,0,0,0.18); overflow:hidden; }
+.bmSheetTop{ display:flex; align-items:center; justify-content:space-between; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.bmSheetTitle{ font-weight: 800; font-size: 18px; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; max-width: 70%; }
 .bmSheetBtns{ display:flex; gap:8px; }
-.bmSheetBtn{
-  border: none;
-  background: rgba(0,0,0,0.06);
-  border-radius: 14px;
-  padding: 8px 10px;
-  font-weight: 800;
-  cursor:pointer;
-}
+.bmSheetBtn{ border: none; background: rgba(0,0,0,0.06); border-radius: 14px; padding: 8px 10px; font-weight: 800; cursor:pointer; }
 [data-theme="night"] .bmSheetBtn{ background: rgba(255,255,255,0.10); }
 .bmSheetList{ max-height: min(45vh, 340px); overflow:auto; padding: 10px 10px 14px 10px; }
 
 .bmGroupHeader{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  padding: 10px 12px;
-  margin: 4px 4px 8px 4px;
-  border-radius: 16px;
-  background: rgba(0,0,0,0.04);
-  font-weight: 850;
-  color: rgba(0,0,0,0.70);
-  cursor:pointer;
-  user-select:none;
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding: 10px 12px; margin: 4px 4px 8px 4px; border-radius: 16px;
+  background: rgba(0,0,0,0.04); font-weight: 850; color: rgba(0,0,0,0.70);
+  cursor:pointer; user-select:none;
 }
 .bmGroupHeader:hover{ background: rgba(0,0,0,0.06); }
 [data-theme="night"] .bmGroupHeader{ background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.82); }
 [data-theme="night"] .bmGroupHeader:hover{ background: rgba(255,255,255,0.09); }
 .bmGroupHeader .hint{ font-weight:900; opacity:.55; }
-.bmSheetItem{
-  display:flex; gap:10px; align-items:flex-start;
-  padding: 10px;
-  border-radius: 16px;
-}
+.bmSheetItem{ display:flex; gap:10px; align-items:flex-start; padding: 10px; border-radius: 16px; }
 .bmSheetItem:hover{ background: color-mix(in srgb, var(--text) 4%, transparent); }
 [data-theme="night"] .bmSheetItem:hover{ background: rgba(255,255,255,0.06); }
 .bmSheetMain{ flex:1; min-width:0; }
@@ -1069,63 +969,25 @@ body{ background: var(--appBg); }
 .bmSheetRaw{ font-weight:800; color: rgba(0,0,0,0.85); white-space: normal; overflow: visible; word-break: break-word; line-height:1.25; margin:0 0 6px 0; }
 [data-theme="night"] .bmSheetRaw{ color: rgba(255,255,255,0.92); }
 
-/* Title row in Bookmarks tab (Back button inline with title) */
 .bmTitleRow{ display:flex; align-items:center; gap:10px; }
 .bmSheetActions{ display:flex; gap:8px; padding-top: 2px; }
 .bmEmpty{ padding: 14px; color: rgba(0,0,0,0.55); font-weight: 700; }
 [data-theme="night"] .bmEmpty{ color: rgba(255,255,255,0.70); }
 
-.backToBookBtn{
-  border:none;
-  background: rgba(0,0,0,0.06);
-  border-radius: 16px;
-  padding: 10px 12px;
-  font-weight: 800;
-  cursor:pointer;
-}
+.backToBookBtn{ border:none; background: rgba(0,0,0,0.06); border-radius: 16px; padding: 10px 12px; font-weight: 800; cursor:pointer; }
 [data-theme="night"] .backToBookBtn{ background: rgba(255,255,255,0.10); color: var(--text); }
 
-
-/* Back to book mini button (Bookmarks tab) */
-.bmBackMini{
-  border:none;
-  background: rgba(0,0,0,0.06);
-  border-radius: 14px;
-  padding: 8px 10px;
-  font-weight: 800;
-  cursor:pointer;
-  margin-left: 10px;
-}
+.bmBackMini{ border:none; background: rgba(0,0,0,0.06); border-radius: 14px; padding: 8px 10px; font-weight: 800; cursor:pointer; margin-left: 10px; }
 [data-theme="night"] .bmBackMini{ background: rgba(255,255,255,0.10); color: var(--text); }
-
-
-.bmBackMini.inline{
-  padding: 6px 10px;
-  border-radius: 12px;
-  vertical-align: middle;
-}
-.bmSheetTr{
-  margin-top: 6px;
-  color: rgba(0,0,0,0.55);
-  font-weight: 700;
-  line-height: 1.25;
-}
+.bmBackMini.inline{ padding: 6px 10px; border-radius: 12px; vertical-align: middle; }
+.bmSheetTr{ margin-top: 6px; color: rgba(0,0,0,0.55); font-weight: 700; line-height: 1.25; }
 [data-theme="night"] .bmSheetTr{ color: rgba(255,255,255,0.70); }
-/* Bookmarks grouping header */
-.bmGroupHdr{
-  cursor: pointer;
-  margin: 10px 0 6px 0;
-  padding: 6px 10px;
-  border-radius: 14px;
-  background: rgba(0,0,0,0.04);
-  color: rgba(0,0,0,0.55);
-  font-weight: 800;
-  font-size: 13px;
-  display:flex;
-  gap:8px;
-  align-items:center;
-}
 
+.bmGroupHdr{
+  cursor: pointer; margin: 10px 0 6px 0; padding: 6px 10px; border-radius: 14px;
+  background: rgba(0,0,0,0.04); color: rgba(0,0,0,0.55); font-weight: 800; font-size: 13px;
+  display:flex; gap:8px; align-items:center;
+}
 .bmGroupHdr:hover{ background: rgba(0,0,0,0.06); }
 [data-theme="night"] .bmGroupHdr{ background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.70); }
 [data-theme="night"] .bmGroupHdr:hover{ background: rgba(255,255,255,0.09); }
@@ -1133,52 +995,25 @@ body{ background: var(--appBg); }
 [data-theme="night"] .bmSheetWrap{ background: rgba(0,0,0,0.42); }
 [data-theme="night"] .bmSheet{ box-shadow: 0 18px 60px rgba(0,0,0,0.45); }
 
-
-/* BiReader line action button (reuse lineCardBtn style) */
 .paper .paraLine{ position: relative; padding-right: 48px; }
 .paper .paraLine .lineCardBtn{ position: absolute; right: 6px; top: 6px; }
 
-
-/* ===== Bookmark marks (more visible) ===== */
-
-/* Line mark: a tiny "tab" attached to the line action button (more visible, never overlaps text) */
 .bmLineMark{position:relative;}
 .bmLineMark::after{ display:none; }
 .bmLineMark .lineCardBtn{ position:relative; }
 .bmLineMark .lineCardBtn::after{
-  content:"";
-  position:absolute;
-  left:50%;
-  bottom:4px;
-  width:12px;
-  height:5px;
-  border-radius:999px;
-  transform:translateX(-50%);
-  background:rgba(17,24,39,.30);
-  box-shadow:0 0 0 1px rgba(17,24,39,.14);
-  pointer-events:none;
+  content:""; position:absolute; left:50%; bottom:4px;
+  width:12px; height:5px; border-radius:999px; transform:translateX(-50%);
+  background:rgba(17,24,39,.30); box-shadow:0 0 0 1px rgba(17,24,39,.14); pointer-events:none;
 }
-.night .bmLineMark .lineCardBtn::after{
-  background:rgba(255,255,255,.28);
-  box-shadow:0 0 0 1px rgba(255,255,255,.14);
-}
+.night .bmLineMark .lineCardBtn::after{ background:rgba(255,255,255,.28); box-shadow:0 0 0 1px rgba(255,255,255,.14); }
 
 .bmWordMark{position:relative;}
 .bmWordMark::after{
-  content:"";
-  position:absolute;
-  right:-2px;
-  top:-3px;
-  width:7px;
-  height:7px;
-  border-radius:999px;
-  background:rgba(17,24,39,.38);
-  box-shadow:0 0 0 1px rgba(17,24,39,.16);
-  pointer-events:none;
+  content:""; position:absolute; right:-2px; top:-3px;
+  width:7px; height:7px; border-radius:999px;
+  background:rgba(17,24,39,.38); box-shadow:0 0 0 1px rgba(17,24,39,.16); pointer-events:none;
 }
-.night .bmWordMark::after{
-  background:rgba(255,255,255,.32);
-  box-shadow:0 0 0 1px rgba(255,255,255,.16);
-}
+.night .bmWordMark::after{ background:rgba(255,255,255,.32); box-shadow:0 0 0 1px rgba(255,255,255,.16); }
 
 .pkgChip .sep{opacity:.5; font-weight:900;}
