@@ -1,37 +1,33 @@
 /* ═══════════════════════════════════════════════════════════════
    views/reader.js  —  Экраны «Listen» (reader) и «Read» (bireader)
-   Зависимости (глобальные из app.js):
-     state, app, escapeHtml(), getBookTitle(), getChapters(),
-     setTheme(), syncSettingsUI(), applyHighlightTheme(),
-     hideTranslation(), initReaderLineTranslations(),
-     initLineTranslations(), refreshBiReaderTranslations(),
-     buildTokenMap(), buildParaWordMap(), buildLineMap(),
-     applyBookmarkMarks(), setCursorIndex(), clearActivePara(),
-     setActivePara(), clearActiveLineUI(), setActiveLineUI(),
-     scrollToPara(), clearAllWordHighlights(), setActiveParaWord(),
-     goCatalog(), go(), stopReading(), openChapters(), openSettings(),
-     openDev(), showBookBookmarksSheet(), renderParagraph(),
-     effectiveTotalLines(), openaiAudio, updateProgressUI()
    ═══════════════════════════════════════════════════════════════ */
 
-/* Общий HTML топбара — одинаковый для обоих режимов */
+const _SVG = {
+  home: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>`,
+  chapters: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 10h10M4 14h12M4 18h8"/></svg>`,
+  bookmark: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a1 1 0 0 1 1 1v17l-8-4-8 4V4a1 1 0 0 1 1-1z"/></svg>`,
+  settings: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+  dev: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>`,
+};
+
+/* Общий HTML топбара */
 function _readerTopBar(title){
   return `
     <div class="readTopBar">
       <div class="rtLeft">
-        <button class="topIcon" id="btnBooks" aria-label="Menu" title="Menu">≡</button>
+        <button class="topIcon" id="btnBooks" aria-label="Menu" title="Головне меню">${_SVG.home}</button>
       </div>
       <div class="rtCenter">${escapeHtml(title || "")}</div>
       <div class="rtRight">
-        <button class="topIcon" id="topChapters" title="Chapters">≡</button>
-        <button class="topIcon" id="topBookmarks" title="Bookmarks">🔖</button>
-        <button class="topIcon" id="topDev" title="Admin">⋯</button>
-        <button class="topIcon" id="topSettings" title="Settings">⚙︎</button>
+        <button class="topIcon" id="topChapters" title="Розділи">${_SVG.chapters}</button>
+        <button class="topIcon" id="topBookmarks" title="Закладки">${_SVG.bookmark}</button>
+        <button class="topIcon" id="topDev" title="Admin">${_SVG.dev}</button>
+        <button class="topIcon" id="topSettings" title="Налаштування">${_SVG.settings}</button>
       </div>
     </div>`;
 }
 
-/* Общий JS для кнопок топбара — вызывать после innerHTML */
+/* Общий JS для кнопок топбара */
 function _bindTopBar(){
   const __books = document.getElementById("btnBooks");
   if(__books) __books.onclick = goCatalog;
@@ -108,7 +104,6 @@ function renderReader(){
     </div>
   `;
 
-  document.getElementById("readerBack") && (document.getElementById("readerBack").onclick = ()=>{ try{ stopReading(); }catch(e){} go({name:"details", bookId: (state.book?.id || state.route?.bookId || state.route?.id)},{push:false}); });
   _bindTopBar();
 
   document.documentElement.style.setProperty("--fontSize", state.reading.fontSize + "px");
