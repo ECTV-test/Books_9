@@ -3496,7 +3496,7 @@ function initLineTranslations(){
         transEl.textContent = "Переклад…";
         transEl.classList.add("loading");
 
-        const tr = await TranslateService.translate(lineEl.dataset.raw || "");
+        const tr = await TranslateService.translate(lineEl.dataset.raw || "", state.reading.sourceLang, state.reading.targetLang);
         transEl.classList.remove("loading");
 
         // If throttled placeholder returned, re-queue later
@@ -3581,7 +3581,7 @@ function initReaderLineTranslations({silent=false}={}){
         const raw = (lineEl.dataset.raw || lineEl.textContent || "").trim();
         if(!raw){ transEl.textContent = ""; transEl.dataset.done="1"; continue; }
 
-        const tr = await TranslateService.translate(raw);
+        const tr = await TranslateService.translate(raw, state.reading.sourceLang, state.reading.targetLang);
         transEl.textContent = tr || "—";
         transEl.dataset.done = "1";
       }
@@ -4103,7 +4103,7 @@ try{ clearAllWordHighlights(); }catch(e){}
       let speakText = line;
       if(speakTr){
         try{
-          const tr = await TranslateService.translate(line);
+          const tr = await TranslateService.translate(line, state.reading.sourceLang, state.reading.targetLang);
           if(tr && tr !== "—" && tr !== "…") speakText = tr;
         }catch(e){}
       }
@@ -4127,7 +4127,7 @@ const playNext = async ()=>{
     let speakText = lineText;
 
     if(speakTr){
-      const tr = await TranslateService.translate(lineText);
+      const tr = await TranslateService.translate(lineText, state.reading.sourceLang, state.reading.targetLang);
       if(tr && tr !== "—" && tr !== "…") speakText = tr;
     }
 
