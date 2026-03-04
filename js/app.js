@@ -195,9 +195,9 @@ function applyUiLang(){
     const st = document.querySelector("#settings .setTitle");
     if(st) st.textContent = I18n.t("settings_title");
     const tr = document.getElementById("setTabRead");
-    if(tr) tr.textContent = I18n.t("settings_text");
+    if(tr) tr.textContent = I18n.t("settings_tab_text");
     const tl = document.getElementById("setTabListen");
-    if(tl) tl.textContent = I18n.t("settings_audio");
+    if(tl) tl.textContent = I18n.t("settings_tab_audio");
   }catch(e){}
 
   // UI language row
@@ -341,7 +341,7 @@ function applyUiLang(){
 
     const hint = document.querySelector("#devPanel .hint");
     if(hint){
-      hint.innerHTML = I18n.t("dev_hint_1") + "<br/><br/>" + I18n.t("dev_hint_2");
+      hint.innerHTML = I18n.t("dev_hint_libre") + "<br/><br/>" + I18n.t("dev_hint_worker");
     }
   }catch(e){}
 
