@@ -472,6 +472,7 @@ function addBookmarkFromPopover(){
     if(existing && existing.id){
       BookmarkManager.remove(bookId, existing.id);
       try{ updatePopoverBookmarkButton(); }catch(e){}
+      try{ applyBookmarkMarks(); }catch(e){}
       // refresh bookmarks tab if visible
       try{ if(state.route?.name === "library" && state.ui?.libraryTab === "bookmarks"){ renderLibrary(); } }catch(e){}
       return;
@@ -480,6 +481,7 @@ function addBookmarkFromPopover(){
     BookmarkManager.add({bookId, paraIdx: (Number.isFinite(paraIdx)?Number(paraIdx):0), raw, tr,
       lineIndex: (Number.isFinite(lineIndex)?Number(lineIndex):0),
       level, sourceLang, targetLang, mode: __mode, wordIndex: __wi, wordKey: __wk});
+    try{ applyBookmarkMarks(); }catch(e){}
 
     try{ updatePopoverBookmarkButton(); }catch(e){}
 
@@ -1324,6 +1326,7 @@ function addBookmarkHere(bookId){
     const mode = _bmGetMode();
     const raw = (state.book?.text && state.book.text[lineIndex]) ? String(state.book.text[lineIndex]) : "";
     BookmarkManager.add({bookId, paraIdx: lineIndex, raw, tr:"", lineIndex, level, sourceLang: src, targetLang: trg, mode});
+    try{ applyBookmarkMarks(); }catch(e){}
   }catch(e){}
 }
 function _bmFind(bookId, entryId){
