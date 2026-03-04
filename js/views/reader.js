@@ -22,22 +22,18 @@ function renderReader(){
   syncSettingsUI();
   applyHighlightTheme();
 
-  // Use first heading-like line as screen title if present
-  const firstHeading = (b.text || []).find(t=>/^Chapter\s\d+:/i.test(String(t||"")) || /^The\s+/i.test(String(t||""))) || (b.title_en || "");
   const lines = (b.text || []);
-
-  // chapter headings (start indices) for consistent styling across all languages
   const chapterStarts = new Set((getChapters()||[]).map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
 
   app.innerHTML = `
     <div class="listenStage">
-      <div class="listenTop">
-        <div class="ltLeft">
+      <div class="readTopBar">
+        <div class="rtLeft">
           <button class="chevBtn" id="btnBooks" aria-label="Books">≡</button>
           <button class="chevBtn" id="readerBack" aria-label="Back">‹</button>
         </div>
-        <div class="ltCenter">${escapeHtml(b.title_en || "Book")}</div>
-        <div class="ltRight">
+        <div class="rtCenter">${escapeHtml(b.title_en || "Book")}</div>
+        <div class="rtRight">
           <button class="topIcon" id="topChapters" title="Chapters">≡</button>
           <button class="topIcon" id="topBookmarks" title="Bookmarks">🔖</button>
           <button class="topIcon" id="topDev" title="Admin">⋯</button>
@@ -45,13 +41,10 @@ function renderReader(){
         </div>
       </div>
 
-      <div class="listenTitle">${escapeHtml(String(firstHeading || ""))}</div>
-
       <div class="listenList">
         ${lines.map((p, i)=>{
           const raw = String(p ?? "");
           const isCh = chapterStarts.has(i);
-          // keep empty lines as spacer
           if(raw === ""){
             return `<div style="height:10px"></div>`;
           }
@@ -75,31 +68,13 @@ function renderReader(){
   if(__books) __books.onclick = goCatalog;
 
   const __tc = document.getElementById("topChapters");
-  if(__tc){
-    __tc.addEventListener("click", (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      try{ openChapters(); }catch(err){}
-    });
-  }
+  if(__tc) __tc.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); try{ openChapters(); }catch(err){} });
 
   const __ts = document.getElementById("topSettings");
-  if(__ts){
-    __ts.addEventListener("click", (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      try{ openSettings(); }catch(err){}
-    });
-  }
+  if(__ts) __ts.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); try{ openSettings(); }catch(err){} });
 
   const __td = document.getElementById("topDev");
-  if(__td){
-    __td.addEventListener("click", (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      try{ openDev(); }catch(err){}
-    });
-  }
+  if(__td) __td.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); try{ openDev(); }catch(err){} });
 
   const __tbm = document.getElementById("topBookmarks");
   if(__tbm){
@@ -127,7 +102,6 @@ function renderReader(){
   buildParaWordMap();
   try{ applyBookmarkMarks(); }catch(e){}
 
-  // If we navigated here from a bookmark, jump to that paragraph
   try{
     if(state.route && state.route.startPara != null){
       const sp = Math.max(0, Number(state.route.startPara||0));
@@ -157,10 +131,8 @@ function renderReader(){
     }
   }catch(e){}
 
-  // We do not show inline line translations in Listen UI; but we keep them cached.
   initReaderLineTranslations({silent:true});
 
-  // Line card button
   [...document.querySelectorAll(".lineCardBtn")].forEach(btn=>{
     btn.addEventListener("click",(e)=>{
       e.stopPropagation();
@@ -169,7 +141,6 @@ function renderReader(){
     });
   });
 
-  // close popover on outside click
   document.addEventListener("click", onDocClick, {capture:true});
   updateProgressUI();
 }
@@ -237,32 +208,13 @@ function renderBiReader(){
   if(__books) __books.onclick = goCatalog;
 
   const __tc = document.getElementById("topChapters");
-  if(__tc){
-    __tc.addEventListener("click", (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      try{ openChapters(); }catch(err){}
-    });
-  }
+  if(__tc) __tc.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); try{ openChapters(); }catch(err){} });
 
-  // Stop propagation so global outside-click handler doesn't close immediately.
   const __ts = document.getElementById("topSettings");
-  if(__ts){
-    __ts.addEventListener("click", (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      try{ openSettings(); }catch(err){}
-    });
-  }
+  if(__ts) __ts.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); try{ openSettings(); }catch(err){} });
 
   const __td = document.getElementById("topDev");
-  if(__td){
-    __td.addEventListener("click", (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      try{ openDev(); }catch(err){}
-    });
-  }
+  if(__td) __td.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); try{ openDev(); }catch(err){} });
 
   const __tbm = document.getElementById("topBookmarks");
   if(__tbm){
@@ -290,8 +242,6 @@ function renderBiReader(){
   document.body.classList.toggle("swapLang", !!state.reading.swapLang);
   initLineTranslations();
 
-  // Safety: when returning to BiReader, Safari can keep empty translations with done=1.
-  // If that happens, force a refresh so translations render again without reloading the page.
   if(state.reading.lineTranslation){
     const needsRefresh = [...document.querySelectorAll('.paraTrans[data-for]')]
       .some(el => (el.dataset.done === '1' && (!el.textContent || !el.textContent.trim())));
@@ -300,7 +250,6 @@ function renderBiReader(){
     }
   }
 
-  // line actions (translation/bookmark via popover)
   try{
     [...document.querySelectorAll('[data-para-btn]')].forEach(btn=>{
       btn.addEventListener('click',(e)=>{

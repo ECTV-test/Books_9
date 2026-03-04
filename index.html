@@ -91,11 +91,11 @@
         </div>
       </div>
 
-      <!-- Фон сторінки читання -->
-      <div class="row">
+      <!-- Фон сторінки читання — скрыть в ночной теме через CSS -->
+      <div class="row pageBgRow">
         <div>
-          <div><b>Фон сторінки</b></div>
-          <small>режим «Читати»</small>
+          <div><b id="pageBgLabel">Фон сторінки</b></div>
+          <small id="pageBgHint"></small>
         </div>
         <div class="pageBgSeg">
           <button class="pageBgBtn active" data-bg="auto"  title="Авто (тема)">A</button>
@@ -301,7 +301,6 @@
   <script src="js/i18n.js?v=2"></script>
   <script src="js/config.js?v=2"></script>
   <script src="js/core.js?v=2"></script>
-  <!-- store.js removed: never connected to app.js, Store.* never called -->
   <script src="js/progress.js?v=1"></script>
   <script src="js/bookmarks.js?v=1"></script>
   <script src="js/services/books.js?v=2"></script>
@@ -310,7 +309,7 @@
   <script src="js/views/catalog.js?v=1"></script>
   <script src="js/views/library.js?v=1"></script>
   <script src="js/views/details.js?v=1"></script>
-  <script src="js/views/reader.js?v=1"></script>
+  <script src="js/views/reader.js?v=2"></script>
   <script src="js/app.js?v=7" defer></script>
 
 </body>
