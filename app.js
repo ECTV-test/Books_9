@@ -1,1 +1,1 @@
-placeholder - will be replaced
+APPJS_PLACEHOLDER
