@@ -215,7 +215,7 @@
       margin: -14px -14px 12px;
     }
     .readTopBar .rtLeft,
-    .readTopBar .rtRight{display:flex;align-items:center;gap:10px;min-width:0}
+    .readTopBar .rtRight{display:flex;align-items:center;gap:10px;flex:0 0 auto}
     .readTopBar .rtCenter{
       flex:1;min-width:0;
       text-align:center;
