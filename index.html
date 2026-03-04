@@ -6,6 +6,44 @@
   <title>Book Reader Prototype</title>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/theme.css">
+  <style>
+    /* Топбар — одинаковый стиль для обоих режимов */
+    .readTopBar {
+      left: 0; right: 0;
+      box-sizing: border-box;
+    }
+    .readTopBar .topIcon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      border: none;
+      background: rgba(0,0,0,.06);
+      color: var(--text);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    [data-theme="night"] .readTopBar .topIcon {
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+    }
+    .readTopBar .rtLeft, .readTopBar .rtRight {
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* Скрыть кнопки фона в тёмной теме */
+    [data-theme="night"] .pageBgRow { display: none !important; }
+
+    /* Listen режим — та же бумажная подложка что и Read */
+    .listenPaper {
+      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
+    }
+    .listenPaper .listenList {
+      padding: 0;
+    }
+    .listenPaper .listenLine .para {
+      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
+    }
+  </style>
 </head>
 
 <body data-theme="light">
@@ -273,7 +311,6 @@
         <div class="bar"><div id="pFill"></div></div>
       </div>
       <div class="controls">
-        <button class="iconBtn" id="btnChapters" title="Chapters">≡</button>
         <button class="iconBtn" id="btnBack" title="Back">←</button>
         <button class="iconBtn" id="btnStart" title="To start">⟲</button>
         <button class="playBtn" id="btnPlay" title="Play/Pause">▶</button>
@@ -309,7 +346,7 @@
   <script src="js/views/catalog.js?v=1"></script>
   <script src="js/views/library.js?v=1"></script>
   <script src="js/views/details.js?v=1"></script>
-  <script src="js/views/reader.js?v=2"></script>
+  <script src="js/views/reader.js?v=3"></script>
   <script src="js/app.js?v=7" defer></script>
 
 </body>
