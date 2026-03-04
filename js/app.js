@@ -360,6 +360,7 @@ document.addEventListener("change", function(ev){
     const tEl = ev.target;
     if(tEl && tEl.id === "uiLangSelect"){
       I18n.setUiLang(tEl.value);
+      applyUiLang();
     }
   }catch(e){}
 });
