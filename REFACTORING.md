@@ -11,8 +11,8 @@
 
 | До | После | Разница |
 |---|---|---|
-| 6069 строк | ~4570 строк | **−1500 строк (−25%)** |
-| 1 файл | 7 модулей | логическая структура |
+| 6069 строк | ~3793 строк | **−2276 строк (−37%)** |
+| 1 файл | 10 модулей | логическая структура |
 
 ---
 
@@ -66,6 +66,28 @@ UI-функции (`saveReadingProgress`, `applyBookmarkMarks`) остались
 
 `state.bookCache` удалён — кэш теперь в `BooksService`.
 
+### ✅ Блок 6 — Рендеры экранов → `js/views/`
+
+Три экрана вынесены из app.js в отдельные файлы по принципу **один файл = один экран**:
+
+**`js/views/catalog.js`** (~217 строк)
+- `renderTopbar(title)` — шапка
+- `renderCatalog()` — главный экран каталога книг
+
+**`js/views/library.js`** (~393 строк)
+- `renderLibrary()` — экран «Моя библиотека» (прогресс, закладки)
+
+**`js/views/details.js`** (~196 строк)
+- `renderDetails()` — экран деталей книги (выбор языка, уровня, старт чтения)
+
+**Результат:** `-781 строка` из app.js (4574 → 3793)
+
+Функции `renderReader`, `renderBiReader`, `renderParagraph` остались в app.js — слишком много зависимостей на локальные переменные TTS-движка.
+
+**Также исправлено в этой сессии:**
+- **Баг-фикс topbar (Listen mode):** кнопки растягивались по краям → `.listenTop .ltLeft/.ltRight` получили `flex:0 0 auto`
+- **Баг-фикс смена языка интерфейса:** при смене языка в дропдауне UI не обновлялся → добавлен вызов `applyUiLang()` после `I18n.setUiLang()`
+
 ---
 
 ## Баги найдены и исправлены в процессе
@@ -76,6 +98,8 @@ UI-функции (`saveReadingProgress`, `applyBookmarkMarks`) остались
 | Переход из библиотеки попадал не на ту строку | `go()` не передавал `level`/`sourceLang` в `BooksService.loadBook` | `route.level` и `route.sourceLang` теперь приоритетны |
 | Главная показывала старый прогресс | `getPkgProgress` вызывался без `level`, мёртвые `typeof` guards | Убраны guards, добавлен level |
 | Индикатор уровня у плеера | Отсутствовал | Добавлен `_updatePlayerLevel()` |
+| Кнопки topbar в Listen mode растягивались | `flex` без `flex:0 0 auto` | Исправлен CSS `.listenTop` |
+| Смена языка UI не обновляла интерфейс | `applyUiLang()` не вызывался после смены | Добавлен вызов в обработчик `change` |
 
 ---
 
@@ -91,13 +115,17 @@ js/
   config.js         ← ✅ константы, URLs, языки, голоса (Config.*)
   core.js           ← DOM-free state прогресса (без изменений)
   store.js          ← глобальный UI state (без изменений)
-  progress.js       ← ✅ NEW: storage прогресса (ProgressManager.*)
-  bookmarks.js      ← ✅ NEW: storage закладок (BookmarkManager.*)
+  progress.js       ← ✅ storage прогресса (ProgressManager.*)
+  bookmarks.js      ← ✅ storage закладок (BookmarkManager.*)
   services/
-    books.js        ← ✅ обновлён: реальная логика загрузки книг (BooksService.*)
-    translate.js    ← ✅ обновлён: переводы (TranslateService.*)
+    books.js        ← ✅ загрузка книг (BooksService.*)
+    translate.js    ← ✅ переводы (TranslateService.*)
     tts.js          ← TTS озвучивание (без изменений)
-  app.js            ← UI, рендеры, навигация (4570 строк, было 6069)
+  views/
+    catalog.js      ← ✅ NEW: renderTopbar + renderCatalog (~217 строк)
+    library.js      ← ✅ NEW: renderLibrary (~393 строк)
+    details.js      ← ✅ NEW: renderDetails (~196 строк)
+  app.js            ← UI, рендеры читалки, навигация (3793 строк, было 6069)
 ```
 
 ---
@@ -105,26 +133,28 @@ js/
 ## Порядок подключения в index.html (важно!)
 
 ```html
-<script src="js/i18n.js?v=2"></script>          <!-- 1. i18n первым -->
-<script src="js/config.js?v=2"></script>         <!-- 2. Config -->
-<script src="js/core.js?v=2"></script>           <!-- 3. Core -->
-<script src="js/store.js?v=2"></script>          <!-- 4. Store -->
-<script src="js/progress.js?v=1"></script>       <!-- 5. ProgressManager -->
-<script src="js/bookmarks.js?v=1"></script>      <!-- 6. BookmarkManager -->
-<script src="js/services/books.js?v=2"></script>     <!-- 7. BooksService -->
-<script src="js/services/translate.js?v=2"></script> <!-- 8. TranslateService -->
-<script src="js/services/tts.js?v=2"></script>       <!-- 9. TtsService -->
-<script src="js/app.js?v=3" defer></script>          <!-- 10. App последним -->
+<script src="js/i18n.js?v=2"></script>
+<script src="js/config.js?v=2"></script>
+<script src="js/core.js?v=2"></script>
+<script src="js/store.js?v=2"></script>
+<script src="js/progress.js?v=1"></script>
+<script src="js/bookmarks.js?v=1"></script>
+<script src="js/services/books.js?v=2"></script>
+<script src="js/services/translate.js?v=2"></script>
+<script src="js/services/tts.js?v=2"></script>
+<script src="js/views/catalog.js?v=1"></script>
+<script src="js/views/library.js?v=1"></script>
+<script src="js/views/details.js?v=1"></script>
+<script src="js/app.js?v=5" defer></script>
 ```
 
 ---
 
 ## Что ещё планируется
 
-### Блок 6 — Рендеры (рассматривается)
-Функции `renderCatalog`, `renderDetails`, `renderReader`, `renderBiReader`, `renderLibrary` — можно вынести в `js/views/`.
-**Риск:** высокий, много зависимостей на локальные переменные.
-**Решение:** вынести только если нужно для React-миграции.
+### Блок 7 — renderReader / renderBiReader (высокий риск)
+Зависят на десятки локальных переменных TTS-движка (`openaiAudio`, `openaiLineIndex`, etc.).
+**Решение:** вынести только в рамках полной React-миграции, не раньше.
 
 ### Будущее
 - [ ] Серверный кэш аудио (Cloudflare R2 или KV)
@@ -137,6 +167,7 @@ js/
 ## Принципы рефакторинга
 
 1. **Сервисы = без DOM, без state** — только чистые функции + storage
-2. **UI остаётся в app.js** — `saveReadingProgress`, `applyBookmarkMarks`, все render*
-3. **Никакого изменения поведения** — каждый блок тестируется после переноса
-4. **Один баг за раз** — исправляем только что нашли, не чиним то что не сломано
+2. **Views = один файл = один экран** — глобальные функции, вызываемые из app.js
+3. **UI-движок остаётся в app.js** — TTS, playback, все локальные переменные
+4. **Никакого изменения поведения** — каждый блок тестируется после переноса
+5. **Один баг за раз** — исправляем только что нашли, не чиним то что не сломано
