@@ -1770,7 +1770,7 @@ function renderCatalog(){
 
     // Safe get last package for this book
     let last = null;
-    try{ last = (typeof getLastPkg === "function") ? ProgressManager.getLastPkg(cont.id) : null; }catch(e){ last = null; }
+    try{ last = ProgressManager.getLastPkg(cont.id); }catch(e){ last = null; }
 
     // Fallback label from current reading state (if any)
     const fallbackLabel = (() => {
@@ -1787,18 +1787,13 @@ function renderCatalog(){
       if(last.level) contLevelLabel = String(last.level);
       // Prefer formatted label (EN→UK (Listen))
       try{
-        if(typeof formatPkgLabel === "function"){
-          contShowLabel = Config.formatPkgLabel(last.sourceLang, last.targetLang, last.mode);
-        }
+        contShowLabel = Config.formatPkgLabel(last.sourceLang, last.targetLang, last.mode);
       }catch(e){}
 
-      // Prefer progress from pkg storage (level-aware if supported)
+      // Progress from pkg storage (level-aware)
       try{
-        if(typeof getPkgProgress === "function"){
-          let lp = null;
-          try{ lp = ProgressManager.getPkgProgress(cont.id, last.sourceLang, last.targetLang, last.level); }catch(e){ lp = ProgressManager.getPkgProgress(cont.id, last.sourceLang, last.targetLang); }
-          if(lp && typeof lp.progress === "number") contShowPct = Number(lp.progress||0);
-        }
+        let lp = ProgressManager.getPkgProgress(cont.id, last.sourceLang, last.targetLang, last.level||'original');
+        if(lp && typeof lp.progress === "number") contShowPct = Number(lp.progress||0);
       }catch(e){}
     }
 
