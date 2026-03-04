@@ -67,7 +67,6 @@ const state = {
   route: { name:"catalog", bookId:null },
   navStack: [],
   catalog: [],
-  bookCache: new Map(),
   book: null,
   dev: {
     enabled: true,       // set false to hide dev menu completely
@@ -1566,7 +1565,7 @@ function go(route, {push=true}={}){
   }
 if(route.name === "details"){
     stopReading({save:true});
-    loadBook(route.bookId, state.reading.sourceLang, (typeof core?.getState==="function" ? core.getState().level : (state.level||"original"))).then(book=>{
+    BooksService.loadBook(route.bookId, state.reading.sourceLang, (typeof core?.getState==="function" ? core.getState().level : (state.level||"original")), I18n.getUiLang(), FALLBACK_BOOKS, normalizeBookJson).then(book=>{
       state.book = book;
       _coreApplyBookMeta(book);
       renderDetails();
@@ -1575,7 +1574,7 @@ if(route.name === "details"){
   }
   if(route.name === "reader"){
     stopReading({save:true});
-    loadBook(route.bookId, state.reading.sourceLang, (typeof core?.getState==="function" ? core.getState().level : (state.level||"original"))).then(book=>{
+    BooksService.loadBook(route.bookId, state.reading.sourceLang, (typeof core?.getState==="function" ? core.getState().level : (state.level||"original")), I18n.getUiLang(), FALLBACK_BOOKS, normalizeBookJson).then(book=>{
       state.book = book;
       _coreApplyBookMeta(book);
       renderReader();
@@ -1618,7 +1617,7 @@ if(route.name === "details"){
 
   if(route.name === "bireader"){
     stopReading({save:true});
-    loadBook(route.bookId, state.reading.sourceLang, (typeof core?.getState==="function" ? core.getState().level : (state.level||"original"))).then(book=>{
+    BooksService.loadBook(route.bookId, state.reading.sourceLang, (typeof core?.getState==="function" ? core.getState().level : (state.level||"original")), I18n.getUiLang(), FALLBACK_BOOKS, normalizeBookJson).then(book=>{
       state.book = book;
       _coreApplyBookMeta(book);
       renderBiReader();
@@ -1681,141 +1680,6 @@ function updateModeSwitchUI(){
 /* ===========================
    Books loader (index.json + per-folder book.json) + fallback
 =========================== */
-async function loadCatalog(){
-  const fallbackCatalog = FALLBACK_BOOKS.map(b => normalizeCatalogItem({
-    id: b.id,
-    series: b.series,
-    title_ua: b.title_ua,
-    title_en: b.title_en,
-    level: b.level,
-    durationMin: b.durationMin,
-    cover: b.cover
-  }));
-
-  try{
-    const res = await fetch(Config.BOOKS_INDEX_URL, {cache:"no-store"});
-    if(!res.ok) throw new Error("index not ok");
-    const remoteRaw = await res.json();
-
-    const remote = (remoteRaw || []).map(normalizeCatalogItem);
-
-    const ids = new Set(remote.map(x=>x.id));
-    state.catalog = [...remote, ...fallbackCatalog.filter(x=>!ids.has(x.id))];
-  }catch(e){
-    state.catalog = fallbackCatalog;
-  }
-}
-
-function _normalizeLevel(lv){
-  lv = String(lv||"original").trim().toLowerCase();
-  if(lv === "orig") lv = "original";
-  if(lv === "a0") lv = "a1"; // defensive
-  if(["original","a1","a2","b1"].includes(lv)) return lv;
-  return "original";
-}
-
-async function loadBook(id, sourceLang, level){
-  const lang = String(sourceLang || "en").trim().toLowerCase();
-  const uiL = I18n.getUiLang();
-  const lv = _normalizeLevel(level || (typeof core?.getState==="function" ? core.getState().level : (state.level||"original")));
-  const cacheId = `${id}::${lang}::${uiL}::${lv}`;
-  if(state.bookCache.has(cacheId)) return state.bookCache.get(cacheId);
-
-  const basePath = `books/${encodeURIComponent(id)}`;
-  const remoteUrl = `${basePath}/book.json`;
-
-  try{
-    const res = await fetch(remoteUrl, {cache:"no-store"});
-    if(!res.ok) throw new Error("book not ok");
-    const raw = await res.json();
-
-    // If no "text" array provided, load plain text file.
-    // New structure (preferred): books/<id>/levels/<level>/book.<lang>.txt
-    // Fallbacks: levels/original -> legacy book.<lang>.txt -> book.txt
-    if(!raw.text){
-      const fallbackFile = raw.textFile || "book.txt";
-
-      async function fetchTextFile(relPath){
-        const r = await fetch(`${basePath}/${relPath}`, {cache:"no-store"});
-        if(!r.ok) return null;
-        let txt = await r.text();
-        txt = txt.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-        return txt;
-      }
-
-      const candidates = [];
-      // preferred: level folder
-      candidates.push(`levels/${lv}/book.${lang}.txt`);
-      if(lang !== "en") candidates.push(`levels/${lv}/book.en.txt`);
-      // fallback to original level
-      if(lv !== "original"){
-        candidates.push(`levels/original/book.${lang}.txt`);
-        if(lang !== "en") candidates.push(`levels/original/book.en.txt`);
-      }
-      // legacy
-      if(lang !== "en") candidates.push(`book.${lang}.txt`);
-      candidates.push(fallbackFile);
-
-      let txt = null;
-      for(const rel of candidates){
-        txt = await fetchTextFile(rel);
-        if(txt != null) break;
-      }
-      raw.text = txt ? txt.split("\n") : [];
-    }
-
-    // Chapters: prefer levels/<level>/chapters.json, then levels/original/chapters.json, then legacy/raw/auto.
-    try{
-      async function fetchChapters(relPath){
-        const r = await fetch(`${basePath}/${relPath}`, {cache:"no-store"});
-        if(!r.ok) return null;
-        return await r.json();
-      }
-      let ch = await fetchChapters(`levels/${lv}/chapters.json`);
-      if(ch==null && lv !== "original") ch = await fetchChapters(`levels/original/chapters.json`);
-      if(Array.isArray(ch) && ch.length){
-        raw.chapters = ch;
-      }
-    }catch(e){}
-
-
-    // Description as separate files (desc.<uiLang>.txt), optional.
-    // Tries desc.<uiLang>.txt -> desc.en.txt -> book.json description fields.
-    try{
-      const uiLang = I18n.getUiLang();
-      async function fetchDescFile(fileName){
-        const r = await fetch(`${basePath}/${fileName}`, {cache:"no-store"});
-        if(!r.ok) return null;
-        let txt = await r.text();
-        txt = txt.replace(/^\uFEFF/, "").replace(/\r\n/g,"\n").replace(/\r/g,"\n").trim();
-        return txt;
-      }
-      let descTxt = await fetchDescFile(`desc.${uiLang}.txt`);
-      if(descTxt==null) descTxt = await fetchDescFile(`desc.${uiLang==="uk"?"ua":uiLang}.txt`);
-      if(descTxt==null) descTxt = await fetchDescFile(`desc.en.txt`);
-      if(descTxt!=null){
-        raw.description_i18n = raw.description_i18n || {};
-        raw.description_i18n[uiLang] = descTxt;
-      }
-    }catch(e){}
-
-    const book = normalizeBookJson(raw, id);
-    book.sourceLang = lang;
-    book.levelVersion = lv;
-
-    state.bookCache.set(cacheId, book);
-    return book;
-  }catch(e){
-    const fb = FALLBACK_BOOKS.find(b=>b.id===id) || FALLBACK_BOOKS[0];
-    // keep fallback cached per lang key to prevent toggles from sticking to an older cached book
-    state.bookCache.set(cacheId, fb);
-    return fb;
-  }
-}
-
-/* ---------------------------
-   UI renderers
---------------------------- */
 function renderTopbar(title){
   return `
     <div class="topbar">
@@ -4692,5 +4556,5 @@ document.addEventListener("click", (e)=>{
   });
   targetLangSelect.value = state.reading.targetLang;
 
-  loadCatalog().then(()=>go({name:"catalog"}, {push:false}));
+  BooksService.loadCatalog(FALLBACK_BOOKS, normalizeCatalogItem).then(catalog=>{ state.catalog = catalog; go({name:"catalog"}, {push:false}); });
 })();
