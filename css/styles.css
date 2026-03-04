@@ -211,8 +211,8 @@
       top: 0;
       z-index: 20;
       background: var(--readerBg);
-      padding: 10px 14px;
-      margin: 0 -14px 12px;
+      padding: 10px 18px;
+      margin: -14px -14px 12px;
     }
     .readTopBar .rtLeft,
     .readTopBar .rtRight{display:flex;align-items:center;gap:10px;min-width:0}
@@ -316,17 +316,19 @@
       gap: 6px;
     }
 
-    /* ── Слова: убираем ободок-подчёркивание ── */
+    /* ── Слова-карточки: минимальный ободок, почти невидимый ── */
     .w{
-      display:inline-block;
+      display:inline;
       padding:0 1px;
-      border-radius:6px;
+      border-radius:3px;
       user-select:none;
       cursor:pointer;
     }
     .w.space{padding:0;cursor:default}
     .w.active{
+      display:inline;
       background: var(--hlWord);
+      border-radius:3px;
     }
 
     body[data-route="reader"] .readerStage{padding-bottom:110px;}
