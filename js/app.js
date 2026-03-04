@@ -1574,15 +1574,15 @@ if(route.name === "details"){
   }
   if(route.name === "reader"){
     stopReading({save:true});
-    BooksService.loadBook(route.bookId, state.reading.sourceLang, (typeof core?.getState==="function" ? core.getState().level : (state.level||"original")), I18n.getUiLang(), FALLBACK_BOOKS, normalizeBookJson).then(book=>{
+    BooksService.loadBook(route.bookId, route.sourceLang||state.reading.sourceLang, route.level||state.reading.level||(typeof core?.getState==="function" ? core.getState().level : "original"), I18n.getUiLang(), FALLBACK_BOOKS, normalizeBookJson).then(book=>{
       state.book = book;
       _coreApplyBookMeta(book);
       renderReader();
       showPlayer();
       let idx = (function(){ try{ return restoreReadingProgress()||0; }catch(e){ return 0; } })();
-      // Fallback: when switching modes, route.startIndex carries the last cursor
+      // Fallback: when switching modes or resuming from library, route.startIndex carries the target cursor
       const __fallbackStart = Number(state.route?.startIndex);
-      if((!Number.isFinite(idx) || idx===0) && Number.isFinite(__fallbackStart) && __fallbackStart>0){ idx = __fallbackStart; }
+      if(Number.isFinite(__fallbackStart) && __fallbackStart>0){ idx = __fallbackStart; }
       // Force jump (bookmarks)
       if(state.route?.forceStartIndex && Number.isFinite(__fallbackStart) && __fallbackStart>=0){ idx = __fallbackStart; }
       try{ state.route.forceStartIndex = false; }catch(e){}
@@ -1617,15 +1617,15 @@ if(route.name === "details"){
 
   if(route.name === "bireader"){
     stopReading({save:true});
-    BooksService.loadBook(route.bookId, state.reading.sourceLang, (typeof core?.getState==="function" ? core.getState().level : (state.level||"original")), I18n.getUiLang(), FALLBACK_BOOKS, normalizeBookJson).then(book=>{
+    BooksService.loadBook(route.bookId, route.sourceLang||state.reading.sourceLang, route.level||state.reading.level||(typeof core?.getState==="function" ? core.getState().level : "original"), I18n.getUiLang(), FALLBACK_BOOKS, normalizeBookJson).then(book=>{
       state.book = book;
       _coreApplyBookMeta(book);
       renderBiReader();
       showPlayer();
       let idx = (function(){ try{ return restoreReadingProgress()||0; }catch(e){ return 0; } })();
-      // Fallback: when switching modes, route.startIndex carries the last cursor
+      // Fallback: when switching modes or resuming from library, route.startIndex carries the target cursor
       const __fallbackStart = Number(state.route?.startIndex);
-      if((!Number.isFinite(idx) || idx===0) && Number.isFinite(__fallbackStart) && __fallbackStart>0){ idx = __fallbackStart; }
+      if(Number.isFinite(__fallbackStart) && __fallbackStart>0){ idx = __fallbackStart; }
       // Force jump (bookmarks)
       if(state.route?.forceStartIndex && Number.isFinite(__fallbackStart) && __fallbackStart>=0){ idx = __fallbackStart; }
       try{ state.route.forceStartIndex = false; }catch(e){}
@@ -2168,7 +2168,7 @@ function renderLibrary(){
         const pkg = ProgressManager.getPkgProgress(bookId, src, trg, Config.normalizeLevel(level||'original'));
         if(pkg && typeof pkg.activeIndex === 'number') idx = Number(pkg.activeIndex||0);
       }catch(e){}
-      go({name: routeName, bookId, startIndex: idx});
+      go({name: routeName, bookId, level, sourceLang: src, targetLang: trg, startIndex: idx});
     };
     ch.addEventListener('click', act);
     ch.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ act(e); } });
@@ -2192,7 +2192,7 @@ function renderLibrary(){
           const pkg = ProgressManager.getPkgProgress(bookId, src, trg, Config.normalizeLevel(level||'original'));
           if(pkg && typeof pkg.activeIndex === 'number') idx = Number(pkg.activeIndex||0);
         }catch(e){}
-        go({name: routeName, bookId, startIndex: idx});
+        go({name: routeName, bookId, level, sourceLang: src, targetLang: trg, startIndex: idx});
       };
       h.addEventListener('click', act);
       h.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ act(e); } });
