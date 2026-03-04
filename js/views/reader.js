@@ -14,56 +14,25 @@
      effectiveTotalLines(), openaiAudio, updateProgressUI()
    ═══════════════════════════════════════════════════════════════ */
 
-function renderReader(){
-  if(!state.book){ return go({name:"catalog"}, {push:false}); }
-  const b = state.book;
-
-  setTheme(state.reading.night);
-  syncSettingsUI();
-  applyHighlightTheme();
-
-  const lines = (b.text || []);
-  const chapterStarts = new Set((getChapters()||[]).map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
-
-  app.innerHTML = `
-    <div class="listenStage">
-      <div class="readTopBar">
-        <div class="rtLeft">
-          <button class="chevBtn" id="btnBooks" aria-label="Books">≡</button>
-          <button class="chevBtn" id="readerBack" aria-label="Back">‹</button>
-        </div>
-        <div class="rtCenter">${escapeHtml(b.title_en || "Book")}</div>
-        <div class="rtRight">
-          <button class="topIcon" id="topChapters" title="Chapters">≡</button>
-          <button class="topIcon" id="topBookmarks" title="Bookmarks">🔖</button>
-          <button class="topIcon" id="topDev" title="Admin">⋯</button>
-          <button class="topIcon" id="topSettings" title="Settings">⚙︎</button>
-        </div>
+/* Общий HTML топбара — одинаковый для обоих режимов */
+function _readerTopBar(title){
+  return `
+    <div class="readTopBar">
+      <div class="rtLeft">
+        <button class="topIcon" id="btnBooks" aria-label="Menu" title="Menu">≡</button>
       </div>
-
-      <div class="listenList">
-        ${lines.map((p, i)=>{
-          const raw = String(p ?? "");
-          const isCh = chapterStarts.has(i);
-          if(raw === ""){
-            return `<div style="height:10px"></div>`;
-          }
-          return `
-            <div class="listenLine ${isCh ? "chapterLine" : ""}" data-para-wrap="${i}">
-              ${renderParagraph(raw, i, isCh)}
-              <button class="lineCardBtn" data-para-btn="${i}" title="Line translation">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M7 8h10M7 12h6M7 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </button>
-            </div>
-          `;
-        }).join("")}
+      <div class="rtCenter">${escapeHtml(title || "")}</div>
+      <div class="rtRight">
+        <button class="topIcon" id="topChapters" title="Chapters">≡</button>
+        <button class="topIcon" id="topBookmarks" title="Bookmarks">🔖</button>
+        <button class="topIcon" id="topDev" title="Admin">⋯</button>
+        <button class="topIcon" id="topSettings" title="Settings">⚙︎</button>
       </div>
-    </div>
-  `;
+    </div>`;
+}
 
-  document.getElementById("readerBack").onclick = ()=>{ try{ stopReading(); }catch(e){} go({name:"details", bookId: (state.book?.id || state.route?.bookId || state.route?.id)},{push:false}); };
+/* Общий JS для кнопок топбара — вызывать после innerHTML */
+function _bindTopBar(){
   const __books = document.getElementById("btnBooks");
   if(__books) __books.onclick = goCatalog;
 
@@ -94,6 +63,53 @@ function renderReader(){
       go({name:"library"}, {push:true});
     });
   }
+}
+
+
+function renderReader(){
+  if(!state.book){ return go({name:"catalog"}, {push:false}); }
+  const b = state.book;
+
+  setTheme(state.reading.night);
+  syncSettingsUI();
+  applyHighlightTheme();
+
+  const lines = (b.text || []);
+  const chapterStarts = new Set((getChapters()||[]).map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
+
+  app.innerHTML = `
+    <div class="readerStage">
+      ${_readerTopBar(b.title_en || "Book")}
+
+      <div class="paper">
+        <div class="paperInner listenPaper">
+          <div class="bookTitle">${escapeHtml(b.title_en || "")}</div>
+          <div class="listenList">
+            ${lines.map((p, i)=>{
+              const raw = String(p ?? "");
+              const isCh = chapterStarts.has(i);
+              if(raw === ""){
+                return `<div style="height:10px"></div>`;
+              }
+              return `
+                <div class="listenLine ${isCh ? "chapterLine" : ""}" data-para-wrap="${i}">
+                  ${renderParagraph(raw, i, isCh)}
+                  <button class="lineCardBtn" data-para-btn="${i}" title="Line translation">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M7 8h10M7 12h6M7 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("readerBack") && (document.getElementById("readerBack").onclick = ()=>{ try{ stopReading(); }catch(e){} go({name:"details", bookId: (state.book?.id || state.route?.bookId || state.route?.id)},{push:false}); });
+  _bindTopBar();
 
   document.documentElement.style.setProperty("--fontSize", state.reading.fontSize + "px");
   document.documentElement.style.setProperty("--lineHeight", "1.9");
@@ -162,19 +178,7 @@ function renderBiReader(){
 
   app.innerHTML = `
     <div class="readerStage">
-      <div class="readTopBar">
-        <div class="rtLeft">
-          <button class="chevBtn" id="btnBooks" aria-label="Books">≡</button>
-          <button class="chevBtn" id="readerBack" aria-label="Back">‹</button>
-        </div>
-        <div class="rtCenter">${escapeHtml(b.title_en || "")}</div>
-        <div class="rtRight">
-          <button class="topIcon" id="topChapters" title="Chapters">≡</button>
-          <button class="topIcon" id="topBookmarks" title="Bookmarks">🔖</button>
-          <button class="topIcon" id="topDev" title="Admin">⋯</button>
-          <button class="topIcon" id="topSettings" title="Settings">⚙︎</button>
-        </div>
-      </div>
+      ${_readerTopBar(b.title_en || "")}
 
       <div class="paper">
         <div class="paperInner">
@@ -203,36 +207,7 @@ function renderBiReader(){
     </div>
   `;
 
-  document.getElementById("readerBack").onclick = ()=>{ try{ stopReading(); }catch(e){} go({name:"details", bookId: (state.book?.id || state.route?.bookId || state.route?.id)},{push:false}); };
-  const __books = document.getElementById("btnBooks");
-  if(__books) __books.onclick = goCatalog;
-
-  const __tc = document.getElementById("topChapters");
-  if(__tc) __tc.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); try{ openChapters(); }catch(err){} });
-
-  const __ts = document.getElementById("topSettings");
-  if(__ts) __ts.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); try{ openSettings(); }catch(err){} });
-
-  const __td = document.getElementById("topDev");
-  if(__td) __td.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); try{ openDev(); }catch(err){} });
-
-  const __tbm = document.getElementById("topBookmarks");
-  if(__tbm){
-    __tbm.addEventListener("click", (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      if(state.route?.name === "reader" || state.route?.name === "bireader"){
-        try{ state.ui = state.ui || {}; state.ui._resumeAudioAfterBMSheet = (typeof openaiAudio !== "undefined" && openaiAudio && openaiAudio.paused===false); }catch(err){}
-        try{ if(typeof openaiAudio !== "undefined" && openaiAudio && openaiAudio.pause) openaiAudio.pause(); }catch(err){}
-        try{ showBookBookmarksSheet(state.book?.id || state.route?.bookId); }catch(err){}
-        return;
-      }
-      try{ stopReading(); }catch(err){}
-      state.ui = state.ui || {};
-      state.ui.libraryTab = "bookmarks";
-      go({name:"library"}, {push:true});
-    });
-  }
+  _bindTopBar();
 
   document.documentElement.style.setProperty("--fontSize", state.reading.fontSize + "px");
   document.documentElement.style.setProperty("--lineHeight", "1.9");
