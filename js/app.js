@@ -113,8 +113,7 @@ const state = {
     timer: null,
 
     // translation protection
-    translateCache: new Map(),
-    inFlight: false,
+        inFlight: false,
     lastReqAt: 0,
     cooldownUntil: 0
   }
@@ -517,498 +516,9 @@ function langToBcp47(code){
 }
 
 function setTheme(night){
-  ensureThemePatch();
   document.body.setAttribute("data-theme", night ? "night" : "light");
 }
 
-function ensureThemePatch(){
-  try{
-    if(document.getElementById("themePatch")) return;
-    const st = document.createElement("style");
-    st.id = "themePatch";
-    st.textContent = `
-/* Theme patch: frosted glass + readable night mode for all app surfaces */
-
-/* --- Tokens (light) --- */
-body:not([data-theme="night"]){
-  --appBg: transparent;
-  --appText: rgba(20,24,28,.92);
-  --appMuted: rgba(20,24,28,.62);
-  --appBorder: rgba(20,24,28,.08);
-  --appCardSolid: rgba(255,255,255,.72);
-  --appCard: rgba(255,255,255,.58);
-  --appBtn: rgba(255,255,255,.70);
-  --appBtn2: rgba(255,255,255,.82);
-  --appBtnText: rgba(20,24,28,.92);
-  --appPillBg: rgba(255,255,255,.72);
-  --appPillText: rgba(20,24,28,.92);
-}
-
-/* --- Tokens (night) --- */
-body[data-theme="night"]{
-  --appBg:#07121f;
-  --appText:#e9f0ff;
-  --appMuted:rgba(233,240,255,.74);
-  --appBorder:rgba(255,255,255,.10);
-  --appCardSolid:rgba(255,255,255,.14);
-  --appCard:rgba(255,255,255,.10);
-  --appBtn:rgba(255,255,255,.14);
-  --appBtn2:rgba(255,255,255,.18);
-  --appBtnText:#e9f0ff;
-  --appPillBg:rgba(255,255,255,.14);
-  --appPillText:#e9f0ff;
-}
-
-/* Frosted surfaces (shared) */
-.wrap, .homeScreen .card, .cardWide, .panel, .bmSheet, .sheet, .modal, .dialog, .toast{
-  -webkit-backdrop-filter: blur(18px) saturate(120%);
-  backdrop-filter: blur(18px) saturate(120%);
-}
-
-/* Global app surfaces */
-body[data-theme="night"] .wrap{ background:var(--appBg); color:var(--appText); }
-body[data-theme="night"] .homeScreen .card,
-body[data-theme="night"] .cardWide,
-body[data-theme="night"] .panel,
-body[data-theme="night"] .sheet,
-body[data-theme="night"] .modal,
-body[data-theme="night"] .dialog,
-body[data-theme="night"] .bmSheet{
-  background: var(--appCardSolid);
-  border: 1px solid rgba(255,255,255,.08);
-  box-shadow: none;
-  color: var(--appText);
-}
-body[data-theme="night"] .meta,
-body[data-theme="night"] .sectionLabel,
-body[data-theme="night"] .muted,
-body[data-theme="night"] .subtle{ color: var(--appMuted) !important; }
-
-/* My Library (In progress / Finished) cards: same framed glass as Home card */
-.libraryItem{
-  -webkit-backdrop-filter: blur(18px) saturate(120%);
-  backdrop-filter: blur(18px) saturate(120%);
-}
-body[data-theme="night"] .libraryItem{
-  background: var(--appCardSolid) !important;
-  border: 1px solid rgba(255,255,255,.10) !important;
-  box-shadow: none !important;
-  color: var(--appText) !important;
-}
-body:not([data-theme="night"]) .libraryItem{
-  background: rgba(255,255,255,.62) !important;
-  border: 1px solid rgba(20,24,28,.08) !important;
-}
-
-/* Tabs (Books / My Library) readability */
-body[data-theme="night"] .appHeader .tab{ color: var(--appText) !important; }
-body[data-theme="night"] .appHeader .tab.muted{ color: var(--appMuted) !important; }
-body[data-theme="night"] .appHeader{ background: transparent; }
-
-/* Headings */
-body[data-theme="night"] h1, body[data-theme="night"] h2, body[data-theme="night"] h3,
-body[data-theme="night"] .bigTitle, body[data-theme="night"] .pageTitle{
-  color: var(--appText) !important;
-  text-shadow: none !important;
-}
-
-/* Buttons / icons */
-body[data-theme="night"] .iconBtn,
-body[data-theme="night"] .pillBtn,
-body[data-theme="night"] .miniBtn,
-body[data-theme="night"] .bmSheetBtn,
-body[data-theme="night"] .segBtn,
-body[data-theme="night"] button{
-  background: var(--appBtn);
-  border: 1px solid rgba(255,255,255,.10);
-  color: var(--appBtnText);
-}
-body[data-theme="night"] .miniBtn.active,
-body[data-theme="night"] .pillBtn.active,
-body[data-theme="night"] .segBtn.active{ background: var(--appBtn2); }
-
-/* Bookmark chip markers / line markers */
-body[data-theme="night"] .mark,
-body[data-theme="night"] .chip{
-  background: rgba(0,0,0,.18);
-  color: var(--appText);
-  border: 1px solid rgba(255,255,255,.08);
-}
-
-/* Close (X) visibility in sheets/modals */
-
-/* Close buttons (light): keep X readable */
-body:not([data-theme="night"]) .closeBtn,
-body:not([data-theme="night"]) .sheetClose,
-body:not([data-theme="night"]) .bmClose,
-body:not([data-theme="night"]) .xBtn,
-body:not([data-theme="night"]) #setClose,
-body:not([data-theme="night"]) #devClose{
-
-  background: rgba(0,0,0,.06);
-  color: rgba(20,24,28,.88) !important;
-  border: 1px solid rgba(0,0,0,.10);
-}
-body:not([data-theme="night"]) .closeBtn:hover,
-body:not([data-theme="night"]) .sheetClose:hover,
-body:not([data-theme="night"]) .bmClose:hover,
-body:not([data-theme="night"]) .xBtn:hover{
-  background: rgba(0,0,0,.10);
-}
-body[data-theme="night"] .closeBtn,
-body[data-theme="night"] .sheetClose,
-body[data-theme="night"] .bmClose,
-body[data-theme="night"] .xBtn,
-body[data-theme="night"] #setClose,
-body[data-theme="night"] #devClose{
-  background: rgba(255,255,255,.12);
-  color: var(--appText) !important;
-  border: 1px solid rgba(255,255,255,.14);
-}
-/* Bookmark markers: make existing dot/shelf visible in night (do NOT add new markers) */
-body[data-theme="night"] .bmWordMark::before{
-  background: rgba(255,255,255,.85) !important;
-  box-shadow: 0 0 0 2px rgba(255,255,255,.14) !important;
-}
-body[data-theme="night"] .bmLineMark .lineCardBtn::after{
-  background: rgba(255,255,255,.62) !important;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.18) !important;
-}
-
-/* Bookmarks list cards in night: match main menu "glass" instead of flat gray */
-body[data-theme="night"] .bmItem,
-body[data-theme="night"] .bmCard,
-body[data-theme="night"] .bmRow{
-  background: var(--appCardSolid) !important;
-  border: 1px solid rgba(255,255,255,.08) !important;
-}
-
-/* Bookmarks page in night: fix low-contrast text */
-body[data-theme="night"] .bmItem,
-body[data-theme="night"] .bmCard,
-body[data-theme="night"] .bmRow,
-body[data-theme="night"] .bmItem * ,
-body[data-theme="night"] .bmCard * ,
-body[data-theme="night"] .bmRow *{
-  color: var(--appText);
-}
-body[data-theme="night"] .bmItem .muted,
-body[data-theme="night"] .bmCard .muted,
-body[data-theme="night"] .bmRow .muted,
-body[data-theme="night"] .bmItem .subtle,
-body[data-theme="night"] .bmCard .subtle,
-body[data-theme="night"] .bmRow .subtle{
-  color: var(--appMuted) !important;
-}
-
-/* Library segmented buttons in LIGHT: ensure readable labels */
-body:not([data-theme="night"]) .segBtn,
-body:not([data-theme="night"]) .segmented .segBtn,
-body:not([data-theme="night"]) .segmented button{
-  color: rgba(20,24,28,.82) !important;
-}
-body:not([data-theme="night"]) .segBtn.active,
-body:not([data-theme="night"]) .segmented .segBtn.active,
-body:not([data-theme="night"]) .segmented button.active{
-  color: rgba(255,255,255,.96) !important;
-}
-/* Top bars (Read/Listen): frosted like player bar in both themes */
-.readTopBar, .listenTop{
-  -webkit-backdrop-filter: blur(18px) saturate(120%);
-  backdrop-filter: blur(18px) saturate(120%);
-}
-body:not([data-theme="night"]) .readTopBar,
-body:not([data-theme="night"]) .listenTop{
-  background: rgba(255,255,255,.60) !important;
-  border-bottom: 1px solid rgba(20,24,28,.08) !important;
-}
-body[data-theme="night"] .readTopBar,
-body[data-theme="night"] .listenTop{
-  background: rgba(255,255,255,.10) !important;
-  border-bottom: 1px solid rgba(255,255,255,.08) !important;
-}
-
-
-/* --- v2 fixes: bookmark indicators visibility + mobile layout --- */
-
-/* Bookmark indicators (night): style whichever pseudo is used (do NOT create new content) */
-body[data-theme="night"] .bmWordMark{
-  filter: drop-shadow(0 0 6px rgba(120,200,255,.18));
-}
-body[data-theme="night"] .bmWordMark::before,
-body[data-theme="night"] .bmWordMark::after{
-  background: rgba(255,255,255,.92) !important;
-  opacity: 1 !important;
-  box-shadow: 0 0 0 2px rgba(0,0,0,.35), 0 0 10px rgba(120,200,255,.22) !important;
-}
-
-/* Line-bookmark shelf + button highlight (night) */
-body[data-theme="night"] .bmLineMark .lineCardBtn{
-  box-shadow: 0 0 0 2px rgba(120,200,255,.18), 0 6px 18px rgba(0,0,0,.25) !important;
-}
-body[data-theme="night"] .bmLineMark .lineCardBtn::before,
-body[data-theme="night"] .bmLineMark .lineCardBtn::after{
-  background: rgba(255,255,255,.62) !important;
-  opacity: 1 !important;
-}
-
-
-/* Bookmarks page: always put author/series on second line under title (avoid overlap everywhere) */
-.bmTitleRow{ display:block !important; }
-.bmTitleRow .bmTitle{ display:block !important; }
-.bmTitleRow .bmMeta{ display:block !important; margin-top: 6px !important; }
-
-/* Mobile: prevent title/meta overlap in Bookmarks list */
-@media (max-width: 520px){
-  .bmTitleRow{ flex-wrap: wrap !important; gap: 8px !important; }
-/* --- Mobile layout: My Library cards (prevent text overlap) --- */
-@media (max-width: 520px){
-  .libraryItem{
-    position: relative !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 10px !important;
-    padding: 16px 14px 18px !important;
-    border-radius: 28px !important;
-  }
-  .libraryItem .coverImg{
-    width: 132px !important;
-    height: 132px !important;
-    flex: 0 0 auto !important;
-    border-radius: 28px !important;
-    overflow: hidden !important;
-  }
-  .libraryItem .coverImg img{
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-  }
-  .libraryItem .title{
-    font-size: 30px !important;
-    line-height: 1.05 !important;
-    text-align: center !important;
-    margin: 2px 0 0 !important;
-  }
-  .libraryItem .meta{
-    text-align: center !important;
-    margin: 4px 0 0 !important;
-  }
-  .libraryItem .pkgRow{
-    width: 100% !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    margin-top: 10px !important;
-  }
-  .libraryItem .pkgChip{
-    max-width: 100% !important;
-    white-space: nowrap !important;
-  }
-  .libraryItem .circle{
-    position: absolute !important;
-    top: 14px !important;
-    right: 14px !important;
-    transform: none !important;
-  }
-}
-
-  .bmTitle{ max-width: 100% !important; }
-  .bmMeta{ margin-top: 4px !important; }
-}
-
-/* --- v3.1: progress chips (keep simple — no extra frames) --- */
-body[data-theme="night"] .pkgChip{
-  background: rgba(255,255,255,.08) !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: var(--appText) !important;
-  font-weight: 750 !important;
-}
-body[data-theme="night"] .pkgChip .sep{ opacity: .55 !important; }
-body[data-theme="night"] .pkgChip .lvl{
-  background: transparent !important;
-  border: none !important;
-  color: var(--appText) !important;
-  font-weight: 800 !important;
-  padding: 0 !important;
-  margin-right: 6px !important;
-}
-
-/* Details screen cards: match bookmarks "glass" tone */
-body[data-theme="night"] .formCard{
-  background: var(--appCardSolid) !important;
-  border: 1px solid rgba(255,255,255,.08) !important;
-  box-shadow: none !important;
-}
-body:not([data-theme="night"]) .formCard{
-  background: rgba(255,255,255,.62) !important;
-  border: 1px solid rgba(20,24,28,.08) !important;
-}
-
-/* Popover bookmark button: filled when active (night) */
-body[data-theme="night"] #popBookmark.active{
-  background: rgba(255,255,255,.92) !important;
-  border-color: rgba(255,255,255,.0) !important;
-  color: rgba(10,14,18,.92) !important;
-}
-
-/* Details screen uses pills too; keep tone consistent */
-body[data-theme="night"] .metaPill,
-body[data-theme="night"] .detailPill,
-body[data-theme="night"] .pill{
-  background: rgba(255,255,255,.10) !important;
-  border: 1px solid rgba(255,255,255,.12) !important;
-  color: var(--appText) !important;
-}
-
-/* --- v3.1: popover bookmark button fill in night when active --- */
-body[data-theme="night"] #popBookmark.active{
-  background: rgba(42,167,255,.32) !important;
-  border-color: rgba(42,167,255,.45) !important;
-  box-shadow: 0 10px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.12) !important;
-}
-body[data-theme="night"] #popBookmark.active svg,
-body[data-theme="night"] #popBookmark.active span{
-  color: #e9f0ff !important;
-  fill: #e9f0ff !important;
-}
-
-/* === v3.4 final polish === */
-
-/* Library cards should match Continue Reading frame + rounded corners */
-.libraryItem{
-  border-radius: 28px !important;
-  overflow: hidden;
-}
-
-/* Light theme: ensure library cards also have the framed glass look */
-body:not([data-theme="night"]) .libraryItem{
-  background: rgba(255,255,255,.70) !important;
-  border: 1px solid rgba(20,24,28,.08) !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,.06);
-}
-
-/* Details description box: match bookmark glass tone */
-body[data-theme="night"] .detailsDesc{
-  background: rgba(255,255,255,.10) !important;
-  border: 1px solid rgba(255,255,255,.10) !important;
-  color: var(--appText) !important;
-  border-radius: 18px !important;
-}
-body:not([data-theme="night"]) .detailsDesc{
-  background: rgba(255,255,255,.66) !important;
-  border: 1px solid rgba(20,24,28,.08) !important;
-  color: var(--appBtnText) !important;
-  border-radius: 18px !important;
-}
-
-/* Make all major sheets/dialogs slightly "glassy" in light too (subtle) */
-body:not([data-theme="night"]) .bmSheet,
-body:not([data-theme="night"]) .sheet,
-body:not([data-theme="night"]) .modal,
-body:not([data-theme="night"]) .dialog{
-  background: rgba(255,255,255,.74) !important;
-  border: 1px solid rgba(20,24,28,.08) !important;
-}
-
-/* Popover bookmark button: active should look clearly filled in night */
-body[data-theme="night"] #popBookmark.active{
-  background: rgba(255,255,255,.26) !important;
-  border: 1px solid rgba(255,255,255,.20) !important;
-  box-shadow: 0 0 0 1px rgba(0,0,0,.25) inset !important;
-  color: #fff !important;
-}
-body[data-theme="night"] #popBookmark.active svg,
-body[data-theme="night"] #popBookmark.active i{
-  color: #fff !important;
-  fill: #fff !important;
-}
-
-/* Remove any pill/outline around level inside progress chips */
-.pkgChip .lvl{
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-}
-
-
-
-/* --- Select (dropdown) styling: rounded corners + consistent glass in both themes --- */
-.sheet select, .dialog select, .panel select, .formCard select{
-  border-radius: 18px !important;
-  padding: 8px 14px !important;
-  outline: none !important;
-}
-body[data-theme="night"] .sheet select,
-body[data-theme="night"] .dialog select,
-body[data-theme="night"] .panel select,
-body[data-theme="night"] .formCard select{
-  background: rgba(0,0,0,.35) !important;
-  color: #fff !important;
-  border: 1px solid rgba(255,255,255,.18) !important;
-}
-body:not([data-theme="night"]) .sheet select,
-body:not([data-theme="night"]) .dialog select,
-body:not([data-theme="night"]) .panel select,
-body:not([data-theme="night"]) .formCard select{
-  background: rgba(255,255,255,.86) !important;
-  color: rgba(20,24,28,.92) !important;
-  border: 1px solid rgba(20,24,28,.10) !important;
-}
-
-/* Close (X) visibility in LIGHT theme (was washed out) */
-body:not([data-theme="night"]) .closeBtn,
-body:not([data-theme="night"]) .sheetClose,
-body:not([data-theme="night"]) .bmClose,
-body:not([data-theme="night"]) .xBtn{
-  background: rgba(0,0,0,.08) !important;
-  color: rgba(20,24,28,.92) !important;
-  border: 1px solid rgba(20,24,28,.10) !important;
-}
-
-/* Responsive sheets/modals on phones: safe padding + no overflow */
-@media (max-width: 520px){
-  .sheet, .dialog, .panel, .bmSheetWrap, .chaptersSheet{
-    width: calc(100% - 16px) !important;
-    max-width: calc(100% - 16px) !important;
-    margin: 8px !important;
-    border-radius: 22px !important;
-  }
-  .bmTitleRow{ flex-wrap: wrap !important; gap: 6px !important; }
-  .formRow{ flex-wrap: wrap !important; }
-  .formRow > *{ max-width: 100% !important; }
-}
-
-/* --- Close (X) button readability (light & night) --- */
-.sheetClose, .closeBtn, .xBtn, .bmClose{
-  -webkit-backdrop-filter: blur(14px) saturate(130%);
-  backdrop-filter: blur(14px) saturate(130%);
-}
-body:not([data-theme="night"]) .sheetClose, 
-body:not([data-theme="night"]) .closeBtn,
-body:not([data-theme="night"]) .xBtn,
-body:not([data-theme="night"]) .bmClose{
-  background: rgba(255,255,255,.88) !important;
-  border: 1px solid rgba(20,24,28,.12) !important;
-  color: rgba(20,24,28,.92) !important;
-  text-shadow: none !important;
-}
-body[data-theme="night"] .sheetClose,
-body[data-theme="night"] .closeBtn,
-body[data-theme="night"] .xBtn,
-body[data-theme="night"] .bmClose{
-  background: rgba(255,255,255,.16) !important;
-  border: 1px solid rgba(255,255,255,.12) !important;
-  color: rgba(255,255,255,.92) !important;
-}
-
-`;
-    document.head.appendChild(st);
-  }catch(e){}
-}
 
 function applyHighlightTheme(){
   if(state.reading.highlightTheme === "default"){
@@ -2287,7 +1797,7 @@ function go(route, {push=true}={}){
     state.reading.cursorIndex = 0;
     state.reading.activeTokenIndex = -1;
     state.reading.tokenMap = [];
-    try{ state.reading.translateCache?.clear?.(); }catch(e){}
+    try{ TranslateService.clearCache(); }catch(e){}
   }
 
   state.route = route;
@@ -3327,7 +2837,7 @@ setLabels();
     try{ stopReading({save:true}); }catch(e){}
     try{ saveReadingProgress(); }catch(e){}
     state.reading.sourceLang = src.value;
-    try{ state.reading.translateCache.clear(); }catch(e){}
+    try{ TranslateService.clearCache(); }catch(e){}
     setLabels();
     applyLanguagePairChange();
   };
@@ -3336,7 +2846,7 @@ setLabels();
     try{ stopReading({save:true}); }catch(e){}
     try{ saveReadingProgress(); }catch(e){}
     state.reading.targetLang = trg.value;
-    try{ state.reading.translateCache.clear(); }catch(e){}
+    try{ TranslateService.clearCache(); }catch(e){}
     setLabels();
     applyLanguagePairChange();
   };
@@ -3940,140 +3450,6 @@ function langToLocale(code){
 /* ---------------------------
    Translation (LibreTranslate) + 429 protection
 --------------------------- */
-async function translateWord(word){
-  const w = String(word||"").trim();
-  if(!w) return "—";
-
-  const key = `${String(state.dev.translationProvider||"openai")}::${String(state.reading.targetLang||"uk")}::${normalizeWord(w)}`;
-  if(state.reading.translateCache.has(key)) return state.reading.translateCache.get(key);
-
-  if(state.reading.cooldownUntil && Date.now() < state.reading.cooldownUntil){
-    const wait = Math.ceil((state.reading.cooldownUntil - Date.now())/1000);
-    return `⏳ Ліміт. Зачекай ${wait} с.`;
-  }
-
-  const prov = String(state.dev.translationProvider||"openai").toLowerCase();
-  const trg  = String(state.reading.targetLang || "uk").trim().toLowerCase();
-  const sl   = String(state.reading.sourceLang || state.book?.sourceLang || "auto").trim().toLowerCase() || "auto";
-
-  // Prefer Worker (keeps Libre/OpenAI keys off GitHub Pages).
-  const url = String(Config.WORKER_TRANSLATE_URL || "").trim();
-  if(url){
-    const res = await fetch(url, {
-      method:"POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({
-        text: w,
-        sourceLang: sl || "auto",
-        targetLang: trg,
-        provider: prov,      // "openai" | "libre"
-        noCache: !!state.dev.noCache
-      })
-    }).catch(()=>null);
-
-    if(!res) return "— (не вдалося підключитися до воркера)";
-    if(res.status === 429){
-      state.reading.cooldownUntil = Date.now() + 20000;
-      return "⏳ Ліміт. Зачекай 20 секунд.";
-    }
-    if(!res.ok) return `— (помилка ${res.status})`;
-
-    const data = await res.json().catch(()=> ({}));
-    const translated = (data.translatedText || data.translation || "").trim() || "—";
-    state.reading.translateCache.set(key, translated);
-    return translated;
-  }
-
-  // Optional fallback: direct LibreTranslate ONLY if app has a key (not recommended for GitHub Pages).
-  if(prov === "libre"){
-    const apiKey = String(Config.LIBRETRANSLATE_API_KEY || "").trim();
-    if(!apiKey) return "— (Worker URL не задано, а ключ LibreTranslate не вказано)";
-    const payload = { q: w, source: sl || "auto", target: trg, format: "text", alternatives: 3, api_key: apiKey };
-    const res = await fetch(Config.LIBRETRANSLATE_URL, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)}).catch(()=>null);
-    if(!res) return "— (не вдалося підключитися до LibreTranslate)";
-    if(res.status === 429){
-      state.reading.cooldownUntil = Date.now() + 20000;
-      return "⏳ Ліміт. Зачекай 20 секунд.";
-    }
-    if(!res.ok) return `— (помилка ${res.status})`;
-    const data = await res.json().catch(()=> ({}));
-    const translated = (data.translatedText || "").trim() || "—";
-    state.reading.translateCache.set(key, translated);
-    return translated;
-  }
-
-  return "— (Worker URL не задано)";
-}
-
-async function translateTextAny(text, target, provider){
-  const s = String(text||"").trim();
-  if(!s) return "—";
-  const cacheKey = `${String(provider||state.dev.translationProvider||"openai")}::${target}::${s}`;
-  if(state.reading.translateCache.has(cacheKey)) return state.reading.translateCache.get(cacheKey);
-
-  // local cooldown (mainly for LibreTranslate public / worker)
-  if(state.reading.cooldownUntil && Date.now() < state.reading.cooldownUntil){
-    const wait = Math.ceil((state.reading.cooldownUntil - Date.now())/1000);
-    return `⏳ Ліміт. Зачекай ${wait} с.`;
-  }
-
-  const prov = String(provider || state.dev.translationProvider || "openai").toLowerCase();
-  const trg = String(target || state.reading.targetLang || "uk").trim().toLowerCase();
-  const sl  = String(state.reading.sourceLang || state.book?.sourceLang || "auto").trim().toLowerCase() || "auto";
-
-  // Prefer Worker for BOTH providers (keeps keys server-side and avoids CORS/API-key issues).
-  const url = String(Config.WORKER_TRANSLATE_URL || "").trim();
-  if(url){
-    const res = await fetch(url, {
-      method:"POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({
-        text: s,
-        sourceLang: sl || "auto",
-        targetLang: trg,
-        provider: prov,        // "openai" | "libre"
-        noCache: !!state.dev.noCache
-      })
-    }).catch(()=>null);
-
-    if(!res) return "— (не вдалося підключитися до воркера)";
-    if(res.status === 429){
-      state.reading.cooldownUntil = Date.now() + 20000;
-      return "⏳ Ліміт. Зачекай 20 секунд.";
-    }
-    if(!res.ok) return `— (помилка ${res.status})`;
-
-    const data = await res.json().catch(()=> ({}));
-    const translated = (data.translatedText || data.translation || "").trim() || "—";
-    state.reading.translateCache.set(cacheKey, translated);
-    return translated;
-  }
-
-  // Fallback: direct LibreTranslate ONLY if a key is provided in the app (optional).
-  if(prov === "libre"){
-    const apiKey = String(Config.LIBRETRANSLATE_API_KEY || "").trim();
-    if(!apiKey) return "— (Worker URL не задано, а ключ LibreTranslate не вказано)";
-    const payload = { q: s, source: sl || "auto", target: trg, format: "text", api_key: apiKey };
-    const res = await fetch(Config.LIBRETRANSLATE_URL, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)}).catch(()=>null);
-    if(!res) return "— (не вдалося підключитися до LibreTranslate)";
-    if(res.status === 429){
-      state.reading.cooldownUntil = Date.now() + 20000;
-      return "⏳ Ліміт. Зачекай 20 секунд.";
-    }
-    if(!res.ok) return `— (помилка ${res.status})`;
-    const data = await res.json().catch(()=> ({}));
-    const translated = (data.translatedText || "").trim() || "—";
-    state.reading.translateCache.set(cacheKey, translated);
-    return translated;
-  }
-
-  return "— (Worker URL не задано)";
-}
-
-
-let lineObserver = null;
-let biProgressObserver = null;
-
 function initLineTranslations(){
   const isBi = state.route?.name === "bireader";
   if(!isBi) return;
@@ -4120,7 +3496,7 @@ function initLineTranslations(){
         transEl.textContent = "Переклад…";
         transEl.classList.add("loading");
 
-        const tr = await translateTextAny(lineEl.dataset.raw || "");
+        const tr = await TranslateService.translate(lineEl.dataset.raw || "");
         transEl.classList.remove("loading");
 
         // If throttled placeholder returned, re-queue later
@@ -4205,7 +3581,7 @@ function initReaderLineTranslations({silent=false}={}){
         const raw = (lineEl.dataset.raw || lineEl.textContent || "").trim();
         if(!raw){ transEl.textContent = ""; transEl.dataset.done="1"; continue; }
 
-        const tr = await translateTextAny(raw);
+        const tr = await TranslateService.translate(raw);
         transEl.textContent = tr || "—";
         transEl.dataset.done = "1";
       }
@@ -4327,7 +3703,7 @@ async function showTranslation(span){
   popover.style.top = y + "px";
   popover.style.visibility = "visible";
 
-  const tr = await translateWord(raw);
+  const tr = await TranslateService.translateWord(raw);
   popTrans.classList.remove("loading");
   popTrans.textContent = tr;
   try{ if(popCtx) popCtx.tr = tr; }catch(e){}
@@ -4369,11 +3745,6 @@ async function playOneShotTTS(text){
   oneShotAudio.onended = ()=>{ try{ URL.revokeObjectURL(oneShotUrl);}catch(e){} oneShotUrl=null; };
   try{ await oneShotAudio.play(); }catch(e){ /* ignore */ }
 }
-async function translateLine(text){
-  // Line-level translation uses the same engine/cache as other translations
-  return await translateTextAny(String(text||""));
-}
-
 async function showLineCard(paraIdx){
   if(!state.book) return;
   const b = state.book;
@@ -4424,7 +3795,7 @@ async function showLineCard(paraIdx){
   popover.style.top = y + "px";
   popover.style.visibility = "visible";
 
-  const tr = await translateLine(raw);
+  const tr = await TranslateService.translateLine(raw);
   popTrans.classList.remove("loading");
   popTrans.textContent = tr;
   try{ if(popCtx) popCtx.tr = tr; }catch(e){}
@@ -4732,7 +4103,7 @@ try{ clearAllWordHighlights(); }catch(e){}
       let speakText = line;
       if(speakTr){
         try{
-          const tr = await translateTextAny(line);
+          const tr = await TranslateService.translate(line);
           if(tr && tr !== "—" && tr !== "…") speakText = tr;
         }catch(e){}
       }
@@ -4756,7 +4127,7 @@ const playNext = async ()=>{
     let speakText = lineText;
 
     if(speakTr){
-      const tr = await translateTextAny(lineText);
+      const tr = await TranslateService.translate(lineText);
       if(tr && tr !== "—" && tr !== "…") speakText = tr;
     }
 
@@ -5398,8 +4769,8 @@ if(modeRead){
 
 if(devClose) devClose.onclick = closeDev;
 
-provLibre.onclick = ()=>{ state.dev.translationProvider = "libre"; state.reading.translateCache.clear(); syncDevUI(); };
-provOpenAI.onclick = ()=>{ state.dev.translationProvider = "openai"; state.reading.translateCache.clear(); syncDevUI(); };
+provLibre.onclick = ()=>{ state.dev.translationProvider = "libre"; TranslateService.clearCache(); syncDevUI(); };
+provOpenAI.onclick = ()=>{ state.dev.translationProvider = "openai"; TranslateService.clearCache(); syncDevUI(); };
 
 vMale.onclick = ()=>{ state.dev.ttsGender = "male"; state.dev.ttsVoice = "onyx"; syncDevUI(); };
 vFemale.onclick = ()=>{ state.dev.ttsGender = "female"; state.dev.ttsVoice = "shimmer"; syncDevUI(); };
@@ -5537,7 +4908,7 @@ targetLangSelect.onchange = ()=>{
   // Save current progress for OLD pair, then switch and restore for NEW pair
   try{ saveReadingProgress(); }catch(e){}
   state.reading.targetLang = targetLangSelect.value;
-  try{ state.reading.translateCache.clear(); }catch(e){}
+  try{ TranslateService.clearCache(); }catch(e){}
   document.querySelectorAll(".paraTrans").forEach(el=>{
     el.textContent = "";
     el.dataset.done = "0";
@@ -5567,7 +4938,6 @@ document.addEventListener("click", (e)=>{
 --------------------------- */
 (function init(){
   // Ensure theme patch is applied before first render (fix missing frames before entering book)
-  try{ ensureThemePatch(); requestAnimationFrame(()=>ensureThemePatch()); setTimeout(()=>ensureThemePatch(),50); }catch(e){}
   Config.TARGET_LANGS.forEach(l=>{
     const opt = document.createElement("option");
     opt.value = l.code;
