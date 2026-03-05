@@ -14,7 +14,6 @@
       --fontSize: 22px;
       --lineHeight: 1.9;
       --safeBottom: env(safe-area-inset-bottom);
-      /* Фон страницы чтения — переключается кнопкой */
       --pageBg: transparent;
     }
 
@@ -30,7 +29,6 @@
       --hlWord: rgba(42,167,255,.22);
     }
 
-    /* Варианты фона страницы */
     body.pageBgWarm  { --pageBg: #F5F0E8; }
     body.pageBgWhite { --pageBg: #ffffff; }
     [data-theme="night"] body.pageBgWarm  { --pageBg: #1a1710; }
@@ -201,7 +199,7 @@
       padding:14px 14px 118px;
     }
 
-    /* ── Верхняя панель «Читать» — на всю ширину как плеер ── */
+    /* ── Верхняя панель «Читать» — frosted glass ── */
     .readTopBar{
       display:flex;
       align-items:center;
@@ -210,9 +208,16 @@
       position: sticky;
       top: 0;
       z-index: 20;
-      background: var(--readerBg);
+      background: rgba(255,255,255,.72);
+      -webkit-backdrop-filter: blur(18px) saturate(120%);
+      backdrop-filter: blur(18px) saturate(120%);
+      border-bottom: 1px solid rgba(20,24,28,.08);
       padding: 10px 18px;
       margin: -14px -14px 12px;
+    }
+    [data-theme="night"] .readTopBar{
+      background: rgba(11,18,32,.55);
+      border-bottom: 1px solid rgba(255,255,255,.08);
     }
     .readTopBar .rtLeft,
     .readTopBar .rtRight{display:flex;align-items:center;gap:10px;flex:0 0 auto}
@@ -316,7 +321,6 @@
       gap: 6px;
     }
 
-    /* ── Слова-карточки ── */
     .w{
       display:inline;
       padding:0 1px;
@@ -334,16 +338,23 @@
     body[data-route="reader"] .readerStage{padding-bottom:110px;}
     .listenStage{max-width:860px;margin:0 auto;padding:18px 18px calc(120px + var(--safeBottom));}
 
-    /* ── Верхняя панель «Слушать» — на всю ширину ── */
+    /* ── Верхняя панель «Слушать» — frosted glass ── */
     .listenTop{
       display:flex;align-items:center;justify-content:space-between;
       gap:12px;
       position: sticky;
       top: 0;
       z-index: 20;
-      background: var(--readerBg);
+      background: rgba(255,255,255,.72);
+      -webkit-backdrop-filter: blur(18px) saturate(120%);
+      backdrop-filter: blur(18px) saturate(120%);
+      border-bottom: 1px solid rgba(20,24,28,.08);
       padding: 10px 18px;
       margin: -18px -18px 0;
+    }
+    [data-theme="night"] .listenTop{
+      background: rgba(11,18,32,.55);
+      border-bottom: 1px solid rgba(255,255,255,.08);
     }
     .listenTop .ltLeft{display:flex;align-items:center;gap:12px;flex:0 0 auto}
     .listenTop .ltRight{display:flex;align-items:center;gap:10px;flex:0 0 auto}
@@ -411,15 +422,20 @@
     [data-theme="night"] .modeBtn.active{background:rgba(255,255,255,.10)}
     .modeBtn svg{width:20px;height:20px}
 
+    /* ── Плеер — frosted glass ── */
     .playerBar{
       position:fixed;left:0;right:0;bottom:0;
-      background:rgba(255,255,255,.75);
-      backdrop-filter: blur(10px);
-      border-top:1px solid var(--line);
+      background: rgba(255,255,255,.72);
+      -webkit-backdrop-filter: blur(18px) saturate(120%);
+      backdrop-filter: blur(18px) saturate(120%);
+      border-top: 1px solid rgba(20,24,28,.08);
       padding:10px 14px calc(10px + var(--safeBottom));
       z-index:50;
     }
-    [data-theme="night"] .playerBar{background:rgba(15,26,47,.70)}
+    [data-theme="night"] .playerBar{
+      background: rgba(11,18,32,.55);
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
     .playerInner{
       max-width:980px;margin:0 auto;
       display:grid;
@@ -611,7 +627,6 @@
       font-weight:900;
     }
 
-    /* ── Кнопки выбора фона страницы ── */
     .pageBgSeg{
       display:inline-flex;
       gap:4px;
