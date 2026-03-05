@@ -77,8 +77,9 @@ function renderLibrary(){
       const coverHtml=b.cover?'<img src="'+escapeHtml(b.cover)+'" alt="">':'';
       const authorSeries=[String((b.author||'')||'').trim(),String((b.series||'')||'').trim()].filter(Boolean).join(' \u2022 ');
       const metaHtml=authorSeries?'<p class="bmMeta">'+escapeHtml(authorSeries)+'</p>':'';
-      const backBtn=(tab==="bookmarks"&&state.ui?.backToBook&&state.ui.backToBook.bookId===b.id)
-        +' <button class="bmBackMini inline" id="backToBookBtn">\u21a9\ufe0e '+I18n.t("btn_back")+'</button>':'';
+      const backBtn=(tab==="bookmarks"&&state.ui&&state.ui.backToBook&&state.ui.backToBook.bookId===b.id)
+        ? ' <button class="bmBackMini inline" id="backToBookBtn">\u21a9\ufe0e '+I18n.t("btn_back")+'</button>'
+        : '';
       const groups=[],keyMap=new Map();
       (items||[]).forEach(function(it){
         const key=String(it.level||'original')+'|'+String(it.sourceLang||'en')+'|'+String(it.targetLang||'uk')+'|'+String(it.mode||'read');
@@ -86,7 +87,7 @@ function renderLibrary(){
         keyMap.get(key).items.push(it);
       });
       try{
-        const last=state.ui?.lastBmCtx;
+        const last=state.ui&&state.ui.lastBmCtx;
         const prefKey=(last&&String(last.bookId)===String(b.id))?(String(last.level||'original')+'|'+String(last.sourceLang||'en')+'|'+String(last.targetLang||'uk')+'|'+String(last.mode||'read')):'';
         groups.forEach(function(g){try{g._ts=Math.max.apply(null,(g.items||[]).map(function(x){return Number(x.createdAt||0);}));}catch(e){g._ts=0;}});
         groups.sort(function(a,b2){const ap=(prefKey&&a.key===prefKey)?1:0,bp=(prefKey&&b2.key===prefKey)?1:0;if(ap!==bp)return bp-ap;return Number(b2._ts||0)-Number(a._ts||0);});
@@ -97,13 +98,17 @@ function renderLibrary(){
           const bId=escapeHtml(b.id),iId=escapeHtml(it.id);
           const trHtml=(it.tr&&it.raw&&it.tr!==it.raw)?'<p class="bmTr">'+escapeHtml(it.tr)+'</p>':'';
           return '<div class="bmItem" data-bm-item><div class="bmMain"><p class="bmLabel">#'+(idx+1)+'</p><p class="bmRaw">'+escapeHtml(it.raw||it.tr||'')+'</p>'+trHtml+'</div>'
-            +'<div class="bmBtns"><button class="bmBtn" data-bm-play="'+bId+'::'+iId+'">&x1F50A;</button>'
-            +'<button class="bmBtn primary" data-bm-go="'+bId+'::'+iId+'">&x21AA;\uFE0E</button>'
-            +'<button class="bmBtn" data-bm-del="'+bId+'::'+iId+'">&#x2715;</button></div></div>';
+            +'<div class="bmBtns">'
+            +'<button class="bmBtn" data-bm-play="'+bId+'::'+iId+'">\ud83d\udd0a</button>'
+            +'<button class="bmBtn primary" data-bm-go="'+bId+'::'+iId+'">\u21aa\ufe0e</button>'
+            +'<button class="bmBtn" data-bm-del="'+bId+'::'+iId+'">\u2715</button>'
+            +'</div></div>';
         }).join('');
         return '<div class="bmGroupHdr" data-resume="'+resumeKey+'" role="button" tabindex="0">'
           +'<span class="bmLevel">'+escapeHtml(Config.formatLevelLabel(g.level))+'</span>'
-          +'<span class="bmSep">\u2022</span><span class="bmPkg">'+escapeHtml(Config.formatPkgLabel(g.src,g.trg,g.mode))+'</span></div>'+itemsHtml;
+          +'<span class="bmSep">\u2022</span>'
+          +'<span class="bmPkg">'+escapeHtml(Config.formatPkgLabel(g.src,g.trg,g.mode))+'</span>'
+          +'</div>'+itemsHtml;
       }).join('');
       return '<div class="bmBook"><div class="bmHead" data-open="'+escapeHtml(b.id)+'">'
         +'<div class="bmCover">'+coverHtml+'</div>'
@@ -183,7 +188,7 @@ function renderLibrary(){
   if(__btb){
     __btb.onclick=(e)=>{
       try{e.preventDefault();e.stopPropagation();}catch(_e){}
-      const ctx=state.ui?.backToBook;
+      const ctx=state.ui&&state.ui.backToBook;
       if(!ctx||!ctx.bookId) return;
       try{state.reading.level=ctx.level||state.reading.level||'original';}catch(e){}
       try{state.reading.sourceLang=ctx.src||state.reading.sourceLang||'en';}catch(e){}
@@ -252,16 +257,16 @@ function renderLibrary(){
           }
         }catch(e){filtered=listAll;}
         const it=filtered.find(x=>x&&x.id===entryId);
-        const idx=Number(it?.paraIdx??it?.lineIndex??0);
+        const idx=Number(it&&(it.paraIdx!=null?it.paraIdx:it.lineIndex)||0);
         const widx=(it&&Number.isFinite(it.wordIndex)&&it.wordIndex>=0)?Number(it.wordIndex):undefined;
-        const bmMode=String(it?.mode||'').toLowerCase();
-        const routeName=(bmMode==='listen')?'reader':(bmMode==='read'?'bireader':(state.route?.name==='bireader'?'bireader':'reader'));
+        const bmMode=String((it&&it.mode)||'').toLowerCase();
+        const routeName=(bmMode==='listen')?'reader':(bmMode==='read'?'bireader':(state.route&&state.route.name==='bireader'?'bireader':'reader'));
         try{
-          const src2=String(it?.sourceLang||state.reading?.sourceLang||'en').trim().toLowerCase();
-          const trg2=String(it?.targetLang||state.reading?.targetLang||'uk').trim().toLowerCase();
-          const level2=Config.normalizeLevel(it?.level||state.reading?.level||'original');
+          const src2=String((it&&it.sourceLang)||state.reading.sourceLang||'en').trim().toLowerCase();
+          const trg2=String((it&&it.targetLang)||state.reading.targetLang||'uk').trim().toLowerCase();
+          const level2=Config.normalizeLevel((it&&it.level)||state.reading.level||'original');
           const prev=ProgressManager.getPkgProgress(bookId,src2,trg2,level2);
-          const resumeIndex=Number.isFinite(prev?.activeIndex)?Number(prev.activeIndex):0;
+          const resumeIndex=Number.isFinite(prev&&prev.activeIndex)?Number(prev.activeIndex):0;
           state.ui=state.ui||{};
           state.ui.pendingBookmarkPlayChoice={bookId:String(bookId),bookmarkIndex:idx,resumeIndex,src:src2,trg:trg2,level:level2,createdAt:Date.now()};
           state.ui.lockProgressUntilChoice={bookId:String(bookId),src:src2,trg:trg2,level:level2,createdAt:Date.now()};
