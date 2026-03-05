@@ -13,36 +13,62 @@ function _appTopBar(){
     + '</div></div>';
 }
 
-/* В\u043eлшебство: вкладки в топбар при скролле */
-function _bindTabsScroll(tabsBooksId, tabLibraryId, isCatalog){
+/* Глобальный observer — чтобы можно было отключить при навигации */
+var _tabsScrollObserver = null;
+
+function _disconnectTabsObserver(){
+  if(_tabsScrollObserver){
+    try{ _tabsScrollObserver.disconnect(); }catch(e){}
+    _tabsScrollObserver = null;
+  }
+}
+
+/* Волшебство: вкладки в топбар при скролле */
+function _bindTabsScroll(isCatalog){
+  _disconnectTabsObserver();
+
   const header = document.querySelector('.appHeader');
   const topBarLeft = document.getElementById('appTopBarLeft');
   if(!header || !topBarLeft) return;
 
   let tabsInBar = false;
+  const barH = document.getElementById('appTopBar')?.offsetHeight || 60;
 
-  const observer = new IntersectionObserver(function(entries){
+  _tabsScrollObserver = new IntersectionObserver(function(entries){
     const entry = entries[0];
+
+    // Если app уже перерисован (нет нашего topBarLeft) — отключаемся
+    if(!document.getElementById('appTopBarLeft')){
+      _disconnectTabsObserver();
+      return;
+    }
+
     if(!entry.isIntersecting && !tabsInBar){
-      // Вкладки ушли за полоску — переносим в топбар
       tabsInBar = true;
-      topBarLeft.innerHTML = '<div class="appTopTabs" id="appTopTabsClone">'
+      const tbl = document.getElementById('appTopBarLeft');
+      if(!tbl) return;
+      tbl.innerHTML = '<div class="appTopTabs">'
         + '<button class="tab ' + (isCatalog ? '' : 'muted') + '" id="topTabBooks">' + I18n.t('tabs_books') + '</button>'
         + '<button class="tab ' + (isCatalog ? 'muted' : '') + '" id="topTabLibrary">' + I18n.t('tabs_library') + '</button>'
         + '</div>';
-      document.getElementById('topTabBooks').onclick = function(e){ e.stopPropagation(); go({name:'catalog'},{push:false}); };
-      document.getElementById('topTabLibrary').onclick = function(e){ e.stopPropagation(); go({name:'library'},{push:false}); };
-    } else if(entry.isIntersecting && tabsInBar){
-      // Вкладки вернулись — чистим топбар
-      tabsInBar = false;
-      topBarLeft.innerHTML = '';
-    }
-  }, { threshold: 0, rootMargin: '-' + (document.getElementById('appTopBar')?.offsetHeight || 60) + 'px 0px 0px 0px' });
+      var tb = document.getElementById('topTabBooks');
+      var tl = document.getElementById('topTabLibrary');
+      if(tb) tb.addEventListener('click', function(e){ e.stopPropagation(); go({name:'catalog'},{push:false}); });
+      if(tl) tl.addEventListener('click', function(e){ e.stopPropagation(); go({name:'library'},{push:false}); });
 
-  observer.observe(header);
+    } else if(entry.isIntersecting && tabsInBar){
+      tabsInBar = false;
+      var tbl2 = document.getElementById('appTopBarLeft');
+      if(tbl2) tbl2.innerHTML = '';
+    }
+  }, { threshold: 0, rootMargin: '-' + barH + 'px 0px 0px 0px' });
+
+  _tabsScrollObserver.observe(header);
 }
 
 function renderCatalog(){
+  _disconnectTabsObserver();
+
   const groups = {};
   state.catalog.forEach(b=>{
     const g = (b.series || "Books").trim();
@@ -143,12 +169,12 @@ function renderCatalog(){
     </div>
   `;
 
-  document.getElementById('tabBooks').onclick    = ()=>go({name:'catalog'},{push:false});
-  document.getElementById('tabLibrary').onclick  = ()=>go({name:'library'},{push:false});
+  document.getElementById('tabBooks').onclick   = ()=>go({name:'catalog'},{push:false});
+  document.getElementById('tabLibrary').onclick = ()=>go({name:'library'},{push:false});
   const __ats = document.getElementById('appTopSettings');
   if(__ats) __ats.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); try{ openSettings(); }catch(err){} });
 
-  _bindTabsScroll('tabBooks','tabLibrary', true);
+  _bindTabsScroll(true);
 
   if(cont){
     const openCont = ()=>{
