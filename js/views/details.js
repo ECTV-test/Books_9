@@ -1,17 +1,11 @@
-/* ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    views/details.js  —  Экран «Детали книги»
-   Зависимости: state, app, go(), escapeHtml(), getBookTitle(),
-                formatMetaAuthorSeries(), stopReading(), saveReadingProgress(),
-                restoreProgressForPair(), applyLanguagePairChange(), openChapters(),
-                showBookBookmarksSheet(), TranslateService.*,
-                ProgressManager.*, Config.*, I18n.*
-   ═══════════════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════════════════════ */
 
 function renderDetails(){
   if(!state.book){ return go({name:"catalog"}, {push:false}); }
   const b = state.book;
 
-  // progress (show last used language package; fallback to max)
   let savedPct = 0;
   let savedLabel = "";
   try{
@@ -46,7 +40,7 @@ function renderDetails(){
   if(!levelNow){ try{ const lp = ProgressManager.getLastPkg(b.id); if(lp && lp.level) levelNow = String(lp.level); }catch(e){} }
   levelNow = Config.formatLevelLabel(levelNow || "original");
   const pctNow = Math.max(0, Math.round(Number(savedPct||0)));
-  const pkgLine = `• ${levelNow} • ~${pagesEst} ${I18n.t("pages")} • ${pctNow}%${savedLabel?` • ${savedLabel}`:``}`;
+  const pkgLine = `• ${levelNow} • ~${pagesEst} ${I18n.t("pages")} • ${pctNow}%${savedLabel?` • ${savedLabel}`:``)`;
 
   const uiL = I18n.getUiLang();
   const desc = (
@@ -59,13 +53,24 @@ function renderDetails(){
   const bookLang = b.sourceLang || state.reading.sourceLang || "en";
   state.reading.sourceLang = bookLang;
 
+  // SVG иконки — те же что в топбаре режимов
+  const svgBack = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`;
+  const svgChapters = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 10h10M4 14h12M4 18h8"/></svg>`;
+  const svgBookmark = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a1 1 0 0 1 1 1v17l-8-4-8 4V4a1 1 0 0 1 1-1z"/></svg>`;
+
+  // SVG режимов — те же что в modeSwitch плеера
+  const svgListen = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-7 7v4a4 4 0 0 0 4 4h1V8H9a5 5 0 0 1 10 0h-1v10h1a4 4 0 0 0 4-4v-4a7 7 0 0 0-7-7z"/></svg>`;
+  const svgRead = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4h10a2 2 0 0 1 2 2v13H7a2 2 0 0 0-2 2V6a2 2 0 0 1 2-2z"/><path d="M7 4v15" stroke-linecap="round"/></svg>`;
+
   app.innerHTML = `
 <div class="wrap">
   <div class="detailsWrap">
     <div class="detailsTop">
-      <button class="iconBtn" id="detailsBack" title="Back">‹</button>
-      <button class="iconBtn" id="detailsChapters" title="Chapters">≡</button>
-      <button class="iconBtn" id="detailsBookmark" title="Bookmark">🔖</button>
+      <button class="iconBtn" id="detailsBack" title="Back">${svgBack}</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="iconBtn" id="detailsBookmark" title="Bookmark">${svgBookmark}</button>
+        <button class="iconBtn" id="detailsChapters" title="Chapters">${svgChapters}</button>
+      </div>
     </div>
 
     <div class="detailsGrid">
@@ -99,8 +104,8 @@ function renderDetails(){
         </div>
 
         <div class="bigActions">
-          <button class="bigBtn" id="btnRead">≡ ${I18n.t("details_btn_read")}</button>
-          <button class="bigBtn secondary" id="btnListen">🎧 ${I18n.t("details_btn_listen")}</button>
+          <button class="bigBtn" id="btnRead">${svgRead} ${I18n.t("details_btn_read")}</button>
+          <button class="bigBtn secondary" id="btnListen">${svgListen} ${I18n.t("details_btn_listen")}</button>
         </div>
       </div>
     </div>
