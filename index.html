@@ -14,14 +14,14 @@
       padding: 10px 18px;
       -webkit-backdrop-filter: blur(18px) saturate(120%);
       backdrop-filter: blur(18px) saturate(120%);
-      background: rgba(255,255,255,.85);
+      background: rgba(255,255,255,.72);
       border-bottom: 1px solid rgba(20,24,28,.08);
       margin: 0 calc(-1 * max(18px, calc((100vw - 1120px) / 2 + 18px)));
       padding-left: max(18px, calc((100vw - 1120px) / 2 + 18px));
       padding-right: max(18px, calc((100vw - 1120px) / 2 + 18px));
     }
     [data-theme="night"] .appTopBar {
-      background: rgba(11,18,32,.88);
+      background: rgba(11,18,32,.55);
       border-bottom: 1px solid rgba(255,255,255,.08);
     }
     .appTopBarLeft { display: flex; align-items: center; gap: 6px; min-width: 0; }
@@ -40,7 +40,6 @@
       font-size: 22px; line-height: 1; font-weight: 900; letter-spacing: -.01em;
       background: none; border: none; padding: 2px 0; cursor: pointer;
       color: var(--text); white-space: nowrap;
-      /* transition управляется JS через inline style */
       transition: opacity .2s ease, transform .2s ease;
     }
     .appTopTabs .tab.muted { color: rgba(54,53,53,.38); }
@@ -49,14 +48,10 @@
     /* ── Большой заголовок — исчезает при скролле, управляется JS ── */
     .appHeader {
       padding-top: 16px !important;
-      /* transition управляется JS */
       transition: opacity .2s ease;
       will-change: opacity;
-      /* Важно: заголовок НЕ занимает место после исчезновения —
-         он остаётся в потоке, но перекрыт топбаром через z-index */
     }
 
-    /* ── Остальные стили ── */
     .readTopBar { left: 0; right: 0; box-sizing: border-box; }
     .readTopBar .topIcon {
       width: 40px; height: 40px; border-radius: 12px; border: none;
@@ -71,19 +66,19 @@
       padding: 10px 18px; margin: 0 -18px 12px -18px;
       -webkit-backdrop-filter: blur(18px) saturate(120%);
       backdrop-filter: blur(18px) saturate(120%);
-      background: rgba(255,255,255,.85);
+      background: rgba(255,255,255,.72);
       border-bottom: 1px solid rgba(20,24,28,.08);
     }
-    [data-theme="night"] .detailsTop { background: rgba(11,18,32,.88); border-bottom: 1px solid rgba(255,255,255,.08); }
+    [data-theme="night"] .detailsTop { background: rgba(11,18,32,.55); border-bottom: 1px solid rgba(255,255,255,.08); }
     .detailsTop .iconBtn { background: rgba(0,0,0,.06); border-radius: 12px; }
     [data-theme="night"] .detailsTop .iconBtn { background: rgba(255,255,255,.10); }
     .playerBar {
       -webkit-backdrop-filter: blur(18px) saturate(120%) !important;
       backdrop-filter: blur(18px) saturate(120%) !important;
-      background: rgba(255,255,255,.85) !important;
+      background: rgba(255,255,255,.72) !important;
       border-top: 1px solid rgba(20,24,28,.08) !important;
     }
-    [data-theme="night"] .playerBar { background: rgba(7,18,31,.92) !important; border-top: 1px solid rgba(255,255,255,.08) !important; }
+    [data-theme="night"] .playerBar { background: rgba(7,18,31,.85) !important; border-top: 1px solid rgba(255,255,255,.08) !important; }
     .playerBar .iconBtn { background: rgba(0,0,0,.06) !important; border-radius: 12px !important; color: var(--text) !important; }
     [data-theme="night"] .playerBar .iconBtn { background: rgba(255,255,255,.10) !important; }
     [data-theme="night"] .readerStage .paper { background: transparent !important; box-shadow: none !important; border: none !important; border-radius: 0 !important; }
