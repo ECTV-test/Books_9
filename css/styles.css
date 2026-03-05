@@ -261,7 +261,7 @@
     .paraLine{ margin: 0 0 14px; }
     .line{
       font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
-      font-size: calc(var(--fontSize) * 1.12);
+      font-size: var(--fontSize);
       line-height: var(--lineHeight);
       margin: 0;
     }
@@ -316,7 +316,7 @@
       gap: 6px;
     }
 
-    /* ── Слова-карточки: минимальный ободок, почти невидимый ── */
+    /* ── Слова-карточки ── */
     .w{
       display:inline;
       padding:0 1px;
