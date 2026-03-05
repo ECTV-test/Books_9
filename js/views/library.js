@@ -3,7 +3,6 @@
    ═══════════════════════════════════════════════════════════ */
 
 function renderLibrary(){
-  // Отключаем observer от предыдущего экрана
   if(typeof _disconnectTabsObserver === 'function') _disconnectTabsObserver();
 
   const tab = state.ui?.libraryTab || "progress";

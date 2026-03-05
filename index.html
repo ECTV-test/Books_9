@@ -18,7 +18,6 @@
       margin: 0 calc(-1 * max(18px, calc((100vw - 1120px) / 2 + 18px)));
       padding-left: max(18px, calc((100vw - 1120px) / 2 + 18px));
       padding-right: max(18px, calc((100vw - 1120px) / 2 + 18px));
-      transition: background .2s;
     }
     [data-theme="night"] .appTopBar {
       background: rgba(11,18,32,.55);
@@ -33,15 +32,25 @@
       cursor: pointer; flex-shrink: 0;
     }
     [data-theme="night"] .appTopBtn { background: rgba(255,255,255,.10); }
+
+    /* ── Маленькие вкладки в топбаре ── */
     .appTopTabs { display: flex; align-items: baseline; gap: 14px; overflow: hidden; }
     .appTopTabs .tab {
       font-size: 22px; line-height: 1; font-weight: 900; letter-spacing: -.01em;
       background: none; border: none; padding: 2px 0; cursor: pointer;
       color: var(--text); white-space: nowrap;
+      transition: opacity .15s;
     }
     .appTopTabs .tab.muted { color: rgba(54,53,53,.38); }
     [data-theme="night"] .appTopTabs .tab.muted { color: rgba(255,255,255,.32); }
-    .appHeader { padding-top: 16px !important; }
+
+    /* ── Большой заголовок — плавно исчезает при скролле ── */
+    .appHeader {
+      padding-top: 16px !important;
+      transition: opacity .15s ease, transform .15s ease;
+      will-change: opacity, transform;
+    }
+
     .readTopBar { left: 0; right: 0; box-sizing: border-box; }
     .readTopBar .topIcon {
       width: 40px; height: 40px; border-radius: 12px; border: none;
@@ -100,20 +109,19 @@
     <div class="setHead"><div class="setTitle">Налаштування</div><button class="miniBtn" id="setClose">✕</button></div>
     <div class="sheetTabs" role="tablist"><button class="sheetTab active" id="setTabRead" role="tab">Текст</button><button class="sheetTab" id="setTabListen" role="tab">Аудіо</button></div>
     <div id="setPaneRead" class="sheetPane" role="tabpanel">
-      <div class="row"><div><div><b id="uiLangLabel">Мова інтерфейсу</b></div><small id="uiLangHint">Interface language</small></div>
-        <select id="uiLangSelect"><option value="en">English</option><option value="uk">Українська</option><option value="ru">Русский</option><option value="pl">Polski</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="pt">Português</option></select></div>
-      <div class="row"><div><div><b>Мова перекладу</b></div><small>LibreTranslate target</small></div><select id="targetLang"></select></div>
+      <div class="row"><div><div><b id="uiLangLabel">Мова інтерфейсу</b></div><small id="uiLangHint">Interface language</small></div><select id="uiLangSelect"><option value="en">English</option><option value="uk">Українська</option><option value="ru">Русский</option><option value="pl">Polski</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="pt">Português</option></select></div>
+      <div class="row"><div><div><b>Мова перекладу</b></div><small>LibreTranslate</small></div><select id="targetLang"></select></div>
       <div class="row"><div><div><b>Розмір тексту</b></div><small>A− / A+</small></div><div class="seg"><button id="fontMinus">A−</button><button id="fontPlus">A+</button></div></div>
-      <div class="row"><div><div><b>Колір підсвітки</b></div><small>Default / Yellow</small></div><div class="seg"><button id="hlDefault" class="active">Default</button><button id="hlYellow">Yellow</button></div></div>
-      <div class="row pageBgRow"><div><div><b id="pageBgLabel">Фон сторінки</b></div><small id="pageBgHint"></small></div><div class="pageBgSeg"><button class="pageBgBtn active" data-bg="auto">A</button><button class="pageBgBtn" data-bg="warm">☀</button><button class="pageBgBtn" data-bg="white">W</button></div></div>
+      <div class="row"><div><div><b>Колір підсвітки</b></div></div><div class="seg"><button id="hlDefault" class="active">Default</button><button id="hlYellow">Yellow</button></div></div>
+      <div class="row pageBgRow"><div><div><b id="pageBgLabel">Фон</b></div><small id="pageBgHint"></small></div><div class="pageBgSeg"><button class="pageBgBtn active" data-bg="auto">A</button><button class="pageBgBtn" data-bg="warm">☀</button><button class="pageBgBtn" data-bg="white">W</button></div></div>
       <div class="row" id="rowTapTranslate"><div><div><b>Переклад</b></div><small>по кліку</small></div><div class="toggle on" id="tTranslation"><div class="knob"></div></div></div>
-      <div class="row" id="rowLineTranslate" style="display:none"><div><div><b>Переклад рядком</b></div><small>під текстом</small></div><div class="toggle on" id="tLineTranslation"><div class="knob"></div></div></div>
-      <div class="row"><div><div><b>Тема</b></div><small>нічний режим</small></div><div class="toggle" id="tNight"><div class="knob"></div></div></div>
-      <div class="row"><div><div><b>Підсвітка</b></div><small>активний рядок</small></div><div class="toggle on" id="tHighlight"><div class="knob"></div></div></div>
-      <div class="row"><div><div><b>Поміняти мови</b></div><small>лише режим "Read"</small></div><div class="toggle" id="tSwap"><div class="knob"></div></div></div>
+      <div class="row" id="rowLineTranslate" style="display:none"><div><div><b>Переклад рядком</b></div></div><div class="toggle on" id="tLineTranslation"><div class="knob"></div></div></div>
+      <div class="row"><div><div><b>Тема</b></div><small>нічний</small></div><div class="toggle" id="tNight"><div class="knob"></div></div></div>
+      <div class="row"><div><div><b>Підсвітка</b></div></div><div class="toggle on" id="tHighlight"><div class="knob"></div></div></div>
+      <div class="row"><div><div><b>Поміняти мови</b></div></div><div class="toggle" id="tSwap"><div class="knob"></div></div></div>
     </div>
     <div id="setPaneListen" class="sheetPane" role="tabpanel" style="display:none">
-      <div class="row"><div><div><b>Стать голосу</b></div></div><div class="seg"><button id="uMale">Чоловічий</button><button id="uFemale">Жіночий</button></div></div>
+      <div class="row"><div><div><b>Стать</b></div></div><div class="seg"><button id="uMale">Чоловічий</button><button id="uFemale">Жіночий</button></div></div>
       <div class="row"><div><div><b>Швидкість</b></div><small id="speedLabel">1.0×</small></div><div class="seg"><button id="uSpeedSlow">Повільно</button><button id="uSpeedNormal">Нормально</button><button id="uSpeedFast">Швидко</button></div></div>
       <input id="speed" class="range" type="range" min="0.3" max="2.0" step="0.05" value="1.0" style="display:none">
     </div>
@@ -122,7 +130,7 @@
     <div class="sheetHandle" aria-hidden="true"></div>
     <div class="setHead"><div class="setTitle">Dev</div><button class="miniBtn" id="devClose">✕</button></div>
     <div class="row"><div><div><b>Провайдер</b></div></div><div class="seg"><button id="provLibre">Libre</button><button id="provOpenAI">OpenAI</button></div></div>
-    <div class="row"><div><div><b>Стать</b></div></div><div class="seg"><button id="vMale">Чоловічий</button><button id="vFemale">Жіночий</button></div></div>
+    <div class="row"><div><div><b>Стать</b></div></div><div class="seg"><button id="vMale">чол</button><button id="vFemale">жін</button></div></div>
     <div class="row"><div><div><b>Голос</b></div></div><select id="ttsVoiceSelect"></select></div>
     <div class="row" style="align-items:flex-start"><div style="min-width:140px"><div><b>Промпт</b></div></div><textarea id="ttsInstructions" style="width:100%;min-height:86px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);color:var(--text);font-weight:700;resize:vertical"></textarea></div>
     <div class="row"><div><div><b>Без кешу</b></div></div><div class="toggle" id="tNoCache"><div class="knob"></div></div></div>
@@ -130,10 +138,7 @@
   </div>
   <div id="chaptersSheet" class="sheet" aria-hidden="true">
     <div class="sheetHandle" aria-hidden="true"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px 6px;">
-      <div id="chaptersTitle" style="font-weight:900">Chapters</div>
-      <button class="btn" id="chaptersClose" style="padding:8px 12px">Close</button>
-    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px 6px;"><div id="chaptersTitle" style="font-weight:900">Chapters</div><button class="btn" id="chaptersClose" style="padding:8px 12px">Close</button></div>
     <div id="chaptersList" style="padding:6px 12px 18px;display:flex;flex-direction:column;gap:8px;"></div>
   </div>
   <div id="player" class="playerBar" style="display:none">
@@ -158,8 +163,8 @@
   <script src="js/services/books.js?v=2"></script>
   <script src="js/services/translate.js?v=2"></script>
   <script src="js/services/tts.js?v=2"></script>
-  <script src="js/views/catalog.js?v=5"></script>
-  <script src="js/views/library.js?v=5"></script>
+  <script src="js/views/catalog.js?v=6"></script>
+  <script src="js/views/library.js?v=6"></script>
   <script src="js/views/details.js?v=3"></script>
   <script src="js/views/reader.js?v=4"></script>
   <script src="js/app.js?v=7" defer></script>

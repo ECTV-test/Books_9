@@ -4,7 +4,7 @@
 
 const _SVG_SETTINGS = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
 
-/* Верхняя полоска — общая для каталога и библиотеки */
+/* Верхняя полоска */
 function _appTopBar(){
   return '<div class="appTopBar" id="appTopBar">'
     + '<div class="appTopBarLeft" id="appTopBarLeft"></div>'
@@ -13,57 +13,83 @@ function _appTopBar(){
     + '</div></div>';
 }
 
-/* Глобальный observer — чтобы можно было отключить при навигации */
-var _tabsScrollObserver = null;
+/* Глобальный scroll listener */
+var _tabsScrollHandler = null;
 
 function _disconnectTabsObserver(){
-  if(_tabsScrollObserver){
-    try{ _tabsScrollObserver.disconnect(); }catch(e){}
-    _tabsScrollObserver = null;
+  if(_tabsScrollHandler){
+    try{ window.removeEventListener('scroll', _tabsScrollHandler, true); }catch(e){}
+    _tabsScrollHandler = null;
   }
 }
 
-/* Волшебство: вкладки в топбар при скролле */
+/* Волшебство: большой заголовок плавно исчезает, маленький плавно появляется */
 function _bindTabsScroll(isCatalog){
   _disconnectTabsObserver();
 
-  const header = document.querySelector('.appHeader');
-  const topBarLeft = document.getElementById('appTopBarLeft');
-  if(!header || !topBarLeft) return;
+  var lastRaf = null;
 
-  let tabsInBar = false;
-  const barH = document.getElementById('appTopBar')?.offsetHeight || 60;
+  _tabsScrollHandler = function(){
+    if(lastRaf) return;
+    lastRaf = requestAnimationFrame(function(){
+      lastRaf = null;
 
-  _tabsScrollObserver = new IntersectionObserver(function(entries){
-    const entry = entries[0];
+      // Если DOM уже перерисован — отключаемся
+      var topBarLeft = document.getElementById('appTopBarLeft');
+      var header = document.querySelector('.appHeader');
+      if(!topBarLeft || !header){ _disconnectTabsObserver(); return; }
 
-    // Если app уже перерисован (нет нашего topBarLeft) — отключаемся
-    if(!document.getElementById('appTopBarLeft')){
-      _disconnectTabsObserver();
-      return;
-    }
+      var barH = document.getElementById('appTopBar')?.offsetHeight || 60;
+      var headerRect = header.getBoundingClientRect();
 
-    if(!entry.isIntersecting && !tabsInBar){
-      tabsInBar = true;
-      const tbl = document.getElementById('appTopBarLeft');
-      if(!tbl) return;
-      tbl.innerHTML = '<div class="appTopTabs">'
-        + '<button class="tab ' + (isCatalog ? '' : 'muted') + '" id="topTabBooks">' + I18n.t('tabs_books') + '</button>'
-        + '<button class="tab ' + (isCatalog ? 'muted' : '') + '" id="topTabLibrary">' + I18n.t('tabs_library') + '</button>'
-        + '</div>';
-      var tb = document.getElementById('topTabBooks');
-      var tl = document.getElementById('topTabLibrary');
-      if(tb) tb.addEventListener('click', function(e){ e.stopPropagation(); go({name:'catalog'},{push:false}); });
-      if(tl) tl.addEventListener('click', function(e){ e.stopPropagation(); go({name:'library'},{push:false}); });
+      // Позиция заголовка: 0 = только дошёл до полоски, 1 = полностью за полоской
+      // fadeZone: зона исчезновения/появления = 40px
+      var fadeZone = 40;
+      // Большой заголовок исчезает когда его нижний край уходит за barH
+      var headerBottom = headerRect.bottom; // нижний край .appHeader
+      // progress: 0 = виден (headerBottom > barH + fadeZone), 1 = скрыт (headerBottom < barH)
+      var progress = 1 - Math.max(0, Math.min(1, (headerBottom - barH) / fadeZone));
 
-    } else if(entry.isIntersecting && tabsInBar){
-      tabsInBar = false;
-      var tbl2 = document.getElementById('appTopBarLeft');
-      if(tbl2) tbl2.innerHTML = '';
-    }
-  }, { threshold: 0, rootMargin: '-' + barH + 'px 0px 0px 0px' });
+      // Большой заголовок: исчезает
+      header.style.opacity = 1 - progress;
+      header.style.transform = 'translateY(' + (-progress * 8) + 'px)';
 
-  _tabsScrollObserver.observe(header);
+      // Маленький в топбаре: появляется
+      var clone = document.getElementById('appTopTabsClone');
+      if(progress > 0.05){
+        if(!clone){
+          topBarLeft.innerHTML = '<div class="appTopTabs" id="appTopTabsClone" style="opacity:0;transform:translateY(6px);transition:opacity .18s,transform .18s">'
+            + '<button class="tab ' + (isCatalog ? '' : 'muted') + '" id="topTabBooks">' + I18n.t('tabs_books') + '</button>'
+            + '<button class="tab ' + (isCatalog ? 'muted' : '') + '" id="topTabLibrary">' + I18n.t('tabs_library') + '</button>'
+            + '</div>';
+          var tb = document.getElementById('topTabBooks');
+          var tl = document.getElementById('topTabLibrary');
+          if(tb) tb.addEventListener('click', function(e){ e.stopPropagation(); go({name:'catalog'},{push:false}); });
+          if(tl) tl.addEventListener('click', function(e){ e.stopPropagation(); go({name:'library'},{push:false}); });
+          clone = document.getElementById('appTopTabsClone');
+          // С задержкой чтоб CSS transition сработал
+          requestAnimationFrame(function(){
+            if(clone){ clone.style.opacity = ''; clone.style.transform = ''; }
+          });
+        }
+        if(clone){
+          clone.style.opacity = String(Math.min(1, (progress - 0.05) / 0.5));
+        }
+      } else {
+        if(clone){
+          clone.style.opacity = '0';
+          clone.style.transform = 'translateY(6px)';
+          // Удаляем после транзиции
+          var _clone = clone;
+          setTimeout(function(){ if(_clone.parentNode) _clone.parentNode.innerHTML = ''; }, 200);
+        }
+      }
+    });
+  };
+
+  window.addEventListener('scroll', _tabsScrollHandler, { passive: true, capture: true });
+  // Сразу вызываем для корректного начального состояния
+  _tabsScrollHandler();
 }
 
 function renderCatalog(){
@@ -148,7 +174,7 @@ function renderCatalog(){
     const items = groups[g].slice(0,10);
     return '<div class="groupCard">'
       +'<div class="groupTitleRow"><h3 class="groupTitle">'+escapeHtml(I18n.tGenre(g))+'</h3>'
-      +'<button class="chevBtn" data-group="'+escapeHtml(g)+'">›</button></div>'
+      +'<button class="chevBtn" data-group="'+escapeHtml(g)+'">\u203a</button></div>'
       +'<div class="hScroll">'
       +items.map(b=>'<div class="bookTile" data-open="'+escapeHtml(b.id)+'">'
         +'<div class="tileCover">'+(b.cover?'<img src="'+escapeHtml(b.cover)+'" alt="">':'')+'</div>'
