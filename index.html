@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/theme.css">
   <style>
-    /* ── Верхняя полоска — на всю ширину ── */
     .appTopBar {
       position: sticky; top: 0; z-index: 20;
       display: flex; align-items: center; justify-content: space-between;
@@ -34,12 +33,7 @@
       cursor: pointer; flex-shrink: 0;
     }
     [data-theme="night"] .appTopBtn { background: rgba(255,255,255,.10); }
-
-    /* ── Вкладки в топбаре (волшебство) ── */
-    .appTopTabs {
-      display: flex; align-items: baseline; gap: 14px;
-      overflow: hidden;
-    }
+    .appTopTabs { display: flex; align-items: baseline; gap: 14px; overflow: hidden; }
     .appTopTabs .tab {
       font-size: 22px; line-height: 1; font-weight: 900; letter-spacing: -.01em;
       background: none; border: none; padding: 2px 0; cursor: pointer;
@@ -47,23 +41,15 @@
     }
     .appTopTabs .tab.muted { color: rgba(54,53,53,.38); }
     [data-theme="night"] .appTopTabs .tab.muted { color: rgba(255,255,255,.32); }
-
-    /* ── appHeader ── */
     .appHeader { padding-top: 16px !important; }
-
-    /* ── Топбар режимов ── */
     .readTopBar { left: 0; right: 0; box-sizing: border-box; }
-    .readTopBar .topIcon, .listenTop .topIcon {
+    .readTopBar .topIcon {
       width: 40px; height: 40px; border-radius: 12px; border: none;
       background: rgba(0,0,0,.06); color: var(--text);
-      display: inline-flex; align-items: center; justify-content: center;
-      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
     }
-    [data-theme="night"] .readTopBar .topIcon,
-    [data-theme="night"] .listenTop .topIcon { background: rgba(255,255,255,.10); }
+    [data-theme="night"] .readTopBar .topIcon { background: rgba(255,255,255,.10); }
     .readTopBar .rtLeft, .readTopBar .rtRight { display: flex; align-items: center; gap: 6px; }
-
-    /* ── Топбар details ── */
     .detailsTop {
       position: sticky; top: 0; z-index: 20;
       display: flex; align-items: center; justify-content: space-between;
@@ -73,89 +59,53 @@
       background: rgba(255,255,255,.72);
       border-bottom: 1px solid rgba(20,24,28,.08);
     }
-    [data-theme="night"] .detailsTop {
-      background: rgba(11,18,32,.55);
-      border-bottom: 1px solid rgba(255,255,255,.08);
-    }
+    [data-theme="night"] .detailsTop { background: rgba(11,18,32,.55); border-bottom: 1px solid rgba(255,255,255,.08); }
     .detailsTop .iconBtn { background: rgba(0,0,0,.06); border-radius: 12px; }
     [data-theme="night"] .detailsTop .iconBtn { background: rgba(255,255,255,.10); }
-
-    /* ── Плеер ── */
     .playerBar {
       -webkit-backdrop-filter: blur(18px) saturate(120%) !important;
       backdrop-filter: blur(18px) saturate(120%) !important;
       background: rgba(255,255,255,.72) !important;
       border-top: 1px solid rgba(20,24,28,.08) !important;
     }
-    [data-theme="night"] .playerBar {
-      background: rgba(7,18,31,.85) !important;
-      border-top: 1px solid rgba(255,255,255,.08) !important;
-    }
-    .playerBar .iconBtn {
-      background: rgba(0,0,0,.06) !important; border-radius: 12px !important; color: var(--text) !important;
-    }
+    [data-theme="night"] .playerBar { background: rgba(7,18,31,.85) !important; border-top: 1px solid rgba(255,255,255,.08) !important; }
+    .playerBar .iconBtn { background: rgba(0,0,0,.06) !important; border-radius: 12px !important; color: var(--text) !important; }
     [data-theme="night"] .playerBar .iconBtn { background: rgba(255,255,255,.10) !important; }
-
-    /* ── Тёмная тема ── */
-    [data-theme="night"] .readerStage .paper {
-      background: transparent !important; box-shadow: none !important;
-      border: none !important; border-radius: 0 !important;
-    }
+    [data-theme="night"] .readerStage .paper { background: transparent !important; box-shadow: none !important; border: none !important; border-radius: 0 !important; }
     [data-theme="night"] .readerStage .paperInner { background: transparent !important; }
     [data-theme="night"] .pageBgRow { display: none !important; }
-
-    /* ── Listen ── */
     .listenPaper { font-family: ui-serif, Georgia, "Times New Roman", Times, serif; }
     .listenPaper .listenList { padding: 0; }
     .listenPaper .listenLine .para { font-family: ui-serif, Georgia, "Times New Roman", Times, serif; }
-
-    /* ── Поповер ── */
     .popMiniBtns { display: flex; gap: 8px; align-items: center; }
     #popBookmark svg, #popSpeak svg { display: block; }
   </style>
 </head>
-
 <body data-theme="light">
   <div id="app"></div>
-
   <div id="popover" class="popover" role="dialog" aria-hidden="true">
     <div class="popRow">
       <div class="popWord" id="popWord">word</div>
       <div class="popMiniBtns">
-        <button class="miniBtn" id="popBookmark" title="Bookmark">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a1 1 0 0 1 1 1v17l-8-4-8 4V4a1 1 0 0 1 1-1z"/></svg>
-        </button>
-        <button class="miniBtn" id="popSpeak" title="Speak">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-        </button>
+        <button class="miniBtn" id="popBookmark" title="Bookmark"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a1 1 0 0 1 1 1v17l-8-4-8 4V4a1 1 0 0 1 1-1z"/></svg></button>
+        <button class="miniBtn" id="popSpeak" title="Speak"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></button>
       </div>
     </div>
     <div class="popTrans" id="popTrans">translation</div>
-    <div class="popActions"><button class="popPlay" id="popPlayFromHere" title="Play from here">Play from here</button></div>
+    <div class="popActions"><button class="popPlay" id="popPlayFromHere">Play from here</button></div>
   </div>
-
   <div id="sheetBackdrop" class="sheetBackdrop" aria-hidden="true"></div>
-
   <div id="settings" class="sheet" aria-hidden="true">
     <div class="sheetHandle" aria-hidden="true"></div>
-    <div class="setHead">
-      <div class="setTitle">Налаштування</div>
-      <button class="miniBtn" id="setClose">✕</button>
-    </div>
-    <div class="sheetTabs" role="tablist">
-      <button class="sheetTab active" id="setTabRead" role="tab">Текст</button>
-      <button class="sheetTab" id="setTabListen" role="tab">Аудіо</button>
-    </div>
+    <div class="setHead"><div class="setTitle">Налаштування</div><button class="miniBtn" id="setClose">✕</button></div>
+    <div class="sheetTabs" role="tablist"><button class="sheetTab active" id="setTabRead" role="tab">Текст</button><button class="sheetTab" id="setTabListen" role="tab">Аудіо</button></div>
     <div id="setPaneRead" class="sheetPane" role="tabpanel">
       <div class="row"><div><div><b id="uiLangLabel">Мова інтерфейсу</b></div><small id="uiLangHint">Interface language</small></div>
-        <select id="uiLangSelect"><option value="en">English</option><option value="uk">Українська</option><option value="ru">Русский</option><option value="pl">Polski</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="pt">Português</option></select>
-      </div>
+        <select id="uiLangSelect"><option value="en">English</option><option value="uk">Українська</option><option value="ru">Русский</option><option value="pl">Polski</option><option value="de">Deutsch</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="pt">Português</option></select></div>
       <div class="row"><div><div><b>Мова перекладу</b></div><small>LibreTranslate target</small></div><select id="targetLang"></select></div>
       <div class="row"><div><div><b>Розмір тексту</b></div><small>A− / A+</small></div><div class="seg"><button id="fontMinus">A−</button><button id="fontPlus">A+</button></div></div>
       <div class="row"><div><div><b>Колір підсвітки</b></div><small>Default / Yellow</small></div><div class="seg"><button id="hlDefault" class="active">Default</button><button id="hlYellow">Yellow</button></div></div>
-      <div class="row pageBgRow"><div><div><b id="pageBgLabel">Фон сторінки</b></div><small id="pageBgHint"></small></div>
-        <div class="pageBgSeg"><button class="pageBgBtn active" data-bg="auto">A</button><button class="pageBgBtn" data-bg="warm">☀</button><button class="pageBgBtn" data-bg="white">W</button></div>
-      </div>
+      <div class="row pageBgRow"><div><div><b id="pageBgLabel">Фон сторінки</b></div><small id="pageBgHint"></small></div><div class="pageBgSeg"><button class="pageBgBtn active" data-bg="auto">A</button><button class="pageBgBtn" data-bg="warm">☀</button><button class="pageBgBtn" data-bg="white">W</button></div></div>
       <div class="row" id="rowTapTranslate"><div><div><b>Переклад</b></div><small>по кліку</small></div><div class="toggle on" id="tTranslation"><div class="knob"></div></div></div>
       <div class="row" id="rowLineTranslate" style="display:none"><div><div><b>Переклад рядком</b></div><small>під текстом</small></div><div class="toggle on" id="tLineTranslation"><div class="knob"></div></div></div>
       <div class="row"><div><div><b>Тема</b></div><small>нічний режим</small></div><div class="toggle" id="tNight"><div class="knob"></div></div></div>
@@ -163,23 +113,21 @@
       <div class="row"><div><div><b>Поміняти мови</b></div><small>лише режим "Read"</small></div><div class="toggle" id="tSwap"><div class="knob"></div></div></div>
     </div>
     <div id="setPaneListen" class="sheetPane" role="tabpanel" style="display:none">
-      <div class="row"><div><div><b>Стать голосу</b></div><small>чоловічий / жіночий</small></div><div class="seg"><button id="uMale">Чоловічий</button><button id="uFemale">Жіночий</button></div></div>
+      <div class="row"><div><div><b>Стать голосу</b></div></div><div class="seg"><button id="uMale">Чоловічий</button><button id="uFemale">Жіночий</button></div></div>
       <div class="row"><div><div><b>Швидкість</b></div><small id="speedLabel">1.0×</small></div><div class="seg"><button id="uSpeedSlow">Повільно</button><button id="uSpeedNormal">Нормально</button><button id="uSpeedFast">Швидко</button></div></div>
       <input id="speed" class="range" type="range" min="0.3" max="2.0" step="0.05" value="1.0" style="display:none">
     </div>
   </div>
-
   <div id="devPanel" class="sheet" aria-hidden="true">
     <div class="sheetHandle" aria-hidden="true"></div>
-    <div class="setHead"><div class="setTitle">Dev / Адмін</div><button class="miniBtn" id="devClose">✕</button></div>
-    <div class="row"><div><div><b>Провайдер</b></div><small>переклад</small></div><div class="seg"><button id="provLibre">Libre</button><button id="provOpenAI">OpenAI</button></div></div>
-    <div class="row"><div><div><b>Стать голосу</b></div></div><div class="seg"><button id="vMale">Чоловічий</button><button id="vFemale">Жіночий</button></div></div>
-    <div class="row"><div><div><b>Голос</b></div><small>OpenAI</small></div><select id="ttsVoiceSelect"></select></div>
+    <div class="setHead"><div class="setTitle">Dev</div><button class="miniBtn" id="devClose">✕</button></div>
+    <div class="row"><div><div><b>Провайдер</b></div></div><div class="seg"><button id="provLibre">Libre</button><button id="provOpenAI">OpenAI</button></div></div>
+    <div class="row"><div><div><b>Стать</b></div></div><div class="seg"><button id="vMale">Чоловічий</button><button id="vFemale">Жіночий</button></div></div>
+    <div class="row"><div><div><b>Голос</b></div></div><select id="ttsVoiceSelect"></select></div>
     <div class="row" style="align-items:flex-start"><div style="min-width:140px"><div><b>Промпт</b></div></div><textarea id="ttsInstructions" style="width:100%;min-height:86px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);color:var(--text);font-weight:700;resize:vertical"></textarea></div>
     <div class="row"><div><div><b>Без кешу</b></div></div><div class="toggle" id="tNoCache"><div class="knob"></div></div></div>
-    <div class="ctaRow" style="margin-top:6px"><button class="btn btnGhost" id="btnClearTts">🧹 Очистити TTS</button><button class="btn btnGhost" id="btnClearTr">🧹 Очистити TR</button></div>
+    <div class="ctaRow" style="margin-top:6px"><button class="btn btnGhost" id="btnClearTts">🧹 TTS</button><button class="btn btnGhost" id="btnClearTr">🧹 TR</button></div>
   </div>
-
   <div id="chaptersSheet" class="sheet" aria-hidden="true">
     <div class="sheetHandle" aria-hidden="true"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px 6px;">
@@ -188,13 +136,9 @@
     </div>
     <div id="chaptersList" style="padding:6px 12px 18px;display:flex;flex-direction:column;gap:8px;"></div>
   </div>
-
   <div id="player" class="playerBar" style="display:none">
     <div class="playerInner">
-      <div>
-        <div class="progTop"><div class="progTitle" id="pTitle">Reader</div><div class="progMeta"><span id="pPct">0%</span></div></div>
-        <div class="bar"><div id="pFill"></div></div>
-      </div>
+      <div><div class="progTop"><div class="progTitle" id="pTitle">Reader</div><div class="progMeta"><span id="pPct">0%</span></div></div><div class="bar"><div id="pFill"></div></div></div>
       <div class="controls">
         <button class="iconBtn" id="btnBack"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
         <button class="iconBtn" id="btnStart"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4v16M19 12L9 4v16l10-8z"/></svg></button>
@@ -206,7 +150,6 @@
       </div>
     </div>
   </div>
-
   <script src="js/i18n.js?v=2"></script>
   <script src="js/config.js?v=2"></script>
   <script src="js/core.js?v=2"></script>
@@ -215,8 +158,8 @@
   <script src="js/services/books.js?v=2"></script>
   <script src="js/services/translate.js?v=2"></script>
   <script src="js/services/tts.js?v=2"></script>
-  <script src="js/views/catalog.js?v=4"></script>
-  <script src="js/views/library.js?v=4"></script>
+  <script src="js/views/catalog.js?v=5"></script>
+  <script src="js/views/library.js?v=5"></script>
   <script src="js/views/details.js?v=3"></script>
   <script src="js/views/reader.js?v=4"></script>
   <script src="js/app.js?v=7" defer></script>

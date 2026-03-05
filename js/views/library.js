@@ -3,6 +3,9 @@
    ═══════════════════════════════════════════════════════════ */
 
 function renderLibrary(){
+  // Отключаем observer от предыдущего экрана
+  if(typeof _disconnectTabsObserver === 'function') _disconnectTabsObserver();
+
   const tab = state.ui?.libraryTab || "progress";
 
   const hasBookmarks = (bookId)=>{
@@ -93,18 +96,15 @@ function renderLibrary(){
         const resumeKey=escapeHtml(b.id)+'|'+escapeHtml(String(g.level||'original'))+'|'+escapeHtml(String(g.src||'en'))+'|'+escapeHtml(String(g.trg||'uk'))+'|'+escapeHtml(String(g.mode||'read'));
         const itemsHtml=g.items.map(function(it,idx){
           const bId=escapeHtml(b.id),iId=escapeHtml(it.id);
-          return '<div class="bmItem" data-bm-item><div class="bmMain"><p class="bmLabel">#'+(idx+1)+'</p><p class="bmRaw">'+escapeHtml(it.raw||it.tr||'')+'</p>'
-            +((it.tr&&it.raw&&it.tr!==it.raw)?'<p class="bmTr">'+escapeHtml(it.tr)+'</p>':'')
-            +'</div><div class="bmBtns">'
-            +'<button class="bmBtn" data-bm-play="'+bId+'::'+iId+'"\ud83d>\udd0a</button>'
-            +'<button class="bmBtn primary" data-bm-go="'+bId+'::'+iId+'">\u21aa\ufe0e</button>'
-            +'<button class="bmBtn" data-bm-del="'+bId+'::'+iId+'">\u2715</button>'
-            +'</div></div>';
+          const trHtml=(it.tr&&it.raw&&it.tr!==it.raw)?'<p class="bmTr">'+escapeHtml(it.tr)+'</p>':'';
+          return '<div class="bmItem" data-bm-item><div class="bmMain"><p class="bmLabel">#'+(idx+1)+'</p><p class="bmRaw">'+escapeHtml(it.raw||it.tr||'')+'</p>'+trHtml+'</div>'
+            +'<div class="bmBtns"><button class="bmBtn" data-bm-play="'+bId+'::'+iId+'">🔊</button>'
+            +'<button class="bmBtn primary" data-bm-go="'+bId+'::'+iId+'">↪︎</button>'
+            +'<button class="bmBtn" data-bm-del="'+bId+'::'+iId+'">✕</button></div></div>';
         }).join('');
         return '<div class="bmGroupHdr" data-resume="'+resumeKey+'" role="button" tabindex="0">'
           +'<span class="bmLevel">'+escapeHtml(Config.formatLevelLabel(g.level))+'</span>'
-          +'<span class="bmSep">\u2022</span><span class="bmPkg">'+escapeHtml(Config.formatPkgLabel(g.src,g.trg,g.mode))+'</span>'
-          +'</div>'+itemsHtml;
+          +'<span class="bmSep">•</span><span class="bmPkg">'+escapeHtml(Config.formatPkgLabel(g.src,g.trg,g.mode))+'</span></div>'+itemsHtml;
       }).join('');
       return '<div class="bmBook"><div class="bmHead" data-open="'+escapeHtml(b.id)+'">'
         +'<div class="bmCover">'+coverHtml+'</div>'
@@ -128,10 +128,10 @@ function renderLibrary(){
           const lvLabel=(lv==="original")?I18n.t("level_original"):String(lv).toUpperCase();
           const resumeKey=escapeHtml(b.id)+'|'+escapeHtml(lv)+'|'+escapeHtml(s)+'|'+escapeHtml(trg)+'|'+escapeHtml(m);
           return '<span class="pkgChip '+(x.isResume?'resume':'')+'" data-resume="'+resumeKey+'" role="button" tabindex="0">'
-            +'<span class="lvl">'+lvLabel+'</span><span class="sep">\u2022</span> '
-            +Config.flagFor(s)+' '+s.toUpperCase()+' <span class="arrow">\u2192</span> '+Config.flagFor(trg)+' '+trg.toUpperCase()
-            +' <span class="sep">\u2022</span> <span class="mode">'+modeLabel+'</span>'
-            +' <span class="sep">\u2022</span> <span class="pct">'+pct+'%</span></span>';
+            +'<span class="lvl">'+lvLabel+'</span><span class="sep">•</span> '
+            +Config.flagFor(s)+' '+s.toUpperCase()+' <span class="arrow">→</span> '+Config.flagFor(trg)+' '+trg.toUpperCase()
+            +' <span class="sep">•</span> <span class="mode">'+modeLabel+'</span>'
+            +' <span class="sep">•</span> <span class="pct">'+pct+'%</span></span>';
         }).join('')+'</div>';
       }
       return '<div class="libraryItem" data-open="'+escapeHtml(b.id)+'">'
@@ -164,16 +164,14 @@ function renderLibrary(){
 
   document.getElementById('tabBooks').onclick     = ()=>go({name:'catalog'},{push:false});
   document.getElementById('tabLibrary').onclick    = ()=>go({name:'library'},{push:false});
-  document.getElementById('libInProgress').onclick = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='progress';   renderLibrary(); };
-  document.getElementById('libFinished').onclick   = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='finished';   renderLibrary(); };
-  document.getElementById('libBookmarks').onclick  = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='bookmarks';  renderLibrary(); };
+  document.getElementById('libInProgress').onclick = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='progress';  renderLibrary(); };
+  document.getElementById('libFinished').onclick   = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='finished';  renderLibrary(); };
+  document.getElementById('libBookmarks').onclick  = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='bookmarks'; renderLibrary(); };
 
-  // Настройки — stopPropagation чтобы шит не закрылся
   const __ats = document.getElementById('appTopSettings');
   if(__ats) __ats.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); try{ openSettings(); }catch(err){} });
 
-  // Волшебство: вкладки в топбар
-  _bindTabsScroll('tabBooks','tabLibrary', false);
+  _bindTabsScroll(false);
 
   const __btb = document.getElementById('backToBookBtn');
   if(__btb){
