@@ -31,6 +31,7 @@ function renderDetails(){
       }
     }
   }catch(e){}
+
   const totalLinesForPages = Array.isArray(b.text) ? b.text.length : String(b.text||"").split(/\n/).filter(x=>x.trim()).length;
   const _fs = Number(state.reading.fontSize||22);
   const _lpp = Math.max(8, Math.round(14*22/_fs));
@@ -40,7 +41,7 @@ function renderDetails(){
   if(!levelNow){ try{ const lp = ProgressManager.getLastPkg(b.id); if(lp && lp.level) levelNow = String(lp.level); }catch(e){} }
   levelNow = Config.formatLevelLabel(levelNow || "original");
   const pctNow = Math.max(0, Math.round(Number(savedPct||0)));
-  const pkgLine = `• ${levelNow} • ~${pagesEst} ${I18n.t("pages")} • ${pctNow}%${savedLabel?` • ${savedLabel}`:``)`;
+  const pkgLine = "\u2022 " + levelNow + " \u2022 ~" + pagesEst + " " + I18n.t("pages") + " \u2022 " + pctNow + "%" + (savedLabel ? " \u2022 " + savedLabel : "");
 
   const uiL = I18n.getUiLang();
   const desc = (
@@ -53,14 +54,11 @@ function renderDetails(){
   const bookLang = b.sourceLang || state.reading.sourceLang || "en";
   state.reading.sourceLang = bookLang;
 
-  // SVG иконки — те же что в топбаре режимов
-  const svgBack = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`;
-  const svgChapters = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 10h10M4 14h12M4 18h8"/></svg>`;
-  const svgBookmark = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a1 1 0 0 1 1 1v17l-8-4-8 4V4a1 1 0 0 1 1-1z"/></svg>`;
-
-  // SVG режимов — те же что в modeSwitch плеера
-  const svgListen = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-7 7v4a4 4 0 0 0 4 4h1V8H9a5 5 0 0 1 10 0h-1v10h1a4 4 0 0 0 4-4v-4a7 7 0 0 0-7-7z"/></svg>`;
-  const svgRead = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4h10a2 2 0 0 1 2 2v13H7a2 2 0 0 0-2 2V6a2 2 0 0 1 2-2z"/><path d="M7 4v15" stroke-linecap="round"/></svg>`;
+  const svgBack = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+  const svgChapters = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 10h10M4 14h12M4 18h8"/></svg>';
+  const svgBookmark = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a1 1 0 0 1 1 1v17l-8-4-8 4V4a1 1 0 0 1 1-1z"/></svg>';
+  const svgListen = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-7 7v4a4 4 0 0 0 4 4h1V8H9a5 5 0 0 1 10 0h-1v10h1a4 4 0 0 0 4-4v-4a7 7 0 0 0-7-7z"/></svg>';
+  const svgRead = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4h10a2 2 0 0 1 2 2v13H7a2 2 0 0 0-2 2V6a2 2 0 0 1 2-2z"/><path d="M7 4v15" stroke-linecap="round"/></svg>';
 
   app.innerHTML = `
 <div class="wrap">
@@ -76,7 +74,7 @@ function renderDetails(){
     <div class="detailsGrid">
       <div>
         <div class="detailsCover">
-          ${b.cover ? `<img src="${escapeHtml(b.cover)}" alt="">` : ``}
+          ${b.cover ? '<img src="' + escapeHtml(b.cover) + '" alt="">' : ''}
         </div>
       </div>
 
@@ -91,15 +89,15 @@ function renderDetails(){
         <div class="formCard">
           <div class="formRow">
             <div class="label">${I18n.t("details_level")}</div>
-            <button class="pillBtn" id="detailsLevelBtn"><span id="detailsLevelLabel">${escapeHtml(I18n.t("level_original"))}</span> <span style="opacity:.6;">▾</span><select id="dLevel" class="selOverlay"></select></button>
+            <button class="pillBtn" id="detailsLevelBtn"><span id="detailsLevelLabel">${escapeHtml(I18n.t("level_original"))}</span> <span style="opacity:.6;">&#9660;</span><select id="dLevel" class="selOverlay"></select></button>
           </div>
           <div class="formRow">
             <div class="label">${I18n.t("details_book_lang")}</div>
-            <button class="pillBtn" id="detailsBookLangBtn"><span id="detailsBookFlag">🇬🇧</span><span id="detailsBookLangLabel">English</span> <span style="opacity:.6;">▾</span><select id="dSourceLang" class="selOverlay"></select></button>
+            <button class="pillBtn" id="detailsBookLangBtn"><span id="detailsBookFlag">&#127468;&#127463;</span><span id="detailsBookLangLabel">English</span> <span style="opacity:.6;">&#9660;</span><select id="dSourceLang" class="selOverlay"></select></button>
           </div>
           <div class="formRow">
             <div class="label">${I18n.t("details_trans_lang")}</div>
-            <button class="pillBtn" id="detailsTransLangBtn"><span id="detailsTransFlag">UA</span><span id="detailsTransLangLabel">Ukrainian</span> <span style="opacity:.6;">▾</span><select id="dTargetLang" class="selOverlay"></select></button>
+            <button class="pillBtn" id="detailsTransLangBtn"><span id="detailsTransFlag">UA</span><span id="detailsTransLangLabel">Ukrainian</span> <span style="opacity:.6;">&#9660;</span><select id="dTargetLang" class="selOverlay"></select></button>
           </div>
         </div>
 
@@ -151,15 +149,15 @@ function renderDetails(){
   const bookLabel = document.getElementById("detailsBookLangLabel");
   const transLabel = document.getElementById("detailsTransLangLabel");
   const levelLabel = document.getElementById("detailsLevelLabel");
-  const bookFlag = document.getElementById("detailsBookFlag");
+  const bookFlag  = document.getElementById("detailsBookFlag");
   const transFlag = document.getElementById("detailsTransFlag");
   function setLabels(){
     const sOpt = Config.SOURCE_LANGS.find(x=>x.code===src.value);
     const tOpt = Config.TARGET_LANGS.find(x=>x.code===trg.value);
-    if(bookLabel && sOpt) bookLabel.textContent = sOpt.label;
+    if(bookLabel  && sOpt) bookLabel.textContent  = sOpt.label;
     if(transLabel && tOpt) transLabel.textContent = tOpt.label;
     if(levelLabel) levelLabel.textContent = Config.formatLevelLabel(lvl.value);
-    if(bookFlag) bookFlag.textContent = Config.flagFor(src.value);
+    if(bookFlag)  bookFlag.textContent  = Config.flagFor(src.value);
     if(transFlag) transFlag.textContent = Config.flagFor(trg.value);
   }
   setLabels();
@@ -189,5 +187,5 @@ function renderDetails(){
   };
 
   document.getElementById("btnListen").onclick = ()=>{ try{ stopReading({save:true}); }catch(e){} state.reading.mode="listen"; state.reading.sourceLang = src.value; state.reading.targetLang = trg.value; try{ restoreProgressForPair(b.id, src.value, trg.value, state.reading.level); }catch(e){} go({name:"reader", bookId: b.id},{push:false}); };
-  document.getElementById("btnRead").onclick = ()=>{ try{ stopReading({save:true}); }catch(e){} state.reading.mode="read"; state.reading.sourceLang = src.value; state.reading.targetLang = trg.value; try{ restoreProgressForPair(b.id, src.value, trg.value, state.reading.level); }catch(e){} go({name:"bireader", bookId: b.id},{push:false}); };
+  document.getElementById("btnRead").onclick   = ()=>{ try{ stopReading({save:true}); }catch(e){} state.reading.mode="read";   state.reading.sourceLang = src.value; state.reading.targetLang = trg.value; try{ restoreProgressForPair(b.id, src.value, trg.value, state.reading.level); }catch(e){} go({name:"bireader", bookId: b.id},{push:false}); };
 }

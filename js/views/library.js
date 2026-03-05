@@ -1,13 +1,13 @@
-/* ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    views/library.js  —  Экран «Моя Библиотека»
-   ═══════════════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════════════════════ */
 
 function renderLibrary(){
   const tab = state.ui?.libraryTab || "progress";
 
   const hasBookmarks = (bookId)=>{
     try{
-      const k = `bm:${bookId}`;
+      const k = "bm:" + bookId;
       const s = localStorage.getItem(k) || sessionStorage.getItem(k);
       if(!s) return false;
       const arr = JSON.parse(s);
@@ -16,7 +16,7 @@ function renderLibrary(){
   };
 
   const rows = state.catalog.map(b=>{
-    let mainP = 0, maxP = 0, pkgs = [];
+    let mainP=0, maxP=0, pkgs=[];
     try{
       pkgs = ProgressManager.listPkgProgress(b.id);
       if(pkgs && pkgs.length){
@@ -72,6 +72,114 @@ function renderLibrary(){
     bookmarksGroups = list.map(({b})=>({ b, items: BookmarkManager.load(b.id) })).filter(g=>g.items&&g.items.length);
   }
 
+  // Build bookmarks HTML separately to avoid nested template literal issues
+  function buildBookmarksHtml(){
+    if(!bookmarksGroups.length) return '<div style="color:rgba(0,0,0,.45);font-weight:800;padding:18px 4px;">No bookmarks yet.</div>';
+    return bookmarksGroups.map(function(grp){
+      const b = grp.b;
+      const items = grp.items;
+      const coverHtml = b.cover ? '<img src="' + escapeHtml(b.cover) + '" alt="">' : '';
+      const authorSeries = [String((b.author||'')||'').trim(), String((b.series||'')||'').trim()].filter(Boolean).join(' \u2022 ');
+      const metaHtml = authorSeries ? '<p class="bmMeta">' + escapeHtml(authorSeries) + '</p>' : '';
+      const backBtn = (tab==="bookmarks" && state.ui?.backToBook && state.ui.backToBook.bookId===b.id)
+        ? ' <button class="bmBackMini inline" id="backToBookBtn" title="Back to book">\u21a9\ufe0e ' + I18n.t("btn_back") + '</button>' : '';
+
+      // Group items by level|src|trg|mode
+      const groups = [];
+      const keyMap = new Map();
+      (items||[]).forEach(function(it){
+        const key = String(it.level||'original')+'|'+String(it.sourceLang||'en')+'|'+String(it.targetLang||'uk')+'|'+String(it.mode||'read');
+        if(!keyMap.has(key)){
+          const g = {key, level:String(it.level||'original'), src:String(it.sourceLang||'en'), trg:String(it.targetLang||'uk'), mode:String(it.mode||'read'), items:[]};
+          keyMap.set(key, g); groups.push(g);
+        }
+        keyMap.get(key).items.push(it);
+      });
+      try{
+        const last = state.ui?.lastBmCtx;
+        const prefKey = (last && String(last.bookId)===String(b.id))
+          ? (String(last.level||'original')+'|'+String(last.sourceLang||'en')+'|'+String(last.targetLang||'uk')+'|'+String(last.mode||'read')) : '';
+        groups.forEach(function(g){ try{ g._ts=Math.max.apply(null,(g.items||[]).map(function(x){return Number(x.createdAt||0);})); }catch(e){ g._ts=0; } });
+        groups.sort(function(a,b2){
+          const ap=(prefKey&&a.key===prefKey)?1:0, bp=(prefKey&&b2.key===prefKey)?1:0;
+          if(ap!==bp) return bp-ap;
+          return Number(b2._ts||0)-Number(a._ts||0);
+        });
+      }catch(e){}
+
+      const groupsHtml = groups.map(function(g){
+        const resumeKey = escapeHtml(b.id)+'|'+escapeHtml(String(g.level||'original'))+'|'+escapeHtml(String(g.src||'en'))+'|'+escapeHtml(String(g.trg||'uk'))+'|'+escapeHtml(String(g.mode||'read'));
+        const itemsHtml = g.items.map(function(it, idx){
+          const rawHtml = escapeHtml(it.raw||it.tr||'');
+          const trHtml = (it.tr && it.raw && it.tr!==it.raw) ? '<p class="bmTr">' + escapeHtml(it.tr) + '</p>' : '';
+          const bId = escapeHtml(b.id), iId = escapeHtml(it.id);
+          return '<div class="bmItem" data-bm-item>'
+            + '<div class="bmMain">'
+            + '<p class="bmLabel">#' + (idx+1) + '</p>'
+            + '<p class="bmRaw">' + rawHtml + '</p>'
+            + trHtml
+            + '</div>'
+            + '<div class="bmBtns">'
+            + '<button class="bmBtn" data-bm-play="' + bId + '::' + iId + '" title="Play">\ud83d\udd0a</button>'
+            + '<button class="bmBtn primary" data-bm-go="' + bId + '::' + iId + '" title="Go">\u21aa\ufe0e</button>'
+            + '<button class="bmBtn" data-bm-del="' + bId + '::' + iId + '" title="Unbookmark">\u2715</button>'
+            + '</div></div>';
+        }).join('');
+        return '<div class="bmGroupHdr" data-resume="' + resumeKey + '" role="button" tabindex="0">'
+          + '<span class="bmLevel">' + escapeHtml(Config.formatLevelLabel(g.level)) + '</span>'
+          + '<span class="bmSep">\u2022</span>'
+          + '<span class="bmPkg">' + escapeHtml(Config.formatPkgLabel(g.src,g.trg,g.mode)) + '</span>'
+          + '</div>' + itemsHtml;
+      }).join('');
+
+      return '<div class="bmBook">'
+        + '<div class="bmHead" data-open="' + escapeHtml(b.id) + '">'
+        + '<div class="bmCover">' + coverHtml + '</div>'
+        + '<div style="flex:1;min-width:0;">'
+        + '<div class="bmTitleRow"><p class="bmTitle">' + escapeHtml(getBookTitle(b)||'Book') + '</p>' + backBtn + '</div>'
+        + '</div>'
+        + metaHtml
+        + '</div>'
+        + '<div class="bmItems">' + groupsHtml + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function buildProgressHtml(){
+    if(!list.length) return '<div style="color:rgba(0,0,0,.45);font-weight:800;padding:18px 4px;">No books yet.</div>';
+    return list.map(function(row){
+      const b = row.b, p = row.p, pkgs = row.pkgs;
+      const coverHtml = b.cover ? '<img src="' + escapeHtml(b.cover) + '" alt="">' : '';
+      let chipsHtml = '';
+      if(pkgs && pkgs.length){
+        chipsHtml = '<div class="pkgRow">' + pkgs.map(function(x){
+          const s=String(x.sourceLang||'').toLowerCase(), trg=String(x.targetLang||'').toLowerCase();
+          const m=String(x.mode||'read').toLowerCase(), lv=Config.normalizeLevel(x.level||'original');
+          const modeLabel=I18n.t(m==="listen"?"mode_listen":"mode_read");
+          const pct=Math.round(Number(x.progress||0));
+          const lvLabel=(lv==="original")?I18n.t("level_original"):String(lv).toUpperCase();
+          const resumeKey=escapeHtml(b.id)+'|'+escapeHtml(lv)+'|'+escapeHtml(s)+'|'+escapeHtml(trg)+'|'+escapeHtml(m);
+          return '<span class="pkgChip ' + (x.isResume?'resume':'') + '" data-resume="' + resumeKey + '" role="button" tabindex="0">'
+            + '<span class="lvl">' + lvLabel + '</span><span class="sep">\u2022</span> '
+            + Config.flagFor(s) + ' ' + s.toUpperCase()
+            + ' <span class="arrow">\u2192</span> '
+            + Config.flagFor(trg) + ' ' + trg.toUpperCase()
+            + ' <span class="sep">\u2022</span> <span class="mode">' + modeLabel + '</span>'
+            + ' <span class="sep">\u2022</span> <span class="pct">' + pct + '%</span></span>';
+        }).join('') + '</div>';
+      }
+      return '<div class="libraryItem" data-open="' + escapeHtml(b.id) + '">'
+        + '<div class="coverImg">' + coverHtml + '</div>'
+        + '<div style="flex:1;min-width:0;">'
+        + '<p class="title">' + escapeHtml(getBookTitle(b)||'Book') + '</p>'
+        + '<p class="meta">' + escapeHtml(formatMetaAuthorSeries(b)) + '</p>'
+        + chipsHtml
+        + '</div>'
+        + '<div class="circle" style="--p:' + Math.round(p) + '%"><div class="inner">' + Math.round(p) + '%</div></div>'
+        + '</div>';
+    }).join('');
+  }
+
   app.innerHTML = `
     <div class="wrap">
       ${_appTopBar()}
@@ -89,83 +197,7 @@ function renderLibrary(){
       </div>
 
       <div class="libraryList">
-        ${tab==="bookmarks" ? (
-          bookmarksGroups.length ? bookmarksGroups.map(({b,items})=>`
-            <div class="bmBook">
-              <div class="bmHead" data-open="${escapeHtml(b.id)}">
-                <div class="bmCover">${b.cover?`<img src="${escapeHtml(b.cover)}" alt="">`:``)}</div>
-                <div style="flex:1;min-width:0;">
-                  <div class="bmTitleRow">
-                    <p class="bmTitle">${escapeHtml(getBookTitle(b)||"Book")}</p>
-                    ${tab==="bookmarks"&&state.ui?.backToBook&&state.ui.backToBook.bookId===b.id?`<button class="bmBackMini inline" id="backToBookBtn" title="Back to book">↩︎ ${I18n.t("btn_back")}</button>`:``}
-                  </div>
-                </div>
-                ${(()=>{ const _m=[String((b.author||"")||"").trim(),String((b.series||"")||"").trim()].filter(Boolean).join(" • "); return _m?`<p class="bmMeta">${escapeHtml(_m)}</p>`:``)})()}
-              </div>
-              <div class="bmItems">
-                ${(()=>{
-                  const groups=[]; const keyMap=new Map();
-                  (items||[]).forEach(it=>{
-                    const key=[String(it.level||"original"),String(it.sourceLang||"en"),String(it.targetLang||"uk"),String(it.mode||"read")].join("|");
-                    if(!keyMap.has(key)){ const g={key,level:String(it.level||"original"),src:String(it.sourceLang||"en"),trg:String(it.targetLang||"uk"),mode:String(it.mode||"read"),items:[]}; keyMap.set(key,g); groups.push(g); }
-                    keyMap.get(key).items.push(it);
-                  });
-                  try{
-                    const last=state.ui?.lastBmCtx;
-                    const prefKey=(last&&String(last.bookId)===String(b.id))?(String(last.level||"original")+"|"+String(last.sourceLang||"en")+"|"+String(last.targetLang||"uk")+"|"+String(last.mode||"read")):"";
-                    groups.forEach(g=>{ try{ g._ts=Math.max.apply(null,(g.items||[]).map(x=>Number(x.createdAt||0))); }catch(e){ g._ts=0; } });
-                    groups.sort((a,b)=>{ const ap=(prefKey&&a.key===prefKey)?1:0,bp=(prefKey&&b.key===prefKey)?1:0; if(ap!==bp) return bp-ap; return Number(b._ts||0)-Number(a._ts||0); });
-                  }catch(e){}
-                  return groups.map(g=>`
-                    <div class="bmGroupHdr" data-resume="${escapeHtml(b.id)}|${escapeHtml(String(g.level||'original'))}|${escapeHtml(String(g.src||'en'))}|${escapeHtml(String(g.trg||'uk'))}|${escapeHtml(String(g.mode||'read'))}" role="button" tabindex="0">
-                      <span class="bmLevel">${escapeHtml(Config.formatLevelLabel(g.level))}</span>
-                      <span class="bmSep">•</span>
-                      <span class="bmPkg">${escapeHtml(Config.formatPkgLabel(g.src,g.trg,g.mode))}</span>
-                    </div>
-                    ${g.items.map((it,idx)=>`
-                      <div class="bmItem" data-bm-item>
-                        <div class="bmMain">
-                          <p class="bmLabel">#${idx+1}</p>
-                          <p class="bmRaw">${escapeHtml(it.raw||it.tr||"")}</p>
-                          ${(it.tr&&it.raw&&it.tr!==it.raw)?`<p class="bmTr">${escapeHtml(it.tr)}</p>`:``}
-                        </div>
-                        <div class="bmBtns">
-                          <button class="bmBtn" data-bm-play="${escapeHtml(b.id)}::${escapeHtml(it.id)}" title="Play">🔊</button>
-                          <button class="bmBtn primary" data-bm-go="${escapeHtml(b.id)}::${escapeHtml(it.id)}" title="Go">↪︎</button>
-                          <button class="bmBtn" data-bm-del="${escapeHtml(b.id)}::${escapeHtml(it.id)}" title="Unbookmark">✕</button>
-                        </div>
-                      </div>
-                    `).join("")}
-                  `).join("");
-                })()}
-              </div>
-            </div>
-          `).join("") : `<div style="color:rgba(0,0,0,.45);font-weight:800;padding:18px 4px;">No bookmarks yet.</div>`
-        ) : (
-          list.length ? list.map(({b,p,pkgs})=>`
-            <div class="libraryItem" data-open="${escapeHtml(b.id)}">
-              <div class="coverImg">${b.cover?`<img src="${escapeHtml(b.cover)}" alt="">`:``)}</div>
-              <div style="flex:1;min-width:0;">
-                <p class="title">${escapeHtml(getBookTitle(b)||"Book")}</p>
-                <p class="meta">${escapeHtml(formatMetaAuthorSeries(b))}</p>
-                ${pkgs&&pkgs.length?`
-                  <div class="pkgRow">
-                    ${pkgs.map(x=>{
-                      const s=String(x.sourceLang||"").toLowerCase(), trg=String(x.targetLang||"").toLowerCase();
-                      const m=String(x.mode||"read").toLowerCase(), lv=Config.normalizeLevel(x.level||"original");
-                      const modeLabel=I18n.t(m==="listen"?"mode_listen":"mode_read");
-                      const pct=Math.round(Number(x.progress||0));
-                      const lvLabel=(lv==="original")?I18n.t("level_original"):String(lv).toUpperCase();
-                      const resumeKey=`${escapeHtml(b.id)}|${escapeHtml(lv)}|${escapeHtml(s)}|${escapeHtml(trg)}|${escapeHtml(m)}`;
-                      return `<span class="pkgChip ${x.isResume?'resume':''}" data-resume="${resumeKey}" role="button" tabindex="0"><span class="lvl">${lvLabel}</span><span class="sep">•</span> ${Config.flagFor(s)} ${s.toUpperCase()} <span class="arrow">→</span> ${Config.flagFor(trg)} ${trg.toUpperCase()} <span class="sep">•</span> <span class="mode">${modeLabel}</span> <span class="sep">•</span> <span class="pct">${pct}%</span></span>`;
-                    }).join("")}
-                  </div>
-                `:``}
-              </div>
-              <div class="circle" style="--p:${Math.round(p)}%"><div class="inner">${Math.round(p)}%</div></div>
-            </div>
-          `).join("") : `<div style="color:rgba(0,0,0,.45);font-weight:800;padding:18px 4px;">No books yet.</div>`
-        )}
+        ${tab==="bookmarks" ? buildBookmarksHtml() : buildProgressHtml()}
       </div>
     </div>
   `;
@@ -197,8 +229,9 @@ function renderLibrary(){
   app.querySelectorAll('.pkgChip[data-resume]').forEach(ch=>{
     const act=(e)=>{
       try{ e.preventDefault(); e.stopPropagation(); }catch(_e){}
-      const [bookId,level,src,trg,mode]=String(ch.dataset.resume||'').split('|');
-      if(!bookId) return;
+      const parts = String(ch.dataset.resume||'').split('|');
+      if(parts.length<5) return;
+      const [bookId,level,src,trg,mode] = parts;
       try{ state.reading.level=level||'original'; }catch(e){}
       try{ state.reading.sourceLang=src||'en'; }catch(e){}
       try{ state.reading.targetLang=trg||'uk'; }catch(e){}
@@ -215,8 +248,9 @@ function renderLibrary(){
     app.querySelectorAll('.bmGroupHdr[data-resume]').forEach(h=>{
       const act=(e)=>{
         try{ e.preventDefault(); e.stopPropagation(); }catch(_e){}
-        const [bookId,level,src,trg,mode]=String(h.dataset.resume||'').split('|');
-        if(!bookId) return;
+        const parts=String(h.dataset.resume||'').split('|');
+        if(parts.length<5) return;
+        const [bookId,level,src,trg,mode]=parts;
         try{ state.reading.level=level||'original'; }catch(e){}
         try{ state.reading.sourceLang=src||'en'; }catch(e){}
         try{ state.reading.targetLang=trg||'uk'; }catch(e){}
@@ -229,56 +263,56 @@ function renderLibrary(){
       h.addEventListener('keydown',(e)=>{ if(e.key==='Enter'||e.key===' '){ act(e); } });
     });
 
-    app.querySelectorAll("[data-bm-play]").forEach(btn=>{
-      btn.addEventListener("click",(e)=>{
+    app.querySelectorAll('[data-bm-play]').forEach(btn=>{
+      btn.addEventListener('click',(e)=>{
         e.preventDefault(); e.stopPropagation();
-        const [bookId,entryId]=String(btn.dataset.bmPlay||"").split("::");
+        const [bookId,entryId]=String(btn.dataset.bmPlay||'').split('::');
         const it=(BookmarkManager.load(bookId)||[]).find(x=>x&&x.id===entryId);
-        if(it) playOneShotTTS(it.raw||it.tr||"");
+        if(it) playOneShotTTS(it.raw||it.tr||'');
       });
     });
-    app.querySelectorAll("[data-bm-go]").forEach(btn=>{
-      btn.addEventListener("click",(e)=>{
+    app.querySelectorAll('[data-bm-go]').forEach(btn=>{
+      btn.addEventListener('click',(e)=>{
         e.preventDefault(); e.stopPropagation();
-        const [bookId,entryId]=String(btn.dataset.bmGo||"").split("::");
+        const [bookId,entryId]=String(btn.dataset.bmGo||'').split('::');
         const listAll=BookmarkManager.load(bookId);
-        let list=listAll;
+        let filtered=listAll;
         try{
           const inReading=state.route&&(state.route.name==="reader"||state.route.name==="bireader");
           if(inReading){
-            const lvl=String(_bmGetLevel()||"original"), pair=_bmGetLangPair(), md=String(_bmGetMode()||"read");
-            list=(listAll||[]).filter(it=>{ if(!it) return false; return String(it.level||"original")===lvl&&String(it.sourceLang||pair.src||"en")===String(pair.src||"en")&&String(it.targetLang||pair.trg||"uk")===String(pair.trg||"uk")&&String(it.mode||"read")===md; });
+            const lvl=String(_bmGetLevel()||'original'), pair=_bmGetLangPair(), md=String(_bmGetMode()||'read');
+            filtered=(listAll||[]).filter(it=>{ if(!it) return false; return String(it.level||'original')===lvl&&String(it.sourceLang||pair.src||'en')===String(pair.src||'en')&&String(it.targetLang||pair.trg||'uk')===String(pair.trg||'uk')&&String(it.mode||'read')===md; });
           }
-        }catch(e){ list=listAll; }
-        const it=list.find(x=>x&&x.id===entryId);
+        }catch(e){ filtered=listAll; }
+        const it=filtered.find(x=>x&&x.id===entryId);
         const idx=Number(it?.paraIdx??it?.lineIndex??0);
         const widx=(it&&Number.isFinite(it.wordIndex)&&it.wordIndex>=0)?Number(it.wordIndex):undefined;
-        const bmMode=String(it?.mode||"").toLowerCase();
+        const bmMode=String(it?.mode||'').toLowerCase();
         const routeName=(bmMode==="listen")?"reader":(bmMode==="read"?"bireader":(state.route?.name==="bireader"?"bireader":"reader"));
         try{
-          const src=String(it?.sourceLang||state.reading?.sourceLang||"en").trim().toLowerCase();
-          const trg=String(it?.targetLang||state.reading?.targetLang||"uk").trim().toLowerCase();
-          const level=Config.normalizeLevel(it?.level||state.reading?.level||"original");
-          const prev=ProgressManager.getPkgProgress(bookId,src,trg,level);
+          const src2=String(it?.sourceLang||state.reading?.sourceLang||'en').trim().toLowerCase();
+          const trg2=String(it?.targetLang||state.reading?.targetLang||'uk').trim().toLowerCase();
+          const level2=Config.normalizeLevel(it?.level||state.reading?.level||'original');
+          const prev=ProgressManager.getPkgProgress(bookId,src2,trg2,level2);
           const resumeIndex=Number.isFinite(prev?.activeIndex)?Number(prev.activeIndex):0;
           state.ui=state.ui||{};
-          state.ui.pendingBookmarkPlayChoice={ bookId:String(bookId), bookmarkIndex:idx, resumeIndex, src, trg, level, createdAt:Date.now() };
-          state.ui.lockProgressUntilChoice={ bookId:String(bookId), src, trg, level, createdAt:Date.now() };
+          state.ui.pendingBookmarkPlayChoice={bookId:String(bookId),bookmarkIndex:idx,resumeIndex,src:src2,trg:trg2,level:level2,createdAt:Date.now()};
+          state.ui.lockProgressUntilChoice={bookId:String(bookId),src:src2,trg:trg2,level:level2,createdAt:Date.now()};
         }catch(_e){}
         go({name:routeName,bookId,startIndex:idx,forceStartIndex:true,startWordIndex:widx,autoPlay:false});
       });
     });
-    app.querySelectorAll("[data-bm-del]").forEach(btn=>{
-      btn.addEventListener("click",(e)=>{
+    app.querySelectorAll('[data-bm-del]').forEach(btn=>{
+      btn.addEventListener('click',(e)=>{
         e.preventDefault(); e.stopPropagation();
-        const [bookId,entryId]=String(btn.dataset.bmDel||"").split("::");
+        const [bookId,entryId]=String(btn.dataset.bmDel||'').split('::');
         BookmarkManager.remove(bookId,entryId);
         renderLibrary();
       });
     });
   }
 
-  app.querySelectorAll("[data-open]").forEach(el=>{
-    el.addEventListener("click",()=>go({name:"details",bookId:el.dataset.open}));
+  app.querySelectorAll('[data-open]').forEach(el=>{
+    el.addEventListener('click',()=>go({name:'details',bookId:el.dataset.open}));
   });
 }
