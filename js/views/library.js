@@ -75,10 +75,10 @@ function renderLibrary(){
     return bookmarksGroups.map(function(grp){
       const b=grp.b,items=grp.items;
       const coverHtml=b.cover?'<img src="'+escapeHtml(b.cover)+'" alt="">':'';
-      const authorSeries=[String((b.author||'')||'').trim(),String((b.series||'')||'').trim()].filter(Boolean).join(' • ');
+      const authorSeries=[String((b.author||'')||'').trim(),String((b.series||'')||'').trim()].filter(Boolean).join(' \u2022 ');
       const metaHtml=authorSeries?'<p class="bmMeta">'+escapeHtml(authorSeries)+'</p>':'';
       const backBtn=(tab==="bookmarks"&&state.ui?.backToBook&&state.ui.backToBook.bookId===b.id)
-        ?' <button class="bmBackMini inline" id="backToBookBtn">↩︎ '+I18n.t("btn_back")+'</button>':'';
+        +' <button class="bmBackMini inline" id="backToBookBtn">\u21a9\ufe0e '+I18n.t("btn_back")+'</button>':'';
       const groups=[],keyMap=new Map();
       (items||[]).forEach(function(it){
         const key=String(it.level||'original')+'|'+String(it.sourceLang||'en')+'|'+String(it.targetLang||'uk')+'|'+String(it.mode||'read');
@@ -97,13 +97,13 @@ function renderLibrary(){
           const bId=escapeHtml(b.id),iId=escapeHtml(it.id);
           const trHtml=(it.tr&&it.raw&&it.tr!==it.raw)?'<p class="bmTr">'+escapeHtml(it.tr)+'</p>':'';
           return '<div class="bmItem" data-bm-item><div class="bmMain"><p class="bmLabel">#'+(idx+1)+'</p><p class="bmRaw">'+escapeHtml(it.raw||it.tr||'')+'</p>'+trHtml+'</div>'
-            +'<div class="bmBtns"><button class="bmBtn" data-bm-play="'+bId+'::'+iId+'">🔊</button>'
-            +'<button class="bmBtn primary" data-bm-go="'+bId+'::'+iId+'">↪︎</button>'
-            +'<button class="bmBtn" data-bm-del="'+bId+'::'+iId+'">✕</button></div></div>';
+            +'<div class="bmBtns"><button class="bmBtn" data-bm-play="'+bId+'::'+iId+'">&x1F50A;</button>'
+            +'<button class="bmBtn primary" data-bm-go="'+bId+'::'+iId+'">&x21AA;\uFE0E</button>'
+            +'<button class="bmBtn" data-bm-del="'+bId+'::'+iId+'">&#x2715;</button></div></div>';
         }).join('');
         return '<div class="bmGroupHdr" data-resume="'+resumeKey+'" role="button" tabindex="0">'
           +'<span class="bmLevel">'+escapeHtml(Config.formatLevelLabel(g.level))+'</span>'
-          +'<span class="bmSep">•</span><span class="bmPkg">'+escapeHtml(Config.formatPkgLabel(g.src,g.trg,g.mode))+'</span></div>'+itemsHtml;
+          +'<span class="bmSep">\u2022</span><span class="bmPkg">'+escapeHtml(Config.formatPkgLabel(g.src,g.trg,g.mode))+'</span></div>'+itemsHtml;
       }).join('');
       return '<div class="bmBook"><div class="bmHead" data-open="'+escapeHtml(b.id)+'">'
         +'<div class="bmCover">'+coverHtml+'</div>'
@@ -127,10 +127,10 @@ function renderLibrary(){
           const lvLabel=(lv==="original")?I18n.t("level_original"):String(lv).toUpperCase();
           const resumeKey=escapeHtml(b.id)+'|'+escapeHtml(lv)+'|'+escapeHtml(s)+'|'+escapeHtml(trg)+'|'+escapeHtml(m);
           return '<span class="pkgChip '+(x.isResume?'resume':'')+'" data-resume="'+resumeKey+'" role="button" tabindex="0">'
-            +'<span class="lvl">'+lvLabel+'</span><span class="sep">•</span> '
-            +Config.flagFor(s)+' '+s.toUpperCase()+' <span class="arrow">→</span> '+Config.flagFor(trg)+' '+trg.toUpperCase()
-            +' <span class="sep">•</span> <span class="mode">'+modeLabel+'</span>'
-            +' <span class="sep">•</span> <span class="pct">'+pct+'%</span></span>';
+            +'<span class="lvl">'+lvLabel+'</span><span class="sep">\u2022</span> '
+            +Config.flagFor(s)+' '+s.toUpperCase()+' <span class="arrow">\u2192</span> '+Config.flagFor(trg)+' '+trg.toUpperCase()
+            +' <span class="sep">\u2022</span> <span class="mode">'+modeLabel+'</span>'
+            +' <span class="sep">\u2022</span> <span class="pct">'+pct+'%</span></span>';
         }).join('')+'</div>';
       }
       return '<div class="libraryItem" data-open="'+escapeHtml(b.id)+'">'
@@ -143,12 +143,8 @@ function renderLibrary(){
 
   app.innerHTML = `
     <div class="wrap">
-      ${_appTopBar()}
-      <div class="appHeader">
-        <button class="tab muted" id="tabBooks">${I18n.t("tabs_books")}</button>
-        <button class="tab" id="tabLibrary">${I18n.t("tabs_library")}</button>
-      </div>
-      <div style="padding:0 18px 8px 18px;">
+      ${_appTopBar(false)}
+      <div style="padding:12px 18px 8px 18px;">
         <div class="segmented">
           <button class="libSegBtn ${tab==="progress"?"active":""}" id="libInProgress">${I18n.t("lib_in_progress")}</button>
           <button class="libSegBtn ${tab==="finished"?"active":""}" id="libFinished">${I18n.t("lib_finished")}</button>
@@ -161,14 +157,19 @@ function renderLibrary(){
     </div>
   `;
 
-  document.getElementById('tabBooks').onclick = ()=>{
-    try{ state.ui = state.ui || {}; state.ui.tabsSavedScrollY = window.scrollY; }catch(e){}
+  var _ttb = document.getElementById('topTabBooks');
+  var _ttl = document.getElementById('topTabLibrary');
+  if(_ttb) _ttb.addEventListener('click', function(e){
+    e.stopPropagation();
+    try{ state.ui = state.ui || {}; state.ui.tabsSavedScrollY = window.scrollY; }catch(e2){}
     go({name:'catalog'},{push:false});
-  };
-  document.getElementById('tabLibrary').onclick = ()=>{
-    try{ state.ui = state.ui || {}; state.ui.tabsSavedScrollY = window.scrollY; }catch(e){}
+  });
+  if(_ttl) _ttl.addEventListener('click', function(e){
+    e.stopPropagation();
+    try{ state.ui = state.ui || {}; state.ui.tabsSavedScrollY = window.scrollY; }catch(e2){}
     go({name:'library'},{push:false});
-  };
+  });
+
   document.getElementById('libInProgress').onclick = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='progress';  renderLibrary(); };
   document.getElementById('libFinished').onclick   = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='finished';  renderLibrary(); };
   document.getElementById('libBookmarks').onclick  = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='bookmarks'; renderLibrary(); };
@@ -176,7 +177,7 @@ function renderLibrary(){
   const __ats = document.getElementById('appTopSettings');
   if(__ats) __ats.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); try{ openSettings(); }catch(err){} });
 
-  _bindTabsScroll(false);
+  if(typeof _bindTabsScroll === 'function') _bindTabsScroll(false);
 
   const __btb = document.getElementById('backToBookBtn');
   if(__btb){
