@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   views/library.js  —  Экран «Моя Библиотека»
+   views/library.js  —  Екран «Моя Бібліотека»
    ═══════════════════════════════════════════════════════════ */
 
 function renderLibrary(){
@@ -75,10 +75,10 @@ function renderLibrary(){
     return bookmarksGroups.map(function(grp){
       const b=grp.b,items=grp.items;
       const coverHtml=b.cover?'<img src="'+escapeHtml(b.cover)+'" alt="">':'';
-      const authorSeries=[String((b.author||'')||'').trim(),String((b.series||'')||'').trim()].filter(Boolean).join(' \u2022 ');
+      const authorSeries=[String((b.author||'')||'').trim(),String((b.series||'')||'').trim()].filter(Boolean).join(' • ');
       const metaHtml=authorSeries?'<p class="bmMeta">'+escapeHtml(authorSeries)+'</p>':'';
       const backBtn=(tab==="bookmarks"&&state.ui?.backToBook&&state.ui.backToBook.bookId===b.id)
-        ?' <button class="bmBackMini inline" id="backToBookBtn">\u21a9\ufe0e '+I18n.t("btn_back")+'</button>':'';
+        ?' <button class="bmBackMini inline" id="backToBookBtn">↩︎ '+I18n.t("btn_back")+'</button>':'';
       const groups=[],keyMap=new Map();
       (items||[]).forEach(function(it){
         const key=String(it.level||'original')+'|'+String(it.sourceLang||'en')+'|'+String(it.targetLang||'uk')+'|'+String(it.mode||'read');
@@ -161,8 +161,14 @@ function renderLibrary(){
     </div>
   `;
 
-  document.getElementById('tabBooks').onclick     = ()=>go({name:'catalog'},{push:false});
-  document.getElementById('tabLibrary').onclick    = ()=>go({name:'library'},{push:false});
+  document.getElementById('tabBooks').onclick = ()=>{
+    try{ state.ui = state.ui || {}; state.ui.tabsSavedScrollY = window.scrollY; }catch(e){}
+    go({name:'catalog'},{push:false});
+  };
+  document.getElementById('tabLibrary').onclick = ()=>{
+    try{ state.ui = state.ui || {}; state.ui.tabsSavedScrollY = window.scrollY; }catch(e){}
+    go({name:'library'},{push:false});
+  };
   document.getElementById('libInProgress').onclick = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='progress';  renderLibrary(); };
   document.getElementById('libFinished').onclick   = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='finished';  renderLibrary(); };
   document.getElementById('libBookmarks').onclick  = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='bookmarks'; renderLibrary(); };
