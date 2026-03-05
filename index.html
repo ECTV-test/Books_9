@@ -7,7 +7,32 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/theme.css">
   <style>
-    /* Топбар */
+    /* ── Верхняя полоска каталога/библиотеки ── */
+    .appTopBar {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 18px;
+      -webkit-backdrop-filter: blur(18px) saturate(120%);
+      backdrop-filter: blur(18px) saturate(120%);
+      background: rgba(255,255,255,.60);
+      border-bottom: 1px solid rgba(20,24,28,.08);
+    }
+    [data-theme="night"] .appTopBar {
+      background: rgba(255,255,255,.10);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .appTopBarLeft, .appTopBarRight { display: flex; align-items: center; gap: 6px; }
+    .appTopBtn {
+      width: 40px; height: 40px; border-radius: 12px; border: none;
+      background: rgba(0,0,0,.06); color: var(--text);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    [data-theme="night"] .appTopBtn {
+      background: rgba(255,255,255,.10); color: var(--text);
+    }
+
+    /* ── Топбар режимов ── */
     .readTopBar { left: 0; right: 0; box-sizing: border-box; }
     .readTopBar .topIcon {
       width: 40px; height: 40px; border-radius: 12px; border: none;
@@ -22,30 +47,42 @@
       display: flex; align-items: center; gap: 6px;
     }
 
-    /* Тёмная тема — без подложки, текст прямо на фоне */
+    /* ── Плеер — стиль как у топбара ── */
+    .playerBar {
+      -webkit-backdrop-filter: blur(18px) saturate(120%) !important;
+      backdrop-filter: blur(18px) saturate(120%) !important;
+      background: rgba(255,255,255,.72) !important;
+      border-top: 1px solid rgba(20,24,28,.08) !important;
+    }
+    [data-theme="night"] .playerBar {
+      background: rgba(7,18,31,.85) !important;
+      border-top: 1px solid rgba(255,255,255,.08) !important;
+    }
+    .playerBar .iconBtn {
+      background: rgba(0,0,0,.06) !important;
+      border-radius: 12px !important;
+      color: var(--text) !important;
+    }
+    [data-theme="night"] .playerBar .iconBtn {
+      background: rgba(255,255,255,.10) !important;
+    }
+
+    /* ── Тёмная тема — без подложки ── */
     [data-theme="night"] .readerStage .paper {
       background: transparent !important;
-      box-shadow: none !important;
-      border: none !important;
-      border-radius: 0 !important;
+      box-shadow: none !important; border: none !important; border-radius: 0 !important;
     }
-    [data-theme="night"] .readerStage .paperInner {
-      background: transparent !important;
-    }
+    [data-theme="night"] .readerStage .paperInner { background: transparent !important; }
 
-    /* Скрыть кнопки фона страницы в тёмной теме */
+    /* ── Кнопки фона — скрыть в тёмной теме ── */
     [data-theme="night"] .pageBgRow { display: none !important; }
 
-    /* Listen режим — серифный шрифт как в Read */
-    .listenPaper {
-      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
-    }
+    /* ── Listen режим — серифный шрифт ── */
+    .listenPaper { font-family: ui-serif, Georgia, "Times New Roman", Times, serif; }
     .listenPaper .listenList { padding: 0; }
-    .listenPaper .listenLine .para {
-      font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
-    }
+    .listenPaper .listenLine .para { font-family: ui-serif, Georgia, "Times New Roman", Times, serif; }
 
-    /* Поповер — SVG кнопки */
+    /* ── Поповер ── */
     .popMiniBtns { display: flex; gap: 8px; align-items: center; }
     #popBookmark svg, #popSpeak svg { display: block; }
   </style>
@@ -325,8 +362,12 @@
         <div class="bar"><div id="pFill"></div></div>
       </div>
       <div class="controls">
-        <button class="iconBtn" id="btnBack" title="Back">←</button>
-        <button class="iconBtn" id="btnStart" title="To start">⟲</button>
+        <button class="iconBtn" id="btnBack" title="Back">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="iconBtn" id="btnStart" title="To start">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4v16M19 12L9 4v16l10-8z"/></svg>
+        </button>
         <button class="playBtn" id="btnPlay" title="Play/Pause">▶</button>
 
         <div class="modeSwitch" id="modeSwitch">
@@ -357,9 +398,9 @@
   <script src="js/services/books.js?v=2"></script>
   <script src="js/services/translate.js?v=2"></script>
   <script src="js/services/tts.js?v=2"></script>
-  <script src="js/views/catalog.js?v=1"></script>
+  <script src="js/views/catalog.js?v=2"></script>
   <script src="js/views/library.js?v=1"></script>
-  <script src="js/views/details.js?v=1"></script>
+  <script src="js/views/details.js?v=2"></script>
   <script src="js/views/reader.js?v=4"></script>
   <script src="js/app.js?v=7" defer></script>
 
