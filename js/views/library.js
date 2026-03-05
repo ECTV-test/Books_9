@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
    views/library.js  —  Экран «Моя Библиотека»
-   ═══════════════════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════════════════ */
 
 function renderLibrary(){
   const tab = state.ui?.libraryTab || "progress";
@@ -10,8 +10,7 @@ function renderLibrary(){
       const k = "bm:" + bookId;
       const s = localStorage.getItem(k) || sessionStorage.getItem(k);
       if(!s) return false;
-      const arr = JSON.parse(s);
-      return Array.isArray(arr) && arr.length>0;
+      return Array.isArray(JSON.parse(s)) && JSON.parse(s).length>0;
     }catch(e){ return false; }
   };
 
@@ -23,160 +22,123 @@ function renderLibrary(){
         maxP = Math.max(...pkgs.map(x=>Number(x.progress||0)));
         const last = ProgressManager.getLastPkg(b.id);
         if(last){
-          const lp = ProgressManager.getPkgProgress(b.id, last.sourceLang, last.targetLang, Config.normalizeLevel(last.level||"original"));
-          mainP = (lp && typeof lp.progress==="number") ? Number(lp.progress||0) : Number(maxP||0);
-        }else{ mainP = Number(maxP||0); }
+          const lp = ProgressManager.getPkgProgress(b.id,last.sourceLang,last.targetLang,Config.normalizeLevel(last.level||"original"));
+          mainP = (lp&&typeof lp.progress==="number") ? Number(lp.progress||0) : Number(maxP||0);
+        }else{ mainP=Number(maxP||0); }
       }
     }catch(e){}
-    if(!pkgs || !pkgs.length){
-      let r=null, br=null;
+    if(!pkgs||!pkgs.length){
+      let r=null,br=null;
       try{
-        r  = JSON.parse(sessionStorage.getItem(ProgressManager.progressKey(b.id,'reader'))  || "null");
-        br = JSON.parse(sessionStorage.getItem(ProgressManager.progressKey(b.id,'bireader')) || "null");
+        r =JSON.parse(sessionStorage.getItem(ProgressManager.progressKey(b.id,'reader')) ||"null");
+        br=JSON.parse(sessionStorage.getItem(ProgressManager.progressKey(b.id,'bireader'))||"null");
       }catch(e){}
-      maxP = Math.max(Number(r?.progress||0), Number(br?.progress||0));
-      mainP = maxP;
+      maxP=Math.max(Number(r?.progress||0),Number(br?.progress||0)); mainP=maxP;
     }
-    let chips = [];
+    let chips=[];
     try{
-      const last = ProgressManager.getLastPkg(b.id);
+      const last=ProgressManager.getLastPkg(b.id);
       if(last){
-        const lv = Config.normalizeLevel(last.level||"original");
-        const lp = ProgressManager.getPkgProgress(b.id, last.sourceLang, last.targetLang, lv);
-        if(lp && typeof lp.progress==="number"){
-          chips.push({ sourceLang:String(last.sourceLang||"").toLowerCase(), targetLang:String(last.targetLang||"").toLowerCase(),
-            mode:String(last.mode||"read").toLowerCase(), level:lv, progress:Number(lp.progress||0), ts:Number(last.ts||lp.ts||0), isResume:true });
+        const lv=Config.normalizeLevel(last.level||"original");
+        const lp=ProgressManager.getPkgProgress(b.id,last.sourceLang,last.targetLang,lv);
+        if(lp&&typeof lp.progress==="number"){
+          chips.push({sourceLang:String(last.sourceLang||"").toLowerCase(),targetLang:String(last.targetLang||"").toLowerCase(),
+            mode:String(last.mode||"read").toLowerCase(),level:lv,progress:Number(lp.progress||0),ts:Number(last.ts||lp.ts||0),isResume:true});
         }
       }
     }catch(e){}
     try{
       for(const o of (pkgs||[])){
         if(chips.length>=3) break;
-        const s=String(o.sourceLang||"").toLowerCase(), t=String(o.targetLang||"").toLowerCase();
-        const lv=Config.normalizeLevel(o.level||"original"), m=String(o.mode||"read").toLowerCase();
-        if(chips.some(c=> c.sourceLang===s && c.targetLang===t && Config.normalizeLevel(c.level||"original")===lv && String(c.mode||"read").toLowerCase()===m)) continue;
+        const s=String(o.sourceLang||"").toLowerCase(),t=String(o.targetLang||"").toLowerCase();
+        const lv=Config.normalizeLevel(o.level||"original"),m=String(o.mode||"read").toLowerCase();
+        if(chips.some(c=>c.sourceLang===s&&c.targetLang===t&&Config.normalizeLevel(c.level||"original")===lv&&String(c.mode||"read").toLowerCase()===m)) continue;
         chips.push(o);
       }
     }catch(e){}
-    const lastTs = chips.length ? Number(chips[0].ts||0) : ((pkgs&&pkgs.length)?Number(pkgs[0].ts||0):0);
-    return {b, p:mainP, maxP, lastTs, pkgs:chips};
-  }).filter(x=> x.p>0 || tab==="finished");
+    const lastTs=chips.length?Number(chips[0].ts||0):((pkgs&&pkgs.length)?Number(pkgs[0].ts||0):0);
+    return {b,p:mainP,maxP,lastTs,pkgs:chips};
+  }).filter(x=>x.p>0||tab==="finished");
 
-  const inProgress = rows.filter(x=> x.maxP>0 && x.maxP<99.5).sort((a,b)=>(Number(b.lastTs||0)-Number(a.lastTs||0))||(b.maxP-a.maxP));
-  const finished   = rows.filter(x=> x.maxP>=99.5).sort((a,b)=>(Number(b.lastTs||0)-Number(a.lastTs||0))||(b.maxP-a.maxP));
-  let list = (tab==="finished" ? finished : inProgress);
-  if(tab==="bookmarks") list = rows.filter(({b})=>hasBookmarks(b.id)).sort((a,b)=>(Number(b.lastTs||0)-Number(a.lastTs||0))||(b.p-a.p));
+  const inProgress=rows.filter(x=>x.maxP>0&&x.maxP<99.5).sort((a,b)=>(Number(b.lastTs||0)-Number(a.lastTs||0))||(b.maxP-a.maxP));
+  const finished  =rows.filter(x=>x.maxP>=99.5).sort((a,b)=>(Number(b.lastTs||0)-Number(a.lastTs||0))||(b.maxP-a.maxP));
+  let list=(tab==="finished"?finished:inProgress);
+  if(tab==="bookmarks") list=rows.filter(({b})=>hasBookmarks(b.id)).sort((a,b)=>(Number(b.lastTs||0)-Number(a.lastTs||0))||(b.p-a.p));
 
-  let bookmarksGroups = [];
-  if(tab==="bookmarks"){
-    bookmarksGroups = list.map(({b})=>({ b, items: BookmarkManager.load(b.id) })).filter(g=>g.items&&g.items.length);
-  }
+  let bookmarksGroups=[];
+  if(tab==="bookmarks") bookmarksGroups=list.map(({b})=>({b,items:BookmarkManager.load(b.id)})).filter(g=>g.items&&g.items.length);
 
-  // Build bookmarks HTML separately to avoid nested template literal issues
   function buildBookmarksHtml(){
     if(!bookmarksGroups.length) return '<div style="color:rgba(0,0,0,.45);font-weight:800;padding:18px 4px;">No bookmarks yet.</div>';
     return bookmarksGroups.map(function(grp){
-      const b = grp.b;
-      const items = grp.items;
-      const coverHtml = b.cover ? '<img src="' + escapeHtml(b.cover) + '" alt="">' : '';
-      const authorSeries = [String((b.author||'')||'').trim(), String((b.series||'')||'').trim()].filter(Boolean).join(' \u2022 ');
-      const metaHtml = authorSeries ? '<p class="bmMeta">' + escapeHtml(authorSeries) + '</p>' : '';
-      const backBtn = (tab==="bookmarks" && state.ui?.backToBook && state.ui.backToBook.bookId===b.id)
-        ? ' <button class="bmBackMini inline" id="backToBookBtn" title="Back to book">\u21a9\ufe0e ' + I18n.t("btn_back") + '</button>' : '';
-
-      // Group items by level|src|trg|mode
-      const groups = [];
-      const keyMap = new Map();
+      const b=grp.b,items=grp.items;
+      const coverHtml=b.cover?'<img src="'+escapeHtml(b.cover)+'" alt="">':'';
+      const authorSeries=[String((b.author||'')||'').trim(),String((b.series||'')||'').trim()].filter(Boolean).join(' \u2022 ');
+      const metaHtml=authorSeries?'<p class="bmMeta">'+escapeHtml(authorSeries)+'</p>':'';
+      const backBtn=(tab==="bookmarks"&&state.ui?.backToBook&&state.ui.backToBook.bookId===b.id)
+        ?' <button class="bmBackMini inline" id="backToBookBtn">\u21a9\ufe0e '+I18n.t("btn_back")+'</button>':'';
+      const groups=[],keyMap=new Map();
       (items||[]).forEach(function(it){
-        const key = String(it.level||'original')+'|'+String(it.sourceLang||'en')+'|'+String(it.targetLang||'uk')+'|'+String(it.mode||'read');
-        if(!keyMap.has(key)){
-          const g = {key, level:String(it.level||'original'), src:String(it.sourceLang||'en'), trg:String(it.targetLang||'uk'), mode:String(it.mode||'read'), items:[]};
-          keyMap.set(key, g); groups.push(g);
-        }
+        const key=String(it.level||'original')+'|'+String(it.sourceLang||'en')+'|'+String(it.targetLang||'uk')+'|'+String(it.mode||'read');
+        if(!keyMap.has(key)){const g={key,level:String(it.level||'original'),src:String(it.sourceLang||'en'),trg:String(it.targetLang||'uk'),mode:String(it.mode||'read'),items:[]};keyMap.set(key,g);groups.push(g);}
         keyMap.get(key).items.push(it);
       });
       try{
-        const last = state.ui?.lastBmCtx;
-        const prefKey = (last && String(last.bookId)===String(b.id))
-          ? (String(last.level||'original')+'|'+String(last.sourceLang||'en')+'|'+String(last.targetLang||'uk')+'|'+String(last.mode||'read')) : '';
-        groups.forEach(function(g){ try{ g._ts=Math.max.apply(null,(g.items||[]).map(function(x){return Number(x.createdAt||0);})); }catch(e){ g._ts=0; } });
-        groups.sort(function(a,b2){
-          const ap=(prefKey&&a.key===prefKey)?1:0, bp=(prefKey&&b2.key===prefKey)?1:0;
-          if(ap!==bp) return bp-ap;
-          return Number(b2._ts||0)-Number(a._ts||0);
-        });
+        const last=state.ui?.lastBmCtx;
+        const prefKey=(last&&String(last.bookId)===String(b.id))?(String(last.level||'original')+'|'+String(last.sourceLang||'en')+'|'+String(last.targetLang||'uk')+'|'+String(last.mode||'read')):'';
+        groups.forEach(function(g){try{g._ts=Math.max.apply(null,(g.items||[]).map(function(x){return Number(x.createdAt||0);}));}catch(e){g._ts=0;}});
+        groups.sort(function(a,b2){const ap=(prefKey&&a.key===prefKey)?1:0,bp=(prefKey&&b2.key===prefKey)?1:0;if(ap!==bp)return bp-ap;return Number(b2._ts||0)-Number(a._ts||0);});
       }catch(e){}
-
-      const groupsHtml = groups.map(function(g){
-        const resumeKey = escapeHtml(b.id)+'|'+escapeHtml(String(g.level||'original'))+'|'+escapeHtml(String(g.src||'en'))+'|'+escapeHtml(String(g.trg||'uk'))+'|'+escapeHtml(String(g.mode||'read'));
-        const itemsHtml = g.items.map(function(it, idx){
-          const rawHtml = escapeHtml(it.raw||it.tr||'');
-          const trHtml = (it.tr && it.raw && it.tr!==it.raw) ? '<p class="bmTr">' + escapeHtml(it.tr) + '</p>' : '';
-          const bId = escapeHtml(b.id), iId = escapeHtml(it.id);
-          return '<div class="bmItem" data-bm-item>'
-            + '<div class="bmMain">'
-            + '<p class="bmLabel">#' + (idx+1) + '</p>'
-            + '<p class="bmRaw">' + rawHtml + '</p>'
-            + trHtml
-            + '</div>'
-            + '<div class="bmBtns">'
-            + '<button class="bmBtn" data-bm-play="' + bId + '::' + iId + '" title="Play">\ud83d\udd0a</button>'
-            + '<button class="bmBtn primary" data-bm-go="' + bId + '::' + iId + '" title="Go">\u21aa\ufe0e</button>'
-            + '<button class="bmBtn" data-bm-del="' + bId + '::' + iId + '" title="Unbookmark">\u2715</button>'
-            + '</div></div>';
+      const groupsHtml=groups.map(function(g){
+        const resumeKey=escapeHtml(b.id)+'|'+escapeHtml(String(g.level||'original'))+'|'+escapeHtml(String(g.src||'en'))+'|'+escapeHtml(String(g.trg||'uk'))+'|'+escapeHtml(String(g.mode||'read'));
+        const itemsHtml=g.items.map(function(it,idx){
+          const bId=escapeHtml(b.id),iId=escapeHtml(it.id);
+          return '<div class="bmItem" data-bm-item><div class="bmMain"><p class="bmLabel">#'+(idx+1)+'</p><p class="bmRaw">'+escapeHtml(it.raw||it.tr||'')+'</p>'
+            +((it.tr&&it.raw&&it.tr!==it.raw)?'<p class="bmTr">'+escapeHtml(it.tr)+'</p>':'')
+            +'</div><div class="bmBtns">'
+            +'<button class="bmBtn" data-bm-play="'+bId+'::'+iId+'"\ud83d>\udd0a</button>'
+            +'<button class="bmBtn primary" data-bm-go="'+bId+'::'+iId+'">\u21aa\ufe0e</button>'
+            +'<button class="bmBtn" data-bm-del="'+bId+'::'+iId+'">\u2715</button>'
+            +'</div></div>';
         }).join('');
-        return '<div class="bmGroupHdr" data-resume="' + resumeKey + '" role="button" tabindex="0">'
-          + '<span class="bmLevel">' + escapeHtml(Config.formatLevelLabel(g.level)) + '</span>'
-          + '<span class="bmSep">\u2022</span>'
-          + '<span class="bmPkg">' + escapeHtml(Config.formatPkgLabel(g.src,g.trg,g.mode)) + '</span>'
-          + '</div>' + itemsHtml;
+        return '<div class="bmGroupHdr" data-resume="'+resumeKey+'" role="button" tabindex="0">'
+          +'<span class="bmLevel">'+escapeHtml(Config.formatLevelLabel(g.level))+'</span>'
+          +'<span class="bmSep">\u2022</span><span class="bmPkg">'+escapeHtml(Config.formatPkgLabel(g.src,g.trg,g.mode))+'</span>'
+          +'</div>'+itemsHtml;
       }).join('');
-
-      return '<div class="bmBook">'
-        + '<div class="bmHead" data-open="' + escapeHtml(b.id) + '">'
-        + '<div class="bmCover">' + coverHtml + '</div>'
-        + '<div style="flex:1;min-width:0;">'
-        + '<div class="bmTitleRow"><p class="bmTitle">' + escapeHtml(getBookTitle(b)||'Book') + '</p>' + backBtn + '</div>'
-        + '</div>'
-        + metaHtml
-        + '</div>'
-        + '<div class="bmItems">' + groupsHtml + '</div>'
-        + '</div>';
+      return '<div class="bmBook"><div class="bmHead" data-open="'+escapeHtml(b.id)+'">'
+        +'<div class="bmCover">'+coverHtml+'</div>'
+        +'<div style="flex:1;min-width:0;"><div class="bmTitleRow"><p class="bmTitle">'+escapeHtml(getBookTitle(b)||'Book')+'</p>'+backBtn+'</div></div>'
+        +metaHtml+'</div><div class="bmItems">'+groupsHtml+'</div></div>';
     }).join('');
   }
 
   function buildProgressHtml(){
     if(!list.length) return '<div style="color:rgba(0,0,0,.45);font-weight:800;padding:18px 4px;">No books yet.</div>';
     return list.map(function(row){
-      const b = row.b, p = row.p, pkgs = row.pkgs;
-      const coverHtml = b.cover ? '<img src="' + escapeHtml(b.cover) + '" alt="">' : '';
-      let chipsHtml = '';
-      if(pkgs && pkgs.length){
-        chipsHtml = '<div class="pkgRow">' + pkgs.map(function(x){
-          const s=String(x.sourceLang||'').toLowerCase(), trg=String(x.targetLang||'').toLowerCase();
-          const m=String(x.mode||'read').toLowerCase(), lv=Config.normalizeLevel(x.level||'original');
+      const b=row.b,p=row.p,pkgs=row.pkgs;
+      const coverHtml=b.cover?'<img src="'+escapeHtml(b.cover)+'" alt="">':'';
+      let chipsHtml='';
+      if(pkgs&&pkgs.length){
+        chipsHtml='<div class="pkgRow">'+pkgs.map(function(x){
+          const s=String(x.sourceLang||'').toLowerCase(),trg=String(x.targetLang||'').toLowerCase();
+          const m=String(x.mode||'read').toLowerCase(),lv=Config.normalizeLevel(x.level||'original');
           const modeLabel=I18n.t(m==="listen"?"mode_listen":"mode_read");
           const pct=Math.round(Number(x.progress||0));
           const lvLabel=(lv==="original")?I18n.t("level_original"):String(lv).toUpperCase();
           const resumeKey=escapeHtml(b.id)+'|'+escapeHtml(lv)+'|'+escapeHtml(s)+'|'+escapeHtml(trg)+'|'+escapeHtml(m);
-          return '<span class="pkgChip ' + (x.isResume?'resume':'') + '" data-resume="' + resumeKey + '" role="button" tabindex="0">'
-            + '<span class="lvl">' + lvLabel + '</span><span class="sep">\u2022</span> '
-            + Config.flagFor(s) + ' ' + s.toUpperCase()
-            + ' <span class="arrow">\u2192</span> '
-            + Config.flagFor(trg) + ' ' + trg.toUpperCase()
-            + ' <span class="sep">\u2022</span> <span class="mode">' + modeLabel + '</span>'
-            + ' <span class="sep">\u2022</span> <span class="pct">' + pct + '%</span></span>';
-        }).join('') + '</div>';
+          return '<span class="pkgChip '+(x.isResume?'resume':'')+'" data-resume="'+resumeKey+'" role="button" tabindex="0">'
+            +'<span class="lvl">'+lvLabel+'</span><span class="sep">\u2022</span> '
+            +Config.flagFor(s)+' '+s.toUpperCase()+' <span class="arrow">\u2192</span> '+Config.flagFor(trg)+' '+trg.toUpperCase()
+            +' <span class="sep">\u2022</span> <span class="mode">'+modeLabel+'</span>'
+            +' <span class="sep">\u2022</span> <span class="pct">'+pct+'%</span></span>';
+        }).join('')+'</div>';
       }
-      return '<div class="libraryItem" data-open="' + escapeHtml(b.id) + '">'
-        + '<div class="coverImg">' + coverHtml + '</div>'
-        + '<div style="flex:1;min-width:0;">'
-        + '<p class="title">' + escapeHtml(getBookTitle(b)||'Book') + '</p>'
-        + '<p class="meta">' + escapeHtml(formatMetaAuthorSeries(b)) + '</p>'
-        + chipsHtml
-        + '</div>'
-        + '<div class="circle" style="--p:' + Math.round(p) + '%"><div class="inner">' + Math.round(p) + '%</div></div>'
-        + '</div>';
+      return '<div class="libraryItem" data-open="'+escapeHtml(b.id)+'">'
+        +'<div class="coverImg">'+coverHtml+'</div>'
+        +'<div style="flex:1;min-width:0;"><p class="title">'+escapeHtml(getBookTitle(b)||'Book')+'</p>'
+        +'<p class="meta">'+escapeHtml(formatMetaAuthorSeries(b))+'</p>'+chipsHtml+'</div>'
+        +'<div class="circle" style="--p:'+Math.round(p)+'%"><div class="inner">'+Math.round(p)+'%</div></div></div>';
     }).join('');
   }
 
@@ -187,85 +149,86 @@ function renderLibrary(){
         <button class="tab muted" id="tabBooks">${I18n.t("tabs_books")}</button>
         <button class="tab" id="tabLibrary">${I18n.t("tabs_library")}</button>
       </div>
-
-      <div style="padding: 0 18px 8px 18px;">
+      <div style="padding:0 18px 8px 18px;">
         <div class="segmented">
           <button class="libSegBtn ${tab==="progress"?"active":""}" id="libInProgress">${I18n.t("lib_in_progress")}</button>
           <button class="libSegBtn ${tab==="finished"?"active":""}" id="libFinished">${I18n.t("lib_finished")}</button>
           <button class="libSegBtn ${tab==="bookmarks"?"active":""}" id="libBookmarks">${I18n.t("lib_bookmarks")}</button>
         </div>
       </div>
-
       <div class="libraryList">
         ${tab==="bookmarks" ? buildBookmarksHtml() : buildProgressHtml()}
       </div>
     </div>
   `;
 
-  document.getElementById("tabBooks").onclick    = ()=>go({name:"catalog"},{push:false});
-  document.getElementById("tabLibrary").onclick   = ()=>go({name:"library"},{push:false});
-  document.getElementById("libInProgress").onclick = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab="progress";   renderLibrary(); };
-  document.getElementById("libFinished").onclick   = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab="finished";   renderLibrary(); };
-  document.getElementById("libBookmarks").onclick  = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab="bookmarks";  renderLibrary(); };
+  document.getElementById('tabBooks').onclick     = ()=>go({name:'catalog'},{push:false});
+  document.getElementById('tabLibrary').onclick    = ()=>go({name:'library'},{push:false});
+  document.getElementById('libInProgress').onclick = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='progress';   renderLibrary(); };
+  document.getElementById('libFinished').onclick   = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='finished';   renderLibrary(); };
+  document.getElementById('libBookmarks').onclick  = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='bookmarks';  renderLibrary(); };
 
-  const __ats = document.getElementById("appTopSettings");
-  if(__ats) __ats.onclick = ()=>{ try{ openSettings(); }catch(e){} };
+  // Настройки — stopPropagation чтобы шит не закрылся
+  const __ats = document.getElementById('appTopSettings');
+  if(__ats) __ats.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); try{ openSettings(); }catch(err){} });
 
-  const __btb = document.getElementById("backToBookBtn");
+  // Волшебство: вкладки в топбар
+  _bindTabsScroll('tabBooks','tabLibrary', false);
+
+  const __btb = document.getElementById('backToBookBtn');
   if(__btb){
-    __btb.onclick = (e)=>{
-      try{ e.preventDefault(); e.stopPropagation(); }catch(_e){}
-      const ctx = state.ui?.backToBook;
+    __btb.onclick=(e)=>{
+      try{e.preventDefault();e.stopPropagation();}catch(_e){}
+      const ctx=state.ui?.backToBook;
       if(!ctx||!ctx.bookId) return;
-      try{ state.reading.level=ctx.level||state.reading.level||"original"; }catch(e){}
-      try{ state.reading.sourceLang=ctx.src||state.reading.sourceLang||"en"; }catch(e){}
-      try{ state.reading.targetLang=ctx.trg||state.reading.targetLang||"uk"; }catch(e){}
-      const routeName=(String(ctx.mode||"read")==="listen")?"reader":"bireader";
-      try{ delete state.ui.backToBook; }catch(e){}
-      go({name:routeName, bookId:ctx.bookId},{push:false});
+      try{state.reading.level=ctx.level||state.reading.level||'original';}catch(e){}
+      try{state.reading.sourceLang=ctx.src||state.reading.sourceLang||'en';}catch(e){}
+      try{state.reading.targetLang=ctx.trg||state.reading.targetLang||'uk';}catch(e){}
+      const routeName=(String(ctx.mode||'read')==='listen')?'reader':'bireader';
+      try{delete state.ui.backToBook;}catch(e){}
+      go({name:routeName,bookId:ctx.bookId},{push:false});
     };
   }
 
   app.querySelectorAll('.pkgChip[data-resume]').forEach(ch=>{
     const act=(e)=>{
-      try{ e.preventDefault(); e.stopPropagation(); }catch(_e){}
-      const parts = String(ch.dataset.resume||'').split('|');
+      try{e.preventDefault();e.stopPropagation();}catch(_e){}
+      const parts=String(ch.dataset.resume||'').split('|');
       if(parts.length<5) return;
-      const [bookId,level,src,trg,mode] = parts;
-      try{ state.reading.level=level||'original'; }catch(e){}
-      try{ state.reading.sourceLang=src||'en'; }catch(e){}
-      try{ state.reading.targetLang=trg||'uk'; }catch(e){}
+      const [bookId,level,src,trg,mode]=parts;
+      try{state.reading.level=level||'original';}catch(e){}
+      try{state.reading.sourceLang=src||'en';}catch(e){}
+      try{state.reading.targetLang=trg||'uk';}catch(e){}
       const routeName=(String(mode||'read')==='listen')?'reader':'bireader';
       let idx=0;
-      try{ const pkg=ProgressManager.getPkgProgress(bookId,src,trg,Config.normalizeLevel(level||'original')); if(pkg&&typeof pkg.activeIndex==='number') idx=Number(pkg.activeIndex||0); }catch(e){}
+      try{const pkg=ProgressManager.getPkgProgress(bookId,src,trg,Config.normalizeLevel(level||'original'));if(pkg&&typeof pkg.activeIndex==='number') idx=Number(pkg.activeIndex||0);}catch(e){}
       go({name:routeName,bookId,level,sourceLang:src,targetLang:trg,startIndex:idx});
     };
     ch.addEventListener('click',act);
-    ch.addEventListener('keydown',(e)=>{ if(e.key==='Enter'||e.key===' '){ act(e); } });
+    ch.addEventListener('keydown',(e)=>{if(e.key==='Enter'||e.key===' '){act(e);}});
   });
 
   if(tab==="bookmarks"){
     app.querySelectorAll('.bmGroupHdr[data-resume]').forEach(h=>{
       const act=(e)=>{
-        try{ e.preventDefault(); e.stopPropagation(); }catch(_e){}
+        try{e.preventDefault();e.stopPropagation();}catch(_e){}
         const parts=String(h.dataset.resume||'').split('|');
         if(parts.length<5) return;
         const [bookId,level,src,trg,mode]=parts;
-        try{ state.reading.level=level||'original'; }catch(e){}
-        try{ state.reading.sourceLang=src||'en'; }catch(e){}
-        try{ state.reading.targetLang=trg||'uk'; }catch(e){}
+        try{state.reading.level=level||'original';}catch(e){}
+        try{state.reading.sourceLang=src||'en';}catch(e){}
+        try{state.reading.targetLang=trg||'uk';}catch(e){}
         const routeName=(String(mode||'read')==='listen')?'reader':'bireader';
         let idx=0;
-        try{ const pkg=ProgressManager.getPkgProgress(bookId,src,trg,Config.normalizeLevel(level||'original')); if(pkg&&typeof pkg.activeIndex==='number') idx=Number(pkg.activeIndex||0); }catch(e){}
+        try{const pkg=ProgressManager.getPkgProgress(bookId,src,trg,Config.normalizeLevel(level||'original'));if(pkg&&typeof pkg.activeIndex==='number') idx=Number(pkg.activeIndex||0);}catch(e){}
         go({name:routeName,bookId,level,sourceLang:src,targetLang:trg,startIndex:idx});
       };
       h.addEventListener('click',act);
-      h.addEventListener('keydown',(e)=>{ if(e.key==='Enter'||e.key===' '){ act(e); } });
+      h.addEventListener('keydown',(e)=>{if(e.key==='Enter'||e.key===' '){act(e);}});
     });
-
     app.querySelectorAll('[data-bm-play]').forEach(btn=>{
       btn.addEventListener('click',(e)=>{
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();e.stopPropagation();
         const [bookId,entryId]=String(btn.dataset.bmPlay||'').split('::');
         const it=(BookmarkManager.load(bookId)||[]).find(x=>x&&x.id===entryId);
         if(it) playOneShotTTS(it.raw||it.tr||'');
@@ -273,22 +236,22 @@ function renderLibrary(){
     });
     app.querySelectorAll('[data-bm-go]').forEach(btn=>{
       btn.addEventListener('click',(e)=>{
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();e.stopPropagation();
         const [bookId,entryId]=String(btn.dataset.bmGo||'').split('::');
         const listAll=BookmarkManager.load(bookId);
         let filtered=listAll;
         try{
-          const inReading=state.route&&(state.route.name==="reader"||state.route.name==="bireader");
+          const inReading=state.route&&(state.route.name==='reader'||state.route.name==='bireader');
           if(inReading){
-            const lvl=String(_bmGetLevel()||'original'), pair=_bmGetLangPair(), md=String(_bmGetMode()||'read');
-            filtered=(listAll||[]).filter(it=>{ if(!it) return false; return String(it.level||'original')===lvl&&String(it.sourceLang||pair.src||'en')===String(pair.src||'en')&&String(it.targetLang||pair.trg||'uk')===String(pair.trg||'uk')&&String(it.mode||'read')===md; });
+            const lvl=String(_bmGetLevel()||'original'),pair=_bmGetLangPair(),md=String(_bmGetMode()||'read');
+            filtered=(listAll||[]).filter(it=>{if(!it)return false;return String(it.level||'original')===lvl&&String(it.sourceLang||pair.src||'en')===String(pair.src||'en')&&String(it.targetLang||pair.trg||'uk')===String(pair.trg||'uk')&&String(it.mode||'read')===md;});
           }
-        }catch(e){ filtered=listAll; }
+        }catch(e){filtered=listAll;}
         const it=filtered.find(x=>x&&x.id===entryId);
         const idx=Number(it?.paraIdx??it?.lineIndex??0);
         const widx=(it&&Number.isFinite(it.wordIndex)&&it.wordIndex>=0)?Number(it.wordIndex):undefined;
         const bmMode=String(it?.mode||'').toLowerCase();
-        const routeName=(bmMode==="listen")?"reader":(bmMode==="read"?"bireader":(state.route?.name==="bireader"?"bireader":"reader"));
+        const routeName=(bmMode==='listen')?'reader':(bmMode==='read'?'bireader':(state.route?.name==='bireader'?'bireader':'reader'));
         try{
           const src2=String(it?.sourceLang||state.reading?.sourceLang||'en').trim().toLowerCase();
           const trg2=String(it?.targetLang||state.reading?.targetLang||'uk').trim().toLowerCase();
@@ -304,7 +267,7 @@ function renderLibrary(){
     });
     app.querySelectorAll('[data-bm-del]').forEach(btn=>{
       btn.addEventListener('click',(e)=>{
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();e.stopPropagation();
         const [bookId,entryId]=String(btn.dataset.bmDel||'').split('::');
         BookmarkManager.remove(bookId,entryId);
         renderLibrary();
