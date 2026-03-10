@@ -4,8 +4,13 @@
 
 const _SVG_SETTINGS = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
 
+const _SVG_MOON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+const _SVG_SUN  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+
 /* Верхняя полоска — всегда содержит табы */
 function _appTopBar(isCatalog){
+  const isNight = !!(typeof state !== 'undefined' && state.reading && state.reading.night);
+  const themeIcon = isNight ? _SVG_SUN : _SVG_MOON;
   return '<div class="appTopBar" id="appTopBar">'
     + '<div class="appTopBarLeft" id="appTopBarLeft">'
     + '<div class="appTopTabs" id="appTopTabsMain">'
@@ -14,6 +19,7 @@ function _appTopBar(isCatalog){
     + '</div>'
     + '</div>'
     + '<div class="appTopBarRight">'
+    + '<button class="appTopBtn" id="appTopTheme" title="Toggle theme" aria-label="Toggle theme">' + themeIcon + '</button>'
     + '<button class="appTopBtn" id="appTopSettings" title="Settings">' + _SVG_SETTINGS + '</button>'
     + '</div></div>';
 }
@@ -30,8 +36,6 @@ function _disconnectTabsObserver(){
 
 function _bindTabsScroll(isCatalog){
   _disconnectTabsObserver();
-  // Нет большого заголовка — скролл-обработчик не нужен
-  // Просто восстанавливаем позицию если нужно
   try{
     if(state.ui && state.ui.tabsCollapsed && state.ui.tabsSavedScrollY){
       var targetY = Number(state.ui.tabsSavedScrollY);
@@ -42,6 +46,39 @@ function _bindTabsScroll(isCatalog){
       });
     }
   }catch(e){}
+}
+
+function _bindTopBarBtns(){
+  var _ttb = document.getElementById('topTabBooks');
+  var _ttl = document.getElementById('topTabLibrary');
+  if(_ttb) _ttb.addEventListener('click', function(e){
+    e.stopPropagation();
+    try{ state.ui = state.ui || {}; state.ui.tabsSavedScrollY = window.scrollY; }catch(e2){}
+    go({name:'catalog'},{push:false});
+  });
+  if(_ttl) _ttl.addEventListener('click', function(e){
+    e.stopPropagation();
+    try{ state.ui = state.ui || {}; state.ui.tabsSavedScrollY = window.scrollY; }catch(e2){}
+    go({name:'library'},{push:false});
+  });
+
+  const __ats = document.getElementById('appTopSettings');
+  if(__ats) __ats.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); try{ openSettings(); }catch(err){} });
+
+  const __att = document.getElementById('appTopTheme');
+  if(__att) __att.addEventListener('click', function(e){
+    e.preventDefault(); e.stopPropagation();
+    try{
+      state.reading.night = !state.reading.night;
+      // sync toggle in settings sheet
+      const tN = document.getElementById('tNight');
+      if(tN){ tN.classList.toggle('on', state.reading.night); }
+      setTheme(state.reading.night);
+      applyHighlightTheme();
+      // update this button icon without full re-render
+      __att.innerHTML = state.reading.night ? _SVG_SUN : _SVG_MOON;
+    }catch(err){}
+  });
 }
 
 function renderCatalog(){
@@ -143,22 +180,7 @@ function renderCatalog(){
     </div>
   `;
 
-  var _ttb = document.getElementById('topTabBooks');
-  var _ttl = document.getElementById('topTabLibrary');
-  if(_ttb) _ttb.addEventListener('click', function(e){
-    e.stopPropagation();
-    try{ state.ui = state.ui || {}; state.ui.tabsSavedScrollY = window.scrollY; }catch(e2){}
-    go({name:'catalog'},{push:false});
-  });
-  if(_ttl) _ttl.addEventListener('click', function(e){
-    e.stopPropagation();
-    try{ state.ui = state.ui || {}; state.ui.tabsSavedScrollY = window.scrollY; }catch(e2){}
-    go({name:'library'},{push:false});
-  });
-
-  const __ats = document.getElementById('appTopSettings');
-  if(__ats) __ats.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); try{ openSettings(); }catch(err){} });
-
+  _bindTopBarBtns();
   _bindTabsScroll(true);
 
   if(cont){

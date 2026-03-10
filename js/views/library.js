@@ -2,6 +2,11 @@
    views/library.js  —  Екран «Моя Бібліотека»
    ═══════════════════════════════════════════════════════════ */
 
+/* SVG icons for bookmark actions — matching the app design system */
+const _SVG_BM_SPEAK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
+const _SVG_BM_GO    = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+const _SVG_BM_DEL   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
 function renderLibrary(){
   if(typeof _disconnectTabsObserver === 'function') _disconnectTabsObserver();
 
@@ -99,9 +104,9 @@ function renderLibrary(){
           const trHtml=(it.tr&&it.raw&&it.tr!==it.raw)?'<p class="bmTr">'+escapeHtml(it.tr)+'</p>':'';
           return '<div class="bmItem" data-bm-item><div class="bmMain"><p class="bmLabel">#'+(idx+1)+'</p><p class="bmRaw">'+escapeHtml(it.raw||it.tr||'')+'</p>'+trHtml+'</div>'
             +'<div class="bmBtns">'
-            +'<button class="bmBtn" data-bm-play="'+bId+'::'+iId+'">\ud83d\udd0a</button>'
-            +'<button class="bmBtn primary" data-bm-go="'+bId+'::'+iId+'">\u21aa\ufe0e</button>'
-            +'<button class="bmBtn" data-bm-del="'+bId+'::'+iId+'">\u2715</button>'
+            +'<button class="bmBtn" data-bm-play="'+bId+'::'+iId+'">'+_SVG_BM_SPEAK+'</button>'
+            +'<button class="bmBtn primary" data-bm-go="'+bId+'::'+iId+'">'+_SVG_BM_GO+'</button>'
+            +'<button class="bmBtn" data-bm-del="'+bId+'::'+iId+'">'+_SVG_BM_DEL+'</button>'
             +'</div></div>';
         }).join('');
         return '<div class="bmGroupHdr" data-resume="'+resumeKey+'" role="button" tabindex="0">'
@@ -162,25 +167,11 @@ function renderLibrary(){
     </div>
   `;
 
-  var _ttb = document.getElementById('topTabBooks');
-  var _ttl = document.getElementById('topTabLibrary');
-  if(_ttb) _ttb.addEventListener('click', function(e){
-    e.stopPropagation();
-    try{ state.ui = state.ui || {}; state.ui.tabsSavedScrollY = window.scrollY; }catch(e2){}
-    go({name:'catalog'},{push:false});
-  });
-  if(_ttl) _ttl.addEventListener('click', function(e){
-    e.stopPropagation();
-    try{ state.ui = state.ui || {}; state.ui.tabsSavedScrollY = window.scrollY; }catch(e2){}
-    go({name:'library'},{push:false});
-  });
+  _bindTopBarBtns();
 
   document.getElementById('libInProgress').onclick = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='progress';  renderLibrary(); };
   document.getElementById('libFinished').onclick   = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='finished';  renderLibrary(); };
   document.getElementById('libBookmarks').onclick  = ()=>{ state.ui=state.ui||{}; state.ui.libraryTab='bookmarks'; renderLibrary(); };
-
-  const __ats = document.getElementById('appTopSettings');
-  if(__ats) __ats.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); try{ openSettings(); }catch(err){} });
 
   if(typeof _bindTabsScroll === 'function') _bindTabsScroll(false);
 
