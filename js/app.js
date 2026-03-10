@@ -53,7 +53,7 @@ In this story, Tim makes a very strange sandwich. When he comes back to eat it, 
       "The Invisible Sandwich",
       "Chapter 1: The Best Sandwich",
       "Tim is hungry, so he goes to the kitchen.",
-      "“I want a big sandwich!” he says.",
+      "\u201cI want a big sandwich!\u201d he says.",
       "He gets some bread and adds cheese, tomato, and lettuce.",
       "The end."
     ]
@@ -608,7 +608,7 @@ function processBookTextForChapters(lines){
     const headingRe = new RegExp(
       "^(" +
         "chapter|chapitre|kapitel|cap[ií]tulo|capitulo|rozdzia[lł]|rozdzial|rozdi[lł]|rozdi[lł]|rozd[ií]l|розділ|глава|частина|part|section" +
-      ")(?:\s+|\s*[:.-]\s*)(?:\d+|[ivxlcdm]+)(?:\s*[:.-].*)?$",
+      ")(?:\\s+|\\s*[:.-]\\s*)(?:\\d+|[ivxlcdm]+)(?:\\s*[:.-].*)?$",
       "i"
     );
 
@@ -684,146 +684,9 @@ function _coreApplyBookMeta(book){
   }catch(e){}
 }
 
-function getChapters(){
-  try{
-    if(core && typeof core.getChapters === "function"){
-      const ch = core.getChapters() || [];
-      // keep legacy shape {title,startIndex}
-      return ch.map(c=>({ title: c.title, startIndex: c.index }));
-    }
-  }catch(e){}
-  return (state.book && Array.isArray(state.book.chapters)) ? state.book.chapters : [];
-}
+/* ── getChapters, renderChaptersList, openChapters, closeChapters, jumpToChapter → js/views/chapters.js ── */
 
 /* _escHtml removed — use escapeHtml() */
-
-function renderChaptersList(){
-  if(!chaptersList) return;
-  const ch = getChapters();
-  if(!ch.length){
-    chaptersList.innerHTML = `<div style="opacity:.6;font-weight:700;padding:8px 2px">${escapeHtml(I18n.t('no_chapters'))}</div>`;
-    return;
-  }
-  // Determine current chapter by current cursor line.
-  let curLine = 0;
-  try{ curLine = getCursorIndex(); }catch(e){ curLine = 0; }
-  let activeIdx = 0;
-  try{
-    for(let i=0;i<ch.length;i++){
-      const si = Number(ch[i]?.startIndex||0);
-      if(Number.isFinite(si) && si <= curLine) activeIdx = i;
-    }
-  }catch(e){}
-
-  chaptersList.innerHTML = ch.map((c, idx)=>{
-    const title = escapeHtml(String(c.title||"Chapter"));
-    const isActive = idx === activeIdx;
-    const isDone = idx < activeIdx;
-    return `<button class="btn" style="text-align:left;justify-content:flex-start;gap:10px;position:relative;${isActive?'background:rgba(59,130,246,.14);':''}" data-chapter="${idx}">
-      <span style="font-weight:900;opacity:.8">${idx+1}.</span>
-      <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</span>
-      ${isDone?`<span style="position:absolute;right:40px;font-weight:900;opacity:.65">✓</span>`:''}
-      <span style="opacity:.6">›</span>
-    </button>`;
-  }).join('');
-
-  [...chaptersList.querySelectorAll('[data-chapter]')].forEach(btn=>{
-    btn.onclick = (e)=>{
-      e.preventDefault();
-      const idx = Number(btn.getAttribute('data-chapter'));
-      jumpToChapter(idx);
-      closeChapters();
-    };
-  });
-}
-
-function openChapters(){
-  if(!chaptersSheet) return;
-  try{ closeSettings(); }catch(e){}
-  try{ closeDev(); }catch(e){}
-  renderChaptersList();
-  chaptersSheet.setAttribute('aria-hidden','false');
-  openSheet(chaptersSheet);
-}
-function closeChapters(){
-  if(!chaptersSheet) return;
-  closeSheet(chaptersSheet);
-}
-
-function jumpToChapter(chIdx){
-  const ch = getChapters();
-  if(!ch.length) return;
-  const c = ch[Math.max(0, Math.min(ch.length-1, Number(chIdx)||0))];
-  const idx = Math.max(0, Number(c.startIndex||0));
-
-  // If we're inside an active reading screen, stop playback WITHOUT saving first,
-  // then set cursor to the chapter start and save once (prevents stale-save races).
-  if(state.route?.name === 'reader' || state.route?.name === 'bireader'){
-    try{ stopReading({save:false}); }catch(e){}
-
-    // Jump inside active reading screen
-          setCursorIndex(idx, {syncUI:true, scroll:true});
-      try{ _clearPendingBookmarkPlayChoice(); }catch(e){}
-      // Apply bookmark word highlight if provided
-      try{
-        const wi = Number(state.route?.startWordIndex);
-        if(Number.isFinite(wi) && wi >= 0){
-          setActiveParaWord(idx, wi);
-          const wEl = state.reading.paraWords?.[idx]?.[wi];
-          if(wEl && wEl.getBoundingClientRect){
-            const r = wEl.getBoundingClientRect();
-            const topZone = window.innerHeight * 0.25;
-            const botZone = window.innerHeight * 0.75;
-            if(r.top < topZone || r.bottom > botZone){
-              window.scrollBy({top: (r.top - window.innerHeight/2), behavior:"smooth"});
-            }
-          }
-        }
-        try{ delete state.route.startWordIndex; }catch(e){}
-      }catch(e){}
-
-      // Autoplay for bookmarks "Play"
-      try{ if(state.route?.autoPlay){ try{ state.route.autoPlay=false; }catch(e){}; setTimeout(()=>{ try{ startReading(); }catch(e){} }, 80); } }catch(e){}
-
-
-  // NEW: Cross-mode sync so mode-switch won't restore an older index
-  if(state.route?.name === 'reader'){
-    try{ state.reading.activeBiLineIndex = idx; }catch(e){}
-    try{ state.reading.resumeIndexBi = idx; }catch(e){}
-  }else{
-    try{ state.reading.activeParaIndex = idx; }catch(e){}
-    try{ state.reading.resumeIndexReader = idx; }catch(e){}
-  }
-
-    try{ saveReadingProgress(); }catch(e){}
-    try{ closeChapters(); }catch(e){}
-    return;
-  }
-
-  // Details screen: save selected chapter as the next start position for this (book + language pair)
-  try{
-    const bookId = resolveBookId();
-    const src = String(state.reading.sourceLang || state.book?.sourceLang || "en").trim().toLowerCase();
-    const trg = String(state.reading.targetLang || "uk").trim().toLowerCase();
-    const level = Config.normalizeLevel(state.reading.level || "original");
-    const pkgKey = ProgressManager.pkgProgressKey(bookId, src, trg, level);
-
-    // Keep previous percent if exists
-    let prevProgress = 0;
-    try{
-      const prev = ProgressManager.getPkgProgress(bookId, src, trg, level);
-      if(prev && typeof prev.progress === "number") prevProgress = Number(prev.progress||0);
-    }catch(_e){}
-
-    const pkgPayload = { sourceLang: src, targetLang: trg, progress: prevProgress, activeIndex: idx, ts: Date.now() };
-    try{ localStorage.setItem(pkgKey, JSON.stringify(pkgPayload)); }
-    catch(e){ try{ sessionStorage.setItem(pkgKey, JSON.stringify(pkgPayload)); }catch(_e){} }
-
-    ProgressManager.saveLastPkg(bookId, state.route?.name||"details", src, trg);
-  }catch(e){}
-  try{ closeChapters(); }catch(e){}
-}
-
 
 /* ---------------------------
    Mode switch (inside reader modes)
@@ -1692,6 +1555,8 @@ function updateModeSwitchUI(){
 
 /* ── renderReader, renderBiReader → js/views/reader.js ── */
 
+/* ── getChapters, renderChaptersList, openChapters, closeChapters, jumpToChapter → js/views/chapters.js ── */
+
 function buildLineMap(){
   const els = [...document.querySelectorAll('.line[data-token="line"]')];
   state.reading.tokenMap = els;
@@ -1705,7 +1570,7 @@ function buildLineMap(){
 // - Latin + diacritics (PL/DE/FR/ES)
 // - Cyrillic (UK/RU)
 // Safari/WebView note: avoid Unicode property escapes (\p{L}) to prevent white screens.
-const WORD_CHARS = "0-9A-Za-z\u00C0-\u024F\u1E00-\u1EFF\u0400-\u052F\u2DE0-\u2DFF\uA640-\uA69F'’";
+const WORD_CHARS = "0-9A-Za-z\u00C0-\u024F\u1E00-\u1EFF\u0400-\u052F\u2DE0-\u2DFF\uA640-\uA69F''";
 const WORD_TOKEN_RE = new RegExp(`(\\s+|[${WORD_CHARS}]+|[^\\s])`, "g");
 const WORD_ONLY_RE = new RegExp(`^[${WORD_CHARS}]+$`);
 const WORD_TRIM_RE = new RegExp(`^[^${WORD_CHARS}]+|[^${WORD_CHARS}]+$`, "g");
@@ -2055,11 +1920,6 @@ function initLineTranslations(){
 
   lines.forEach(el=>lineObserver.observe(el));
 }
-
-
-
-
-
 
 
 function initReaderLineTranslations({silent=false}={}){
