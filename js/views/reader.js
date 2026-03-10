@@ -4,6 +4,7 @@
 
 const _SVG = {
   home: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>`,
+  back: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>`,
   chapters: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 10h10M4 14h12M4 18h8"/></svg>`,
   bookmark: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a1 1 0 0 1 1 1v17l-8-4-8 4V4a1 1 0 0 1 1-1z"/></svg>`,
   settings: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
@@ -16,6 +17,7 @@ function _readerTopBar(title){
     <div class="readTopBar">
       <div class="rtLeft">
         <button class="topIcon" id="btnBooks" aria-label="Menu" title="Головне меню">${_SVG.home}</button>
+        <button class="topIcon" id="btnBackToDetails" aria-label="Back" title="До книги">${_SVG.back}</button>
       </div>
       <div class="rtCenter">${escapeHtml(title || "")}</div>
       <div class="rtRight">
@@ -32,6 +34,13 @@ function _bindTopBar(){
   const __books = document.getElementById("btnBooks");
   if(__books) __books.onclick = goCatalog;
 
+  const __back = document.getElementById("btnBackToDetails");
+  if(__back) __back.onclick = function(){
+    const bookId = (state.book && state.book.id) || (state.route && state.route.bookId);
+    if(bookId){ go({name:"details", bookId: bookId}); }
+    else { go({name:"catalog"}); }
+  };
+
   const __tc = document.getElementById("topChapters");
   if(__tc) __tc.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); try{ openChapters(); }catch(err){} });
 
@@ -46,11 +55,11 @@ function _bindTopBar(){
     __tbm.addEventListener("click", (e)=>{
       e.preventDefault();
       e.stopPropagation();
-      const rn = state.route?.name;
+      const rn = state.route && state.route.name;
       if(rn === "reader" || rn === "bireader"){
         try{ state.ui = state.ui || {}; state.ui._resumeAudioAfterBMSheet = (typeof openaiAudio !== "undefined" && openaiAudio && openaiAudio.paused===false); }catch(err){}
         try{ if(typeof openaiAudio !== "undefined" && openaiAudio && openaiAudio.pause) openaiAudio.pause(); }catch(err){}
-        try{ showBookBookmarksSheet(state.book?.id || state.route?.bookId); }catch(err){}
+        try{ showBookBookmarksSheet(state.book && state.book.id || state.route && state.route.bookId); }catch(err){}
         return;
       }
       try{ stopReading(); }catch(err){}
@@ -125,7 +134,7 @@ function renderReader(){
         const wi = Number(state.route.startWordIndex);
         if(Number.isFinite(wi) && wi >= 0){
           setActiveParaWord(sp, wi);
-          const wEl = state.reading.paraWords?.[sp]?.[wi];
+          const wEl = state.reading.paraWords && state.reading.paraWords[sp] && state.reading.paraWords[sp][wi];
           if(wEl && wEl.getBoundingClientRect){
             const r = wEl.getBoundingClientRect();
             const topZone = window.innerHeight * 0.25;
