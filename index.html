@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Books</title>
-  <link rel="stylesheet" href="css/styles.css?v=10">
+  <link rel="stylesheet" href="css/styles.css?v=11">
   <link rel="stylesheet" href="css/theme.css?v=3">
   <style>
     /* ── User menu dropdown ── */
@@ -27,7 +27,7 @@
       background: var(--bg); color: var(--text); font-size: 13px; font-weight: 700;
       cursor: pointer; transition: background .15s;
     }
-    .umLangBtn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .umLangBtn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
     .umFontRow { display: flex; align-items: center; gap: 8px; }
     .umFontBtn {
       width: 36px; height: 36px; border-radius: 9px; border: 1.5px solid var(--line);
@@ -44,15 +44,23 @@
 <div id="app"></div>
 
 <!-- Player -->
-<div id="player" style="display:none">
-  <div class="progBar"><div id="pFill" class="progFill"></div></div>
-  <div class="progMeta"><span id="pTitle">Book</span><span id="pPct" style="margin-left:auto">0%</span></div>
-  <div class="playerBtns">
-    <button class="segBtn" id="modeListen">Listen</button>
-    <button id="btnStart" class="iconBtn" title="Start">⏮</button>
-    <button id="btnPlay" class="playBtn">▶</button>
-    <button id="btnBack" class="iconBtn" title="Switch mode">⇄</button>
-    <button class="segBtn" id="modeRead">Read</button>
+<div id="player" class="playerBar" style="display:none">
+  <div class="playerInner">
+    <div>
+      <div class="progTop">
+        <span id="pTitle" class="progTitle">Book</span>
+        <span id="pPct" class="progMeta">0%</span>
+      </div>
+      <div class="bar"><div id="pFill"></div></div>
+    </div>
+    <div class="controls">
+      <button class="segBtn" id="modeListen">Listen</button>
+      <button id="btnStart" class="iconBtn" title="Start">&#9198;</button>
+      <button id="btnPlay" class="playBtn">&#9654;</button>
+      <button id="btnBack" class="iconBtn" title="Switch mode">&#8644;</button>
+      <button id="btnChapters" class="iconBtn" title="Chapters">&#9776;</button>
+      <button class="segBtn" id="modeRead">Read</button>
+    </div>
   </div>
 </div>
 
@@ -205,13 +213,13 @@
     <div><b>No cache</b><br><small>ignore Worker cache</small></div>
     <button class="toggle" id="tNoCache"></button>
   </div>
-  <div class="row">
+  <div class="row" style="display:none">
     <div><b>Swap lang (dev)</b></div>
-    <button class="toggle" id="tSwap" style="display:none"></button>
+    <button class="toggle" id="tSwap"></button>
   </div>
   <div style="display:flex;gap:10px;padding:8px 0;">
-    <button id="btnClearTts" class="pillBtn" style="flex:1">🧹 Clear TTS</button>
-    <button id="btnClearTr" class="pillBtn" style="flex:1">🧹 Clear TR</button>
+    <button id="btnClearTts" class="pillBtn" style="flex:1">Clear TTS</button>
+    <button id="btnClearTr" class="pillBtn" style="flex:1">Clear TR</button>
   </div>
   <p class="hint" style="font-size:12px;color:var(--muted);padding:0 4px 8px;"></p>
 </div>
