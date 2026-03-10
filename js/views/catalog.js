@@ -2,10 +2,11 @@
    views/catalog.js  —  Екран «Каталог книг»
    ═══════════════════════════════════════════════════════════ */
 
-const _SVG_SETTINGS = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
-
 const _SVG_MOON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 const _SVG_SUN  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+
+/* User menu SVG icon (person) */
+const _SVG_USER = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
 
 /* Верхняя полоска — всегда содержит табы */
 function _appTopBar(isCatalog){
@@ -20,8 +21,116 @@ function _appTopBar(isCatalog){
     + '</div>'
     + '<div class="appTopBarRight">'
     + '<button class="appTopBtn" id="appTopTheme" title="Toggle theme" aria-label="Toggle theme">' + themeIcon + '</button>'
-    + '<button class="appTopBtn" id="appTopSettings" title="Settings">' + _SVG_SETTINGS + '</button>'
+    + '<button class="appTopBtn" id="appTopUser" title="User settings" aria-label="User settings">' + _SVG_USER + '</button>'
     + '</div></div>';
+}
+
+/* User menu dropdown — rendered into body, closed on outside click */
+function _openUserMenu(anchorBtn){
+  // Close if already open
+  const existing = document.getElementById('userMenuDropdown');
+  if(existing){ existing.remove(); return; }
+
+  const lang = I18n.getUiLang();
+  const langs = I18n.getAvailableLangs();
+  const langLabels = { en: 'English', uk: 'Українська', ru: 'Русский' };
+
+  // Font size helpers
+  const curFontSize = (typeof state !== 'undefined' && state.reading) ? (state.reading.fontSize || 22) : 22;
+
+  const langOptions = langs.map(l =>
+    '<button class="umLangBtn' + (l === lang ? ' active' : '') + '" data-lang="' + l + '">' +
+    (langLabels[l] || l.toUpperCase()) + '</button>'
+  ).join('');
+
+  const menu = document.createElement('div');
+  menu.id = 'userMenuDropdown';
+  menu.className = 'userMenuDropdown';
+  menu.innerHTML =
+    '<div class="umSection">'
+    + '<div class="umLabel" id="umLangLabel">' + I18n.t('user_menu_lang') + '</div>'
+    + '<div class="umLangRow">' + langOptions + '</div>'
+    + '</div>'
+    + '<div class="umDivider"></div>'
+    + '<div class="umSection">'
+    + '<div class="umLabel" id="umFontLabel">' + I18n.t('user_menu_font') + '</div>'
+    + '<div class="umFontRow">'
+    + '<button class="umFontBtn" id="umFontMinus" aria-label="Decrease font">A−</button>'
+    + '<span class="umFontVal" id="umFontVal">' + curFontSize + 'px</span>'
+    + '<button class="umFontBtn" id="umFontPlus" aria-label="Increase font">A+</button>'
+    + '</div>'
+    + '</div>';
+
+  // Position below anchor button
+  document.body.appendChild(menu);
+  const rect = anchorBtn.getBoundingClientRect();
+  const mw = 220;
+  let left = Math.min(rect.right - mw, window.innerWidth - mw - 8);
+  if(left < 8) left = 8;
+  menu.style.top = (rect.bottom + 6) + 'px';
+  menu.style.left = left + 'px';
+
+  // Language buttons
+  menu.querySelectorAll('.umLangBtn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const l = btn.dataset.lang;
+      I18n.setUiLang(l);
+      try{ applyUiLang(); }catch(err){}
+      // re-render current screen so tabs/labels update
+      try{
+        const route = state.route && state.route.name;
+        if(route === 'catalog') renderCatalog();
+        else if(route === 'library') renderLibrary();
+      }catch(err){}
+      menu.remove();
+    });
+  });
+
+  // Font size buttons
+  function updateFontVal(){
+    const el = document.getElementById('umFontVal');
+    if(el && typeof state !== 'undefined') el.textContent = state.reading.fontSize + 'px';
+  }
+  const btnMinus = menu.querySelector('#umFontMinus');
+  const btnPlus  = menu.querySelector('#umFontPlus');
+  if(btnMinus) btnMinus.addEventListener('click', e => {
+    e.stopPropagation();
+    try{
+      state.reading.fontSize = Math.max(16, state.reading.fontSize - 2);
+      document.documentElement.style.setProperty('--fontSize', state.reading.fontSize + 'px');
+      updateFontVal();
+    }catch(err){}
+  });
+  if(btnPlus) btnPlus.addEventListener('click', e => {
+    e.stopPropagation();
+    try{
+      state.reading.fontSize = Math.min(34, state.reading.fontSize + 2);
+      document.documentElement.style.setProperty('--fontSize', state.reading.fontSize + 'px');
+      updateFontVal();
+    }catch(err){}
+  });
+
+  // Close on outside click
+  function onOutside(e){
+    if(!menu.contains(e.target) && e.target !== anchorBtn){
+      menu.remove();
+      document.removeEventListener('click', onOutside, true);
+    }
+  }
+  setTimeout(() => document.addEventListener('click', onOutside, true), 10);
+}
+
+/* Update labels inside open user menu when language changes */
+function _updateUserMenuLabels(){
+  const menu = document.getElementById('userMenuDropdown');
+  if(!menu) return;
+  const lbl = menu.querySelector('#umLangLabel');
+  if(lbl) lbl.textContent = I18n.t('user_menu_lang');
+  const flbl = menu.querySelector('#umFontLabel');
+  if(flbl) flbl.textContent = I18n.t('user_menu_font');
+  const curLang = I18n.getUiLang();
+  menu.querySelectorAll('.umLangBtn').forEach(b => b.classList.toggle('active', b.dataset.lang === curLang));
 }
 
 /* Глобальный scroll listener */
@@ -62,22 +171,23 @@ function _bindTopBarBtns(){
     go({name:'library'},{push:false});
   });
 
-  const __ats = document.getElementById('appTopSettings');
-  if(__ats) __ats.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); try{ openSettings(); }catch(err){} });
-
   const __att = document.getElementById('appTopTheme');
   if(__att) __att.addEventListener('click', function(e){
     e.preventDefault(); e.stopPropagation();
     try{
       state.reading.night = !state.reading.night;
-      // sync toggle in settings sheet
       const tN = document.getElementById('tNight');
       if(tN){ tN.classList.toggle('on', state.reading.night); }
       setTheme(state.reading.night);
       applyHighlightTheme();
-      // update this button icon without full re-render
       __att.innerHTML = state.reading.night ? _SVG_SUN : _SVG_MOON;
     }catch(err){}
+  });
+
+  const __atu = document.getElementById('appTopUser');
+  if(__atu) __atu.addEventListener('click', function(e){
+    e.preventDefault(); e.stopPropagation();
+    _openUserMenu(__atu);
   });
 }
 

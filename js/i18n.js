@@ -53,6 +53,8 @@ const STRINGS = {
     dev_clear_tr:"🧹 Clear translation cache",
     dev_hint_libre:"Translation: LibreTranslate (public). If you see 429 — that is a rate limit.",
     dev_hint_worker:"For security, the OpenAI key is stored in Worker (secret). GitHub Pages stays static.",
+    user_menu_lang:"Interface language",
+    user_menu_font:"Text size",
   },
   uk: {
     tabs_books:"Книги", tabs_library:"Моя бібліотека",
@@ -101,6 +103,8 @@ const STRINGS = {
     dev_clear_tr:"🧹 Очистити кеш перекладу",
     dev_hint_libre:"Переклад: LibreTranslate (публічний). Якщо бачиш 429 — це ліміт.",
     dev_hint_worker:"Для безпеки ключ OpenAI зберігається у Worker. GitHub Pages залишається статичним.",
+    user_menu_lang:"Мова інтерфейсу",
+    user_menu_font:"Розмір тексту",
   },
   ru: {
     tabs_books:"Книги", tabs_library:"Моя библиотека",
@@ -146,9 +150,11 @@ const STRINGS = {
     voice_prompt_label:"Промпт голоса", voice_prompt_hint:"инструкции",
     no_cache_label:"Без кеша", no_cache_hint:"игнорировать кеш Worker",
     dev_clear_tts:"🧹 Очистить кеш озвучки",
-    dev_clear_tr:"🧹 Очистить кеш перевода",   // ИСПРАВЛЕНО: было "Очистити"
+    dev_clear_tr:"🧹 Очистить кеш перевода",
     dev_hint_libre:"Перевод: LibreTranslate (публичный). Если видишь 429 — это лимит.",
     dev_hint_worker:"Для безопасности ключ OpenAI хранится в Worker. GitHub Pages остаётся статичным.",
+    user_menu_lang:"Язык интерфейса",
+    user_menu_font:"Размер текста",
   },
 };
 
