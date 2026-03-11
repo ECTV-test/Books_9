@@ -80,7 +80,9 @@ function renderReader(){
   applyHighlightTheme();
 
   const lines = (b.text || []);
-  const chapterStarts = new Set((getChapters()||[]).map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
+  const chapterList = getChapters() || [];
+  const chapterStarts = new Set(chapterList.map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
+  const chapterIndexMap = new Map(chapterList.map((c, idx)=>[Number(c.startIndex||0), idx]));
 
   app.innerHTML = `
     <div class="readerStage">
@@ -96,8 +98,12 @@ function renderReader(){
               if(raw === ""){
                 return `<div style="height:10px"></div>`;
               }
+              const chIdx = isCh ? chapterIndexMap.get(i) : undefined;
+              const chImgHtml = (isCh && typeof chIdx === 'number')
+                ? `<div class="chapterImgWrap"><img src="books/${b.id}/levels/original/chapter_${chIdx + 1}.jpg" alt="" loading="lazy" onerror="this.closest('.chapterImgWrap').style.display='none'"></div>`
+                : '';
               return `
-                <div class="listenLine ${isCh ? "chapterLine" : ""}" data-para-wrap="${i}">
+                ${chImgHtml}<div class="listenLine ${isCh ? "chapterLine" : ""}" data-para-wrap="${i}">
                   ${renderParagraph(raw, i, isCh)}
                   <button class="lineCardBtn" data-para-btn="${i}" title="Line translation">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -178,7 +184,9 @@ function renderBiReader(){
   const lines = (b.text || []);
   state.reading.biTotal = effectiveTotalLines(lines);
 
-  const chapterStarts = new Set((getChapters()||[]).map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
+  const chapterList2 = getChapters() || [];
+  const chapterStarts = new Set(chapterList2.map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
+  const chapterIndexMap2 = new Map(chapterList2.map((c, idx)=>[Number(c.startIndex||0), idx]));
 
   app.innerHTML = `
     <div class="readerStage">
@@ -194,8 +202,12 @@ function renderBiReader(){
             if(raw === ""){
               return `<div style="height:14px"></div>`;
             }
+            const chIdx2 = isCh ? chapterIndexMap2.get(i) : undefined;
+            const chImgHtml2 = (isCh && typeof chIdx2 === 'number')
+              ? `<div class="chapterImgWrap"><img src="books/${b.id}/levels/original/chapter_${chIdx2 + 1}.jpg" alt="" loading="lazy" onerror="this.closest('.chapterImgWrap').style.display='none'"></div>`
+              : '';
             return `
-              <div class="paraLine ${isCh ? "chapterLine" : ""}" data-para-wrap="${i}">
+              ${chImgHtml2}<div class="paraLine ${isCh ? "chapterLine" : ""}" data-para-wrap="${i}">
                 <div class="line" data-token="line" data-idx="${i}" data-raw="${escapeHtml(raw)}" style="${isCh? "font-weight:900;letter-spacing:.2px" : ""}">${escapeHtml(raw)}</div>
                 <div class="paraTrans" data-for="${i}"></div>
                 <button class="lineCardBtn" data-para-btn="${i}" title="Line translation">
