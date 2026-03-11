@@ -54,6 +54,7 @@ async function handleTranslate(request, env, ctx) {
   const targetLang = (body?.targetLang ?? body?.target ?? body?.to ?? "").toString().trim();
   const provider   = (body?.provider ?? "openai").toString().toLowerCase();
   const noCache    = !!body?.noCache;
+  const level      = (body?.level ?? "original").toString().toLowerCase().replace(/[^a-z0-9]/g, "") || "original";
   const action     = (body?.action ?? "").toString().toLowerCase();
 
   if (action === "clear") {
@@ -66,7 +67,7 @@ async function handleTranslate(request, env, ctx) {
   if (text.length > 800)           return corsJson({ error: "Text too long (max 800 chars)" }, 400, request, env);
 
   const cache    = caches.default;
-  const cacheKey = await buildCacheKey(env, "translate", { provider, sl: sourceLang, tl: targetLang, text });
+  const cacheKey = await buildCacheKey(env, "translate", { provider, sl: sourceLang, tl: targetLang, lv: level, text });
 
   if (!noCache) {
     const cached = await cache.match(cacheKey);
@@ -77,7 +78,7 @@ async function handleTranslate(request, env, ctx) {
   if (provider === "libre") {
     translation = await translateWithLibre(env, text, sourceLang, targetLang);
   } else if (provider === "openai") {
-    translation = await translateWithOpenAI(env, text, sourceLang, targetLang);
+    translation = await translateWithOpenAI(env, text, sourceLang, targetLang, level);
   } else {
     return corsJson({ error: `Unknown provider: ${provider}` }, 400, request, env);
   }
@@ -142,9 +143,37 @@ async function translateWithLibre(env, text, sourceLang, targetLang) {
   return tr;
 }
 
-async function translateWithOpenAI(env, text, sourceLang, targetLang) {
+async function translateWithOpenAI(env, text, sourceLang, targetLang, level) {
   const apiKey = env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY is missing");
+
+  const LANG_NAMES = {
+    en:"English", uk:"Ukrainian", ru:"Russian", pl:"Polish",
+    de:"German",  es:"Spanish",   fr:"French",  it:"Italian", pt:"Portuguese",
+    cs:"Czech",   zh:"Chinese",   ja:"Japanese",ko:"Korean",  ar:"Arabic",
+  };
+  const srcName = LANG_NAMES[sourceLang] || sourceLang;
+  const trgName = LANG_NAMES[targetLang] || targetLang;
+
+  const LEVEL_INSTR = {
+    original: `Translate as literary work — should feel like it was originally written in ${trgName}. Preserve rhythm, style, idioms and metaphors.`,
+    b2:       `Literary style, clear and accessible ${trgName}. Keep the author's tone and mood.`,
+    b1:       `Use common everyday vocabulary. Match the simplicity of the source text.`,
+    a2:       `Simple, high-frequency vocabulary only. Keep sentences short and clear.`,
+    a1:       `Only the most basic, elementary vocabulary. Very short sentences, simple SVO structure.`,
+  };
+  const lvInstr = LEVEL_INSTR[level] || LEVEL_INSTR.original;
+
+  const systemPrompt =
+    `You are a professional literary translator.\n` +
+    `Translate from ${srcName} to ${trgName}.\n` +
+    `${lvInstr}\n\n` +
+    `Rules (follow strictly):\n` +
+    `- Return ONLY the translation — no notes, alternatives, or explanations\n` +
+    `- NEVER translate proper names (character names, place names) — keep original or transliterate phonetically\n` +
+    `- Keep [[CHAPTER: ...]] markers exactly — translate ONLY the chapter title inside the brackets\n` +
+    `- Preserve line breaks and blank lines exactly as in the source\n` +
+    `- Each sentence stays on its own line`;
 
   const model = env.OPENAI_MODEL || "gpt-4o-mini";
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -153,8 +182,8 @@ async function translateWithOpenAI(env, text, sourceLang, targetLang) {
     body: JSON.stringify({
       model,
       messages: [
-        { role: "system", content: "You are a professional translator. Return ONLY the translation, no quotes, no explanations." },
-        { role: "user",   content: `Translate from ${sourceLang} to ${targetLang}:\n\n${text}` },
+        { role: "system", content: systemPrompt },
+        { role: "user",   content: text },
       ],
       temperature: 0.1,
     }),
