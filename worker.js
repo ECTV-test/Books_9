@@ -1,9 +1,10 @@
 /**
- * Cloudflare Worker v2.1
- * Исправления vs v2:
- *  - убран дублирующий параметр format (OpenAI принимает только response_format)
- *  - добавлена поддержка поля instructions для TTS
- *  - CORS ограничен конкретными доменами (настрой под себя)
+ * Cloudflare Worker v2.2
+ * Исправления vs v2.1:
+ *  - level-aware translation prompts (original/b2/b1/a2/a1)
+ *  - fix: одиночное слово → макс 1-3 слова, без творческого контента
+ *  - fix: имена персонажей/мест → транслитерация, не отказ
+ *  - fix: слово-команда ("Wait") → перевод буквально, не разговорный ответ
  *
  * Endpoints:
  *  POST /translate  { text, sourceLang, targetLang, provider?, noCache? }
@@ -168,9 +169,11 @@ async function translateWithOpenAI(env, text, sourceLang, targetLang, level) {
     `You are a professional literary translator.\n` +
     `Translate from ${srcName} to ${trgName}.\n` +
     `${lvInstr}\n\n` +
-    `Rules (follow strictly):\n` +
-    `- Return ONLY the translation — no notes, alternatives, or explanations\n` +
-    `- NEVER translate proper names (character names, place names) — keep original or transliterate phonetically\n` +
+    `Rules (follow STRICTLY — no exceptions):\n` +
+    `- Return ONLY the translation — no commentary, alternatives, or explanations\n` +
+    `- Single word or short phrase (1–3 tokens): return 1–3 words ONLY — never expand into sentences or creative text\n` +
+    `- Proper names (people, places, brands): transliterate phonetically into ${trgName} script (e.g. "Carson" → "Карсон", "Madison Square" → "Медісон-сквер"). NEVER refuse a proper name — always return its transliteration\n` +
+    `- If input looks like a question or command, translate it literally — NEVER respond conversationally\n` +
     `- Keep [[CHAPTER: ...]] markers exactly — translate ONLY the chapter title inside the brackets\n` +
     `- Preserve line breaks and blank lines exactly as in the source\n` +
     `- Each sentence stays on its own line`;
