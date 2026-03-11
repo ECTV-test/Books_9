@@ -1209,3 +1209,28 @@ body{ background: var(--appBg); }
   min-width:130px;
   font-weight:900;
 }
+
+/* ── Chapter images from agent (books/{id}/levels/original/chapter_N.jpg) ── */
+.chapterImgWrap {
+  width: 100%;
+  max-width: 620px;
+  margin: 28px auto 12px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 6px 32px rgba(0,0,0,.16);
+  display: block;
+}
+[data-theme="night"] .chapterImgWrap {
+  box-shadow: 0 6px 32px rgba(0,0,0,.48);
+}
+.chapterImgWrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 400px;
+  object-fit: cover;
+}
+@media (max-width: 640px) {
+  .chapterImgWrap { border-radius: 12px; margin: 18px 0 8px; }
+  .chapterImgWrap img { max-height: 240px; }
+}
