@@ -54,12 +54,16 @@ function renderDetails(){
   const bookLang = b.sourceLang || state.reading.sourceLang || "en";
   state.reading.sourceLang = bookLang;
 
-  const svgBack = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+  const svgBack     = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
   const svgChapters = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 10h10M4 14h12M4 18h8"/></svg>';
   const svgBookmark = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h14a1 1 0 0 1 1 1v17l-8-4-8 4V4a1 1 0 0 1 1-1z"/></svg>';
-  const svgMoon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-  const svgListen = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-7 7v4a4 4 0 0 0 4 4h1V8H9a5 5 0 0 1 10 0h-1v10h1a4 4 0 0 0 4-4v-4a7 7 0 0 0-7-7z"/></svg>';
-  const svgRead = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4h10a2 2 0 0 1 2 2v13H7a2 2 0 0 0-2 2V6a2 2 0 0 1 2-2z"/><path d="M7 4v15" stroke-linecap="round"/></svg>';
+  const svgMoon     = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  const svgSun      = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+  const svgListen   = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-7 7v4a4 4 0 0 0 4 4h1V8H9a5 5 0 0 1 10 0h-1v10h1a4 4 0 0 0 4-4v-4a7 7 0 0 0-7-7z"/></svg>';
+  const svgRead     = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4h10a2 2 0 0 1 2 2v13H7a2 2 0 0 0-2 2V6a2 2 0 0 1 2-2z"/><path d="M7 4v15" stroke-linecap="round"/></svg>';
+
+  // Show correct icon based on current theme (moon = light mode, sun = dark mode)
+  const _nightIcon = state.reading.night ? svgSun : svgMoon;
 
   app.innerHTML = `
 <div class="wrap">
@@ -67,7 +71,7 @@ function renderDetails(){
     <div class="detailsTop">
       <button class="iconBtn" id="detailsBack" title="Back">${svgBack}</button>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button class="iconBtn" id="detailsNight" title="Toggle theme">${svgMoon}</button>
+        <button class="iconBtn" id="detailsNight" title="Toggle theme">${_nightIcon}</button>
         <button class="iconBtn" id="detailsBookmark" title="Bookmark">${svgBookmark}</button>
         <button class="iconBtn" id="detailsChapters" title="Chapters">${svgChapters}</button>
       </div>
@@ -115,16 +119,17 @@ function renderDetails(){
 
   document.getElementById("detailsBack").onclick = ()=>go({name:"catalog"},{push:false});
   document.getElementById("detailsBookmark").onclick = ()=>showBookBookmarksSheet((state.route && state.route.bookId) || state.book?.id || state.route?.bookId);
+
   const __dn = document.getElementById("detailsNight");
   if(__dn){
-    // Sync icon to current theme on render
-    __dn.style.opacity = (state.reading.night ? "1" : "0.55");
     __dn.onclick = ()=>{
       state.reading.night = !state.reading.night;
-      __dn.style.opacity = (state.reading.night ? "1" : "0.55");
+      // Swap icon: moon in light mode, sun in dark mode
+      __dn.innerHTML = state.reading.night ? svgSun : svgMoon;
       try{ setTheme(state.reading.night); }catch(e){}
     };
   }
+
   const __dch = document.getElementById("detailsChapters");
   if(__dch){
     __dch.addEventListener("click", (e)=>{ try{ e.preventDefault(); e.stopPropagation(); }catch(_){} try{ openChapters(); }catch(err){} });
