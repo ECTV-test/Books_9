@@ -108,14 +108,14 @@ function renderReader(){
                 return `<div style="height:10px"></div>`;
               }
               const chIdx = isCh ? chapterIndexMap.get(i) : undefined;
+              const chImgHtml = (isCh && typeof chIdx === 'number')
+                ? `<div class="chapterImgWrap"><img src="books/${b.id}/levels/original/chapter_${chIdx + 1}.jpg" alt="" loading="lazy" onerror="this.closest('.chapterImgWrap').style.display='none'"></div>`
+                : '';
               return `
+                ${chImgHtml}
                 <div class="listenLine ${isCh ? "chapterLine" : ""}" data-para-wrap="${i}">
                   ${renderParagraph(isCh ? _fmtChapterTitle(raw, chIdx) : raw, i, isCh)}
-                  <button class="lineCardBtn" data-para-btn="${i}" title="Line translation">
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M7 8h10M7 12h6M7 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                  </button>
+                  ${isCh ? '' : `<button class="lineCardBtn" data-para-btn="${i}" title="Line translation"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 8h10M7 12h6M7 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>`}
                 </div>
               `;
             }).join("")}
@@ -210,15 +210,15 @@ function renderBiReader(){
             }
             const chIdx2 = isCh ? chapterIndexMap2.get(i) : undefined;
             const displayText = isCh ? _fmtChapterTitle(raw, chIdx2) : raw;
+            const chImgHtml2 = (isCh && typeof chIdx2 === 'number')
+              ? `<div class="chapterImgWrap"><img src="books/${b.id}/levels/original/chapter_${chIdx2 + 1}.jpg" alt="" loading="lazy" onerror="this.closest('.chapterImgWrap').style.display='none'"></div>`
+              : '';
             return `
+              ${chImgHtml2}
               <div class="paraLine ${isCh ? "chapterLine" : ""}" data-para-wrap="${i}">
                 <div class="line" data-token="line" data-idx="${i}" data-raw="${escapeHtml(raw)}" style="${isCh? "font-weight:900;letter-spacing:.2px" : ""}">${escapeHtml(displayText)}</div>
-                <div class="paraTrans" data-for="${i}"></div>
-                <button class="lineCardBtn" data-para-btn="${i}" title="Line translation">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M7 8h10M7 12h6M7 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  </svg>
-                </button>
+                ${isCh ? '' : `<div class="paraTrans" data-for="${i}"></div>`}
+                ${isCh ? '' : `<button class="lineCardBtn" data-para-btn="${i}" title="Line translation"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 8h10M7 12h6M7 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>`}
               </div>
             `;
           }).join("")}
