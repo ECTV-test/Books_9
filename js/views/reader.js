@@ -93,13 +93,16 @@ function renderReader(){
   const chapterStarts = new Set(_chList.map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
   const chapterIndexMap = new Map(_chList.map((c,idx)=>[Number(c.startIndex||0),idx]));
 
+  // Use getBookTitle for proper multi-lang fallback (fixes "Book" for new books)
+  const _bookTitle = (typeof getBookTitle === 'function' ? getBookTitle(b) : b.title_en) || '';
+
   app.innerHTML = `
     <div class="readerStage">
-      ${_readerTopBar(b.title_en || "Book")}
+      ${_readerTopBar(_bookTitle || "Book")}
 
       <div class="paper">
         <div class="paperInner listenPaper">
-          <div class="bookTitle">${escapeHtml(b.title_en || "")}</div>
+          <div class="bookTitle">${escapeHtml(_bookTitle)}</div>
           <div class="listenList">
             ${lines.map((p, i)=>{
               const raw = String(p ?? "");
@@ -194,13 +197,16 @@ function renderBiReader(){
   const chapterStarts = new Set(_chList2.map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
   const chapterIndexMap2 = new Map(_chList2.map((c,idx)=>[Number(c.startIndex||0),idx]));
 
+  // Use getBookTitle for proper multi-lang fallback (fixes "Book" for new books)
+  const _bookTitle2 = (typeof getBookTitle === 'function' ? getBookTitle(b) : b.title_en) || '';
+
   app.innerHTML = `
     <div class="readerStage">
-      ${_readerTopBar(b.title_en || "")}
+      ${_readerTopBar(_bookTitle2)}
 
       <div class="paper">
         <div class="paperInner">
-          <div class="bookTitle">${escapeHtml(b.title_en || "")}</div>
+          <div class="bookTitle">${escapeHtml(_bookTitle2)}</div>
 
           ${lines.map((ln, i)=>{
             const raw = String(ln ?? "");
