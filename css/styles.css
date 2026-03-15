@@ -1267,23 +1267,23 @@ body{ background: var(--appBg); }
   height: auto;
   aspect-ratio: 2/3;
   box-shadow: none;
+  border-radius: 16px;
 }
 
-/* ── Topbar: center tabs with grid (fix: was position:absolute) ── */
+/* ── Topbar: 3-column grid → tabs centered, buttons on the right ── */
+/* NOTE: appTopBarLeft has id="appTopBarLeft", appTopBarRight has class only */
 #appTopBar {
   display: grid !important;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
 }
 #appTopBarLeft {
-  position: static !important;
-  transform: none !important;
   grid-column: 2;
   justify-self: center;
   pointer-events: none;
 }
 #appTopTabsMain { pointer-events: auto; }
-#appTopBarRight {
+.appTopBarRight {
   grid-column: 3;
   justify-self: end;
   display: flex;
