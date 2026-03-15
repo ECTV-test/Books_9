@@ -2,6 +2,15 @@
    views/reader.js  —  Экраны «Listen» (reader) и «Read» (bireader)
    ═══════════════════════════════════════════════════════════════ */
 
+/** Strip [[CHAPTER: Title]] → "Title" (or "Chapter N" if empty) */
+function _fmtChapterTitle(raw, chIdx) {
+  const m = raw.match(/^\[\[CHAPTER:\s*(.*?)\]\]\s*$/);
+  if (!m) return raw;
+  const title = (m[1] || '').trim();
+  if (title) return title;
+  return typeof chIdx === 'number' ? 'Chapter ' + (chIdx + 1) : 'Chapter';
+}
+
 const _SVG = {
   home: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>`,
   back: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>`,
@@ -80,17 +89,17 @@ function renderReader(){
   applyHighlightTheme();
 
   const lines = (b.text || []);
-  const chapterList = getChapters() || [];
-  const chapterStarts = new Set(chapterList.map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
-  const chapterIndexMap = new Map(chapterList.map((c, idx)=>[Number(c.startIndex||0), idx]));
+  const _chList = getChapters() || [];
+  const chapterStarts = new Set(_chList.map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
+  const chapterIndexMap = new Map(_chList.map((c,idx)=>[Number(c.startIndex||0),idx]));
 
   app.innerHTML = `
     <div class="readerStage">
-      ${_readerTopBar(getBookTitle(b) || "Book")}
+      ${_readerTopBar(b.title_en || "Book")}
 
       <div class="paper">
         <div class="paperInner listenPaper">
-          <div class="bookTitle">${escapeHtml(getBookTitle(b) || "")}</div>
+          <div class="bookTitle">${escapeHtml(b.title_en || "")}</div>
           <div class="listenList">
             ${lines.map((p, i)=>{
               const raw = String(p ?? "");
@@ -99,12 +108,9 @@ function renderReader(){
                 return `<div style="height:10px"></div>`;
               }
               const chIdx = isCh ? chapterIndexMap.get(i) : undefined;
-              const chImgHtml = (isCh && typeof chIdx === 'number')
-                ? `<div class="chapterImgWrap"><img src="books/${b.id}/levels/original/chapter_${chIdx + 1}.jpg" alt="" loading="lazy" onerror="this.closest('.chapterImgWrap').style.display='none'"></div>`
-                : '';
               return `
-                ${chImgHtml}<div class="listenLine ${isCh ? "chapterLine" : ""}" data-para-wrap="${i}">
-                  ${renderParagraph(raw, i, isCh)}
+                <div class="listenLine ${isCh ? "chapterLine" : ""}" data-para-wrap="${i}">
+                  ${renderParagraph(isCh ? _fmtChapterTitle(raw, chIdx) : raw, i, isCh)}
                   <button class="lineCardBtn" data-para-btn="${i}" title="Line translation">
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                       <path d="M7 8h10M7 12h6M7 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -184,17 +190,17 @@ function renderBiReader(){
   const lines = (b.text || []);
   state.reading.biTotal = effectiveTotalLines(lines);
 
-  const chapterList2 = getChapters() || [];
-  const chapterStarts = new Set(chapterList2.map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
-  const chapterIndexMap2 = new Map(chapterList2.map((c, idx)=>[Number(c.startIndex||0), idx]));
+  const _chList2 = getChapters() || [];
+  const chapterStarts = new Set(_chList2.map(c=>Number(c.startIndex||0)).filter(n=>Number.isFinite(n)));
+  const chapterIndexMap2 = new Map(_chList2.map((c,idx)=>[Number(c.startIndex||0),idx]));
 
   app.innerHTML = `
     <div class="readerStage">
-      ${_readerTopBar(getBookTitle(b) || "")}
+      ${_readerTopBar(b.title_en || "")}
 
       <div class="paper">
         <div class="paperInner">
-          <div class="bookTitle">${escapeHtml(getBookTitle(b) || "")}</div>
+          <div class="bookTitle">${escapeHtml(b.title_en || "")}</div>
 
           ${lines.map((ln, i)=>{
             const raw = String(ln ?? "");
@@ -203,12 +209,10 @@ function renderBiReader(){
               return `<div style="height:14px"></div>`;
             }
             const chIdx2 = isCh ? chapterIndexMap2.get(i) : undefined;
-            const chImgHtml2 = (isCh && typeof chIdx2 === 'number')
-              ? `<div class="chapterImgWrap"><img src="books/${b.id}/levels/original/chapter_${chIdx2 + 1}.jpg" alt="" loading="lazy" onerror="this.closest('.chapterImgWrap').style.display='none'"></div>`
-              : '';
+            const displayText = isCh ? _fmtChapterTitle(raw, chIdx2) : raw;
             return `
-              ${chImgHtml2}<div class="paraLine ${isCh ? "chapterLine" : ""}" data-para-wrap="${i}">
-                <div class="line" data-token="line" data-idx="${i}" data-raw="${escapeHtml(raw)}" style="${isCh? "font-weight:900;letter-spacing:.2px" : ""}">${escapeHtml(raw)}</div>
+              <div class="paraLine ${isCh ? "chapterLine" : ""}" data-para-wrap="${i}">
+                <div class="line" data-token="line" data-idx="${i}" data-raw="${escapeHtml(raw)}" style="${isCh? "font-weight:900;letter-spacing:.2px" : ""}">${escapeHtml(displayText)}</div>
                 <div class="paraTrans" data-for="${i}"></div>
                 <button class="lineCardBtn" data-para-btn="${i}" title="Line translation">
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
