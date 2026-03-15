@@ -8,11 +8,33 @@ const _SVG_SUN  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" s
 /* User menu SVG icon (person) */
 const _SVG_USER = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
 
-/* Верхняя полоска — всегда содержит табы */
-function _appTopBar(isCatalog){
+/**
+ * Верхняя полоска — 3-column grid:
+ *   col-1 (appTopBarLogo)  — мини-обложка «продолжить» (если есть)
+ *   col-2 (appTopBarLeft)  — вкладки Книги / Бібліотека (центр)
+ *   col-3 (appTopBarRight) — кнопки луна/солнце + юзер
+ *
+ * @param {boolean} isCatalog
+ * @param {object|null} cont  — объект книги для мини-обложки
+ */
+function _appTopBar(isCatalog, cont){
   const isNight = !!(typeof state !== 'undefined' && state.reading && state.reading.night);
   const themeIcon = isNight ? _SVG_SUN : _SVG_MOON;
+
+  // Mini continue-reading: small book cover in left column
+  let miniCont = '';
+  if(cont){
+    const coverSrc = cont.cover ? escapeHtml(cont.cover) : '';
+    const titleAttr = escapeHtml((typeof getBookTitle === 'function' ? getBookTitle(cont) : cont.title_en) || 'Continue reading');
+    miniCont = '<button class="topMiniCont" id="topMiniCont" title="' + titleAttr + '">'
+      + '<div class="topMiniCover">'
+      + (coverSrc ? '<img src="' + coverSrc + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">' : '')
+      + '</div>'
+      + '</button>';
+  }
+
   return '<div class="appTopBar" id="appTopBar">'
+    + '<div class="appTopBarLogo" id="appTopBarLogo">' + miniCont + '</div>'
     + '<div class="appTopBarLeft" id="appTopBarLeft">'
     + '<div class="appTopTabs" id="appTopTabsMain">'
     + '<button class="tab ' + (isCatalog ? '' : 'muted') + '" id="topTabBooks">' + I18n.t('tabs_books') + '</button>'
@@ -77,7 +99,6 @@ function _openUserMenu(anchorBtn){
       const l = btn.dataset.lang;
       I18n.setUiLang(l);
       try{ applyUiLang(); }catch(err){}
-      // re-render current screen so tabs/labels update
       try{
         const route = state.route && state.route.name;
         if(route === 'catalog') renderCatalog();
@@ -201,79 +222,48 @@ function renderCatalog(){
   });
   const groupNames = Object.keys(groups);
 
-  let cont = null, contPct = 0;
+  // Find last-interacted book for mini-continue cover in topbar
+  let cont = null;
   try{
     const g = ProgressManager.getGlobalLastInteraction();
     if(g && g.bookId){
       cont = state.catalog.find(b=>b.id===g.bookId) || null;
-      if(cont){
-        const lp = ProgressManager.getPkgProgress(cont.id, g.sourceLang, g.targetLang, g.level||'original');
-        if(lp && typeof lp.progress==='number') contPct = Number(lp.progress||0);
-      }
     }
     if(!cont){
+      let bestTs = -1;
       for(const b of state.catalog){
         const pkgs = ProgressManager.listPkgProgress(b.id);
         if(pkgs && pkgs.length){
-          const latest = pkgs[0], ts = Number(latest.ts||0);
-          const bestTs = cont ? Number((ProgressManager.listPkgProgress(cont.id)[0]||{}).ts||0) : -1;
-          if(!cont || ts > bestTs){ cont = b; contPct = Number(latest.progress||0); }
-        }else{
-          const r = JSON.parse(sessionStorage.getItem(ProgressManager.progressKey(b.id,'reader'))||"null");
-          const br= JSON.parse(sessionStorage.getItem(ProgressManager.progressKey(b.id,'bireader'))||"null");
-          const p = Math.max(r?.progress||0, br?.progress||0);
-          if(p > contPct){ contPct = p; cont = b; }
+          const ts = Number(pkgs[0].ts||0);
+          if(ts > bestTs){ bestTs = ts; cont = b; }
         }
       }
     }
   }catch(e){}
 
-  let contShowPct=contPct, contShowLabel='', contLevelLabel='', contMeta1='', contMeta2='';
-  if(cont){
-    const _series = String((cont.series||"")||'').trim()||'NEW';
-    const _author = String((cont.author||"")||'').trim();
-    contMeta1 = [_author,_series].filter(Boolean).join(' \u2022 ')||_series;
-    let last=null;
-    try{ last=ProgressManager.getLastPkg(cont.id); }catch(e){}
-    const fallbackLabel=(()=>{
-      try{
-        if(last&&last.sourceLang&&last.targetLang){
-          const m=(last.mode&&String(last.mode).toLowerCase()==='listen')?I18n.t('mode_listen'):I18n.t('mode_read');
-          return flagEmoji(last.sourceLang)+' '+String(last.sourceLang).toUpperCase()+'\u2192'+flagEmoji(last.targetLang)+' '+String(last.targetLang).toUpperCase()+' ('+m+')';
-        }
-      }catch(e){}
-      return '';
-    })();
-    if(last){
-      if(last.level) contLevelLabel=String(last.level);
-      try{ contShowLabel=Config.formatPkgLabel(last.sourceLang,last.targetLang,last.mode); }catch(e){}
-      try{
-        const lp=ProgressManager.getPkgProgress(cont.id,last.sourceLang,last.targetLang,last.level||'original');
-        if(lp&&typeof lp.progress==='number') contShowPct=Number(lp.progress||0);
-      }catch(e){}
-    }
-    const pctTxt=Math.round(contShowPct)+'%';
-    const labelTxt=contShowLabel||fallbackLabel;
-    const lvlTxt=Config.formatLevelLabel(contLevelLabel||'original');
-    contMeta2=labelTxt?lvlTxt+' \u2022 '+labelTxt+' \u2022 '+pctTxt:lvlTxt+' \u2022 '+pctTxt;
-  }
-
-  const continueHtml = cont ? (
-    '<div class="sectionLabel">'+I18n.t('continue_reading')+'</div>'
-    +'<div class="cardWide" id="continueCard" role="button" tabindex="0">'
-    +'<div class="coverImg">'+(cont.cover?'<img src="'+escapeHtml(cont.cover)+'" alt="">':'')+'</div>'
-    +'<div class="info"><p class="title">'+escapeHtml(getBookTitle(cont)||'Book')+'</p>'
-    +'<p class="meta meta1">'+escapeHtml(contMeta1)+'</p>'
-    +'<p class="meta meta2">'+escapeHtml(contMeta2)+'</p></div>'
-    +'<div class="circle" style="--p:'+Math.round(contShowPct)+'%"><div class="inner">'+Math.round(contShowPct)+'%</div></div>'
-    +'</div>'
-  ) : '';
+  // openCont: resume reading or open details
+  const openCont = cont ? ()=>{
+    try{
+      const last=ProgressManager.getGlobalLastInteraction();
+      const bid=cont.id;
+      if(last&&String(last.bookId||'')===String(bid||'')){
+        state.reading.sourceLang=last.sourceLang||state.reading.sourceLang;
+        state.reading.targetLang=last.targetLang||state.reading.targetLang;
+        const pkg=ProgressManager.getPkgProgress(bid,state.reading.sourceLang,state.reading.targetLang,last.level||'original');
+        const idx=pkg&&typeof pkg.activeIndex==='number'?Number(pkg.activeIndex||0):0;
+        if(String(last.mode||'')==='read') go({name:'bireader',bookId:bid,level:last.level||'original',sourceLang:last.sourceLang,targetLang:last.targetLang,startIndex:idx});
+        else go({name:'reader',bookId:bid,level:last.level||'original',sourceLang:last.sourceLang,targetLang:last.targetLang,startIndex:idx});
+        return;
+      }
+    }catch(e){}
+    go({name:'details',bookId:cont.id});
+  } : null;
 
   const groupsHtml = groupNames.map(g=>{
     const items = groups[g].slice(0,10);
     return '<div class="groupCard">'
       +'<div class="groupTitleRow"><h3 class="groupTitle">'+escapeHtml(I18n.tGenre(g))+'</h3>'
-      +'<button class="chevBtn" data-group="'+escapeHtml(g)+'">&rsaquo;</button></div>'
+      +'<button class="chevBtn" data-group="'+escapeHtml(g)+'">&#8250;</button></div>'
       +'<div class="hScroll">'
       +items.map(b=>'<div class="bookTile" data-open="'+escapeHtml(b.id)+'">'
         +'<div class="tileCover">'+(b.cover?'<img src="'+escapeHtml(b.cover)+'" alt="">':'')+'</div>'
@@ -284,8 +274,7 @@ function renderCatalog(){
 
   app.innerHTML = `
     <div class="wrap homeScreen">
-      ${_appTopBar(true)}
-      ${continueHtml}
+      ${_appTopBar(true, cont)}
       ${groupsHtml}
     </div>
   `;
@@ -293,31 +282,49 @@ function renderCatalog(){
   _bindTopBarBtns();
   _bindTabsScroll(true);
 
-  if(cont){
-    const openCont = ()=>{
-      try{
-        const last=ProgressManager.getGlobalLastInteraction();
-        const bid=cont.id;
-        if(last&&String(last.bookId||'')===String(bid||'')){
-          state.reading.sourceLang=last.sourceLang||state.reading.sourceLang;
-          state.reading.targetLang=last.targetLang||state.reading.targetLang;
-          const pkg=ProgressManager.getPkgProgress(bid,state.reading.sourceLang,state.reading.targetLang,last.level||'original');
-          const idx=pkg&&typeof pkg.activeIndex==='number'?Number(pkg.activeIndex||0):0;
-          if(String(last.mode||'')==='read') go({name:'bireader',bookId:bid,level:last.level||'original',sourceLang:last.sourceLang,targetLang:last.targetLang,startIndex:idx});
-          else go({name:'reader',bookId:bid,level:last.level||'original',sourceLang:last.sourceLang,targetLang:last.targetLang,startIndex:idx});
-          return;
-        }
-      }catch(e){}
-      go({name:'details',bookId:cont.id});
-    };
-    const cc=document.getElementById('continueCard');
-    if(cc){ cc.onclick=openCont; cc.onkeydown=(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openCont(); } }; }
+  // Bind mini-continue button (topbar left column)
+  if(cont && openCont){
+    const mc = document.getElementById('topMiniCont');
+    if(mc) mc.onclick = openCont;
   }
 
   app.querySelectorAll('[data-open]').forEach(el=>{
     el.addEventListener('click',()=>go({name:'details',bookId:el.dataset.open}));
   });
+  // ›  button → all-books genre page
   app.querySelectorAll('[data-group]').forEach(el=>{
-    el.addEventListener('click',()=>alert('Genre filter coming soon.'));
+    el.addEventListener('click',()=>{ try{ renderGenreAll(el.dataset.group); }catch(err){ console.error(err); } });
+  });
+}
+
+/* ── All-books view for a genre/series ─────────────────────── */
+function renderGenreAll(groupName){
+  _disconnectTabsObserver();
+  const books = (state.catalog || []).filter(b => (b.series || 'Books').trim() === groupName);
+  const svgBack = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>';
+
+  app.innerHTML = `
+    <div class="wrap homeScreen">
+      <div class="genreTopBar">
+        <button class="appTopBtn" id="btnGenreBack" style="flex-shrink:0" title="Back">${svgBack}</button>
+        <h2 class="genreTopTitle">${escapeHtml(I18n.tGenre(groupName))}</h2>
+        <div style="width:38px;flex-shrink:0"></div>
+      </div>
+      <div class="genreGrid">
+        ${books.map(b =>
+          '<div class="bookTile" data-open="' + escapeHtml(b.id) + '">'
+          + '<div class="tileCover">' + (b.cover ? '<img src="' + escapeHtml(b.cover) + '" alt="">' : '') + '</div>'
+          + '<div class="tileMeta"><p class="tileTitle">' + escapeHtml(getBookTitle(b) || 'Book') + '</p>'
+          + '<p class="tileSub">' + escapeHtml(formatMetaAuthorSeries(b)) + '</p></div></div>'
+        ).join('')}
+      </div>
+    </div>
+  `;
+
+  const btnBack = document.getElementById('btnGenreBack');
+  if(btnBack) btnBack.onclick = () => renderCatalog();
+
+  app.querySelectorAll('[data-open]').forEach(el => {
+    el.addEventListener('click', () => go({name:'details', bookId:el.dataset.open}));
   });
 }
