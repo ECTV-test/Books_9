@@ -1302,3 +1302,24 @@ body{ background: var(--appBg); }
   text-align: center;
   width: 100%;
 }
+
+
+/* ── Catalog: EWA-style section titles ── */
+.homeScreen .groupTitle {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* ── Fix horizontal overflow: remove negative margins from appTopBar in homeScreen ── */
+/* (appTopBar in index.html has complex calc-margin for non-homeScreen pages) */
+.homeScreen .appTopBar {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* ── cardWide (Continue Reading) keeps 18px horizontal margins ── */
+.homeScreen .cardWide {
+  margin-left: 18px !important;
+  margin-right: 18px !important;
+}
