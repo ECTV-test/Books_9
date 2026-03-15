@@ -1234,3 +1234,39 @@ body{ background: var(--appBg); }
   .chapterImgWrap { border-radius: 12px; margin: 18px 0 8px; }
   .chapterImgWrap img { max-height: 240px; }
 }
+
+/* ── Catalog: full-width carousels, no card box, no cover shadow ── */
+.groupCard {
+  margin: 10px 0 18px 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 12px 0 0 0;
+}
+.groupCard .groupTitleRow {
+  padding: 0 18px;
+  margin-bottom: 10px;
+}
+/* Carousel edge-to-edge */
+.homeScreen .hScroll {
+  margin-left: 0;
+  margin-right: 0;
+  padding: 4px 18px 16px;
+}
+/* Remove shadow under book covers */
+.bookTile .tileCover {
+  box-shadow: none;
+}
+/* Center topbar tabs (catalog/library) */
+#appTopBar {
+  position: relative;
+}
+#appTopBarLeft {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+#appTopTabsMain {
+  pointer-events: auto;
+}
