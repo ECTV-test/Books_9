@@ -765,7 +765,7 @@ body{ background: var(--appBg); }
   margin: 10px 18px 22px 18px;
   background: var(--appCard);
   border-radius: var(--appRadius);
-  box-shadow: var(--appShadow);
+  box-shadow: none;
   padding: 16px 14px 18px 14px;
 }
 .groupTitleRow{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
@@ -1080,7 +1080,7 @@ body{ background: var(--appBg); }
   display: block;
 }
 
-/* ── Chapter images in reader (from agent ZIP) ── */
+/* ── Chapter images in reader ── */
 .chapterImgWrap {
   margin: 12px 0 20px;
   text-align: center;
