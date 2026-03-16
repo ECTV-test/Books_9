@@ -9,7 +9,7 @@ const _SVG_SUN  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" s
 const _SVG_USER = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
 const _SVG_LOGO = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>';
 
-/* Safe i18n helper — returns null if key not found (I18n.t returns key string on miss) */
+/* Safe i18n helper — returns fallback if key not found (I18n.t returns key string on miss) */
 function _t(key, fallback){
   try{
     const v = I18n.t(key);
@@ -31,7 +31,6 @@ function _appTopBar(isCatalog, cont, hideMiniCont){
   const isNight = !!(typeof state !== 'undefined' && state.reading && state.reading.night);
   const themeIcon = isNight ? _SVG_SUN : _SVG_MOON;
 
-  // Mini continue-reading: small book cover in left column
   let miniCont = '';
   if(cont){
     const coverSrc = cont.cover ? escapeHtml(cont.cover) : '';
@@ -60,7 +59,7 @@ function _appTopBar(isCatalog, cont, hideMiniCont){
 
 /**
  * Wide "Continue reading" card for the main page.
- * Reads progress from listPkgProgress (same source as library view).
+ * Uses pkg.progress (0-100) — same field as library.js uses.
  */
 function _contCardHtml(cont){
   if(!cont) return '';
@@ -70,10 +69,12 @@ function _contCardHtml(cont){
 
   try{
     const last = ProgressManager.getGlobalLastInteraction();
-    // Use listPkgProgress — same data source as library "In progress" view
+
+    // Primary: listPkgProgress — same source as library "In progress" view
+    // Field name is "progress" (0-100), not "pct"
     const pkgs = ProgressManager.listPkgProgress(cont.id);
     if(pkgs && pkgs.length){
-      // Pick the package matching last interaction, otherwise the most recent one
+      // Pick the package matching last interaction, otherwise the most recent
       let bestPkg = pkgs[0];
       if(last && String(last.bookId) === String(cont.id)){
         const match = pkgs.find(p =>
@@ -82,11 +83,8 @@ function _contCardHtml(cont){
         if(match) bestPkg = match;
       }
 
-      // Get percentage
-      if(typeof bestPkg.pct === 'number')
-        pct = Math.round(bestPkg.pct);
-      else if(typeof bestPkg.activeIndex === 'number' && typeof bestPkg.total === 'number' && bestPkg.total > 0)
-        pct = Math.round(100 * bestPkg.activeIndex / bestPkg.total);
+      // progress field stores 0-100 (same as library.js: Math.round(Number(x.progress||0)))
+      pct = Math.round(Number(bestPkg.progress || 0));
 
       // Build progress line
       const modeStr = String(bestPkg.mode || (last ? last.mode : '') || '');
@@ -98,13 +96,13 @@ function _contCardHtml(cont){
       progressLine = parts.join(' • ');
 
     } else if(last && String(last.bookId) === String(cont.id)){
-      // Fallback: getPkgProgress
-      const pkg = ProgressManager.getPkgProgress(cont.id, last.sourceLang, last.targetLang, last.level || 'original');
-      if(pkg){
-        if(typeof pkg.pct === 'number') pct = Math.round(pkg.pct);
-        else if(typeof pkg.activeIndex === 'number' && typeof pkg.total === 'number' && pkg.total > 0)
-          pct = Math.round(100 * pkg.activeIndex / pkg.total);
-      }
+      // Fallback: getPkgProgress — also uses .progress field
+      const lvl = (typeof Config !== 'undefined' && Config.normalizeLevel)
+        ? Config.normalizeLevel(last.level || 'original')
+        : (last.level || 'original');
+      const pkg = ProgressManager.getPkgProgress(cont.id, last.sourceLang, last.targetLang, lvl);
+      if(pkg) pct = Math.round(Number(pkg.progress || 0));
+
       const modeStr = String(last.mode || '');
       const modeLabel = modeStr === 'listen' ? _t('mode_listen','Слухати') : _t('mode_read','Читати');
       const sl = (last.sourceLang || '').toUpperCase();
@@ -118,7 +116,6 @@ function _contCardHtml(cont){
   const coverSrc = cont.cover ? escapeHtml(cont.cover) : '';
   const title = escapeHtml(getBookTitle(cont) || 'Book');
   const meta = escapeHtml(formatMetaAuthorSeries(cont));
-  // _t() returns fallback when key missing (I18n.t returns key string on miss)
   const label = _t('cont_reading', 'ПРОДОВЖИТИ ЧИТАННЯ');
 
   return '<div class="sectionLabel" style="padding-top:18px">' + label + '</div>'
@@ -137,15 +134,12 @@ function _contCardHtml(cont){
 
 /* User menu dropdown — rendered into body, closed on outside click */
 function _openUserMenu(anchorBtn){
-  // Close if already open
   const existing = document.getElementById('userMenuDropdown');
   if(existing){ existing.remove(); return; }
 
   const lang = I18n.getUiLang();
   const langs = I18n.getAvailableLangs();
   const langLabels = { en: 'English', uk: 'Українська', ru: 'Русский' };
-
-  // Font size helpers
   const curFontSize = (typeof state !== 'undefined' && state.reading) ? (state.reading.fontSize || 22) : 22;
 
   const langOptions = langs.map(l =>
@@ -171,7 +165,6 @@ function _openUserMenu(anchorBtn){
     + '</div>'
     + '</div>';
 
-  // Position below anchor button
   document.body.appendChild(menu);
   const rect = anchorBtn.getBoundingClientRect();
   const mw = 220;
@@ -180,7 +173,6 @@ function _openUserMenu(anchorBtn){
   menu.style.top = (rect.bottom + 6) + 'px';
   menu.style.left = left + 'px';
 
-  // Language buttons
   menu.querySelectorAll('.umLangBtn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
@@ -196,7 +188,6 @@ function _openUserMenu(anchorBtn){
     });
   });
 
-  // Font size buttons
   function updateFontVal(){
     const el = document.getElementById('umFontVal');
     if(el && typeof state !== 'undefined') el.textContent = state.reading.fontSize + 'px';
@@ -220,7 +211,6 @@ function _openUserMenu(anchorBtn){
     }catch(err){}
   });
 
-  // Close on outside click
   function onOutside(e){
     if(!menu.contains(e.target) && e.target !== anchorBtn){
       menu.remove();
@@ -242,7 +232,7 @@ function _updateUserMenuLabels(){
   menu.querySelectorAll('.umLangBtn').forEach(b => b.classList.toggle('active', b.dataset.lang === curLang));
 }
 
-/* Влобальный scroll listener */
+/* Global scroll listener */
 var _tabsScrollHandler = null;
 
 function _disconnectTabsObserver(){
@@ -337,7 +327,8 @@ function renderCatalog(){
       if(last&&String(last.bookId||'')===String(bid||'')){
         state.reading.sourceLang=last.sourceLang||state.reading.sourceLang;
         state.reading.targetLang=last.targetLang||state.reading.targetLang;
-        const pkg=ProgressManager.getPkgProgress(bid,state.reading.sourceLang,state.reading.targetLang,last.level||'original');
+        const lvl=(typeof Config!=='undefined'&&Config.normalizeLevel)?Config.normalizeLevel(last.level||'original'):(last.level||'original');
+        const pkg=ProgressManager.getPkgProgress(bid,state.reading.sourceLang,state.reading.targetLang,lvl);
         const idx=pkg&&typeof pkg.activeIndex==='number'?Number(pkg.activeIndex||0):0;
         if(String(last.mode||'')==='read') go({name:'bireader',bookId:bid,level:last.level||'original',sourceLang:last.sourceLang,targetLang:last.targetLang,startIndex:idx});
         else go({name:'reader',bookId:bid,level:last.level||'original',sourceLang:last.sourceLang,targetLang:last.targetLang,startIndex:idx});
@@ -360,7 +351,6 @@ function renderCatalog(){
       +'</div></div>';
   }).join('');
 
-  // Top bar: pass cont for mini cover (starts hidden; shown on scroll)
   app.innerHTML = `
     <div class="wrap homeScreen">
       ${_appTopBar(true, cont, true)}
@@ -392,14 +382,13 @@ function renderCatalog(){
       }
       _tabsScrollHandler = _scrollShowMini;
       window.addEventListener('scroll', _scrollShowMini, { passive: true });
-      _scrollShowMini(); // initial check
+      _scrollShowMini();
     }
   }
 
   app.querySelectorAll('[data-open]').forEach(el=>{
     el.addEventListener('click',()=>go({name:'details',bookId:el.dataset.open}));
   });
-  // ›  button → all-books genre page
   app.querySelectorAll('[data-group]').forEach(el=>{
     el.addEventListener('click',()=>{ try{ renderGenreAll(el.dataset.group); }catch(err){ console.error(err); } });
   });
