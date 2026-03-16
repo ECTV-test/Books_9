@@ -32,7 +32,6 @@
       cursor: pointer; flex-shrink: 0;
     }
     [data-theme="night"] .appTopBtn { background: rgba(255,255,255,.10); }
-    /* Вабы всегда в топбаре, выравнивание по baseline */
     .appTopTabs { display: flex; align-items: baseline; gap: 14px; overflow: hidden; }
     .appTopTabs .tab {
       font-size: 26px; line-height: 1; font-weight: 900; letter-spacing: -.01em;
@@ -41,7 +40,6 @@
     }
     .appTopTabs .tab.muted { color: rgba(54,53,53,.38); }
     [data-theme="night"] .appTopTabs .tab.muted { color: rgba(255,255,255,.32); }
-    /* Убираем большой appHeader */
     .appHeader { display: none !important; }
     .readTopBar { left: 0; right: 0; box-sizing: border-box; }
     .readTopBar .topIcon {
@@ -54,7 +52,6 @@
     .detailsTop {
       position: sticky; top: 0; z-index: 20;
       display: flex; align-items: center; justify-content: space-between;
-      /* full-width same as appTopBar */
       margin: 0 calc(-1 * max(18px, calc((100vw - 980px) / 2 + 18px))) 12px;
       padding: 10px max(18px, calc((100vw - 980px) / 2 + 18px));
       -webkit-backdrop-filter: blur(18px) saturate(120%);
@@ -66,7 +63,6 @@
     [data-theme="night"] .detailsTop { background: rgba(11,18,32,.55); border-bottom: 1px solid rgba(255,255,255,.08); }
     .detailsTop .iconBtn { background: rgba(0,0,0,.06); border-radius: 12px; }
     [data-theme="night"] .detailsTop .iconBtn { background: rgba(255,255,255,.10); }
-    /* playerBar — единый frosted glass как везде */
     .playerBar {
       -webkit-backdrop-filter: blur(18px) saturate(120%) !important;
       backdrop-filter: blur(18px) saturate(120%) !important;
@@ -87,7 +83,6 @@
     .listenPaper .listenLine .para { font-family: ui-serif, Georgia, "Times New Roman", Times, serif; }
     .popMiniBtns { display: flex; gap: 8px; align-items: center; }
     #popBookmark svg, #popSpeak svg { display: block; }
-    /* User menu dropdown */
     .userMenuDropdown {
       position: fixed;
       z-index: 1200;
@@ -122,7 +117,6 @@
     }
     .umFontVal { font-size: 14px; font-weight: 800; min-width: 44px; text-align: center; color: var(--text); }
     .umDivider { height: 1px; background: var(--line); margin: 4px 0; }
-    /* bmBtn SVG alignment fix */
     .bmBtn { display:inline-flex; align-items:center; justify-content:center; }
   </style>
 </head>
@@ -200,14 +194,13 @@
   <script src="js/services/books.js?v=2"></script>
   <script src="js/services/translate.js?v=2"></script>
   <script src="js/services/tts.js?v=2"></script>
-  <script src="js/views/catalog.js?v=15"></script>
+  <script src="js/views/catalog.js?v=16"></script>
   <script src="js/views/library.js?v=12"></script>
   <script src="js/views/details.js?v=4"></script>
   <script src="js/views/reader.js?v=8"></script>
   <script src="js/views/chapters.js?v=1"></script>
   <script src="js/app.js?v=8" defer></script>
   <script>
-    // i18n live update — перерисовываем текущий экран при смене языка
     I18n.onUiLangChange(function(){
       try{
         var route = state && state.route;
