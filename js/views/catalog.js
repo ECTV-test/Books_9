@@ -11,14 +11,15 @@ const _SVG_LOGO = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" s
 
 /**
  * Верхняя полоска — 3-column grid:
- *   col-1 (appTopBarLogo)  — мини-обложка «продолжить» (если есть)
+ *   col-1 (appTopBarLogo)  — мини-обложка «продолжить» (показывается при скролле)
  *   col-2 (appTopBarLeft)  — вкладки Книги / Бібліотека (центр)
  *   col-3 (appTopBarRight) — кнопки луна/солнце + юзер
  *
  * @param {boolean} isCatalog
- * @param {object|null} cont  — объект книги для мини-обложки
+ * @param {object|null} cont       — объект книги для мини-обложки
+ * @param {boolean} hideMiniCont   — скрыть мини-обложку (показываем при скролле)
  */
-function _appTopBar(isCatalog, cont){
+function _appTopBar(isCatalog, cont, hideMiniCont){
   const isNight = !!(typeof state !== 'undefined' && state.reading && state.reading.night);
   const themeIcon = isNight ? _SVG_SUN : _SVG_MOON;
 
@@ -27,7 +28,8 @@ function _appTopBar(isCatalog, cont){
   if(cont){
     const coverSrc = cont.cover ? escapeHtml(cont.cover) : '';
     const titleAttr = escapeHtml((typeof getBookTitle === 'function' ? getBookTitle(cont) : cont.title_en) || 'Continue reading');
-    miniCont = '<button class="topMiniCont" id="topMiniCont" title="' + titleAttr + '">'
+    const hideStyle = hideMiniCont ? ' style="display:none"' : '';
+    miniCont = '<button class="topMiniCont" id="topMiniCont" title="' + titleAttr + '"' + hideStyle + '>'
       + '<div class="topMiniCover">'
       + (coverSrc ? '<img src="' + coverSrc + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">' : '')
       + '</div>'
@@ -46,6 +48,63 @@ function _appTopBar(isCatalog, cont){
     + '<button class="appTopBtn" id="appTopTheme" title="Toggle theme" aria-label="Toggle theme">' + themeIcon + '</button>'
     + '<button class="appTopBtn" id="appTopUser" title="User settings" aria-label="User settings">' + _SVG_USER + '</button>'
     + '</div></div>';
+}
+
+/**
+ * Wide "Continue reading" card for the main page
+ * Shows book cover, title, author, last progress info and % circle
+ */
+function _contCardHtml(cont){
+  if(!cont) return '';
+
+  let pct = 0;
+  let progressLine = '';
+
+  try{
+    const last = ProgressManager.getGlobalLastInteraction();
+    if(last && String(last.bookId) === String(cont.id)){
+      // Try to get percentage from pkg progress
+      const pkg = ProgressManager.getPkgProgress(cont.id, last.sourceLang, last.targetLang, last.level || 'original');
+      if(pkg){
+        if(typeof pkg.pct === 'number') pct = Math.round(pkg.pct);
+        else if(typeof pkg.activeIndex === 'number' && typeof pkg.total === 'number' && pkg.total > 0)
+          pct = Math.round(100 * pkg.activeIndex / pkg.total);
+      }
+      // Fallback: try listPkgProgress
+      if(!pct){
+        const pkgs = ProgressManager.listPkgProgress(cont.id);
+        if(pkgs && pkgs.length && typeof pkgs[0].pct === 'number') pct = Math.round(pkgs[0].pct);
+      }
+
+      const modeStr = String(last.mode || '');
+      const modeLabel = modeStr === 'listen'
+        ? (I18n.t('mode_listen') || 'Слухати')
+        : (I18n.t('mode_read') || 'Читати');
+      const sl = (last.sourceLang || '').toUpperCase();
+      const tl = (last.targetLang || '').toUpperCase();
+      const langStr = sl && tl && sl !== tl ? sl + '→' + tl : (sl || tl);
+      const parts = [langStr, modeLabel, pct ? pct + '%' : ''].filter(Boolean);
+      progressLine = parts.join(' • ');
+    }
+  }catch(e){}
+
+  const coverSrc = cont.cover ? escapeHtml(cont.cover) : '';
+  const title = escapeHtml(getBookTitle(cont) || 'Book');
+  const meta = escapeHtml(formatMetaAuthorSeries(cont));
+  const label = I18n.t('cont_reading') || 'ПРОДОВЖИТИ ЧИТАННЯ';
+
+  return '<div class="sectionLabel" style="padding-top:18px">' + label + '</div>'
+    + '<div class="cardWide" id="contReadCard" style="cursor:pointer">'
+    + '<div class="coverImg">' + (coverSrc ? '<img src="' + coverSrc + '" alt="">' : '') + '</div>'
+    + '<div class="info">'
+    + '<p class="title">' + title + '</p>'
+    + '<p class="meta">' + meta + '</p>'
+    + (progressLine ? '<p class="meta1">' + progressLine + '</p>' : '')
+    + '</div>'
+    + '<div class="circle" style="--p:' + pct + '%;flex-shrink:0">'
+    + '<div class="inner">' + pct + '%</div>'
+    + '</div>'
+    + '</div>';
 }
 
 /* User menu dropdown — rendered into body, closed on outside click */
@@ -223,7 +282,7 @@ function renderCatalog(){
   });
   const groupNames = Object.keys(groups);
 
-  // Find last-interacted book for mini-continue cover in topbar
+  // Find last-interacted book for continue-reading card
   let cont = null;
   try{
     const g = ProgressManager.getGlobalLastInteraction();
@@ -273,9 +332,11 @@ function renderCatalog(){
       +'</div></div>';
   }).join('');
 
+  // Top bar: pass cont for mini cover (starts hidden; shown on scroll)
   app.innerHTML = `
     <div class="wrap homeScreen">
-      ${_appTopBar(true, cont)}
+      ${_appTopBar(true, cont, true)}
+      ${cont ? _contCardHtml(cont) : ''}
       ${groupsHtml}
     </div>
   `;
@@ -283,10 +344,28 @@ function renderCatalog(){
   _bindTopBarBtns();
   _bindTabsScroll(true);
 
-  // Bind mini-continue button (topbar left column)
+  // Bind big continue-reading card
+  if(cont && openCont){
+    const contCardEl = document.getElementById('contReadCard');
+    if(contCardEl) contCardEl.onclick = openCont;
+  }
+
+  // Bind topbar mini cover click + show/hide on scroll
   if(cont && openCont){
     const mc = document.getElementById('topMiniCont');
+    const contCardEl = document.getElementById('contReadCard');
     if(mc) mc.onclick = openCont;
+    if(mc && contCardEl){
+      function _scrollShowMini(){
+        const r = contCardEl.getBoundingClientRect();
+        const tb = document.getElementById('appTopBar');
+        const barH = tb ? tb.offsetHeight : 56;
+        mc.style.display = (r.bottom < barH) ? '' : 'none';
+      }
+      _tabsScrollHandler = _scrollShowMini;
+      window.addEventListener('scroll', _scrollShowMini, { passive: true });
+      _scrollShowMini(); // initial check
+    }
   }
 
   app.querySelectorAll('[data-open]').forEach(el=>{
