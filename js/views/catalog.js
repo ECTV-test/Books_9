@@ -9,6 +9,14 @@ const _SVG_SUN  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" s
 const _SVG_USER = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
 const _SVG_LOGO = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>';
 
+/* Safe i18n helper — returns null if key not found (I18n.t returns key string on miss) */
+function _t(key, fallback){
+  try{
+    const v = I18n.t(key);
+    return (v && v !== key) ? v : fallback;
+  }catch(e){ return fallback; }
+}
+
 /**
  * Верхняя полоска — 3-column grid:
  *   col-1 (appTopBarLogo)  — мини-обложка «продолжить» (показывается при скролле)
@@ -40,8 +48,8 @@ function _appTopBar(isCatalog, cont, hideMiniCont){
     + '<div class="appTopBarLogo" id="appTopBarLogo"><span class="appLogo">' + _SVG_LOGO + '</span>' + miniCont + '</div>'
     + '<div class="appTopBarLeft" id="appTopBarLeft">'
     + '<div class="appTopTabs" id="appTopTabsMain">'
-    + '<button class="tab ' + (isCatalog ? '' : 'muted') + '" id="topTabBooks">' + I18n.t('tabs_books') + '</button>'
-    + '<button class="tab ' + (isCatalog ? 'muted' : '') + '" id="topTabLibrary">' + I18n.t('tabs_library') + '</button>'
+    + '<button class="tab ' + (isCatalog ? '' : 'muted') + '" id="topTabBooks">' + _t('tabs_books','Книги') + '</button>'
+    + '<button class="tab ' + (isCatalog ? 'muted' : '') + '" id="topTabLibrary">' + _t('tabs_library','Моя бібліотека') + '</button>'
     + '</div>'
     + '</div>'
     + '<div class="appTopBarRight">'
@@ -51,8 +59,8 @@ function _appTopBar(isCatalog, cont, hideMiniCont){
 }
 
 /**
- * Wide "Continue reading" card for the main page
- * Shows book cover, title, author, last progress info and % circle
+ * Wide "Continue reading" card for the main page.
+ * Reads progress from listPkgProgress (same source as library view).
  */
 function _contCardHtml(cont){
   if(!cont) return '';
@@ -62,24 +70,43 @@ function _contCardHtml(cont){
 
   try{
     const last = ProgressManager.getGlobalLastInteraction();
-    if(last && String(last.bookId) === String(cont.id)){
-      // Try to get percentage from pkg progress
+    // Use listPkgProgress — same data source as library "In progress" view
+    const pkgs = ProgressManager.listPkgProgress(cont.id);
+    if(pkgs && pkgs.length){
+      // Pick the package matching last interaction, otherwise the most recent one
+      let bestPkg = pkgs[0];
+      if(last && String(last.bookId) === String(cont.id)){
+        const match = pkgs.find(p =>
+          p.sourceLang === last.sourceLang && p.targetLang === last.targetLang
+        );
+        if(match) bestPkg = match;
+      }
+
+      // Get percentage
+      if(typeof bestPkg.pct === 'number')
+        pct = Math.round(bestPkg.pct);
+      else if(typeof bestPkg.activeIndex === 'number' && typeof bestPkg.total === 'number' && bestPkg.total > 0)
+        pct = Math.round(100 * bestPkg.activeIndex / bestPkg.total);
+
+      // Build progress line
+      const modeStr = String(bestPkg.mode || (last ? last.mode : '') || '');
+      const modeLabel = modeStr === 'listen' ? _t('mode_listen','Слухати') : _t('mode_read','Читати');
+      const sl = (bestPkg.sourceLang || '').toUpperCase();
+      const tl = (bestPkg.targetLang || '').toUpperCase();
+      const langStr = sl && tl && sl !== tl ? sl + '→' + tl : (sl || tl);
+      const parts = [langStr, modeLabel, pct ? pct + '%' : ''].filter(Boolean);
+      progressLine = parts.join(' • ');
+
+    } else if(last && String(last.bookId) === String(cont.id)){
+      // Fallback: getPkgProgress
       const pkg = ProgressManager.getPkgProgress(cont.id, last.sourceLang, last.targetLang, last.level || 'original');
       if(pkg){
         if(typeof pkg.pct === 'number') pct = Math.round(pkg.pct);
         else if(typeof pkg.activeIndex === 'number' && typeof pkg.total === 'number' && pkg.total > 0)
           pct = Math.round(100 * pkg.activeIndex / pkg.total);
       }
-      // Fallback: try listPkgProgress
-      if(!pct){
-        const pkgs = ProgressManager.listPkgProgress(cont.id);
-        if(pkgs && pkgs.length && typeof pkgs[0].pct === 'number') pct = Math.round(pkgs[0].pct);
-      }
-
       const modeStr = String(last.mode || '');
-      const modeLabel = modeStr === 'listen'
-        ? (I18n.t('mode_listen') || 'Слухати')
-        : (I18n.t('mode_read') || 'Читати');
+      const modeLabel = modeStr === 'listen' ? _t('mode_listen','Слухати') : _t('mode_read','Читати');
       const sl = (last.sourceLang || '').toUpperCase();
       const tl = (last.targetLang || '').toUpperCase();
       const langStr = sl && tl && sl !== tl ? sl + '→' + tl : (sl || tl);
@@ -91,7 +118,8 @@ function _contCardHtml(cont){
   const coverSrc = cont.cover ? escapeHtml(cont.cover) : '';
   const title = escapeHtml(getBookTitle(cont) || 'Book');
   const meta = escapeHtml(formatMetaAuthorSeries(cont));
-  const label = I18n.t('cont_reading') || 'ПРОДОВЖИТИ ЧИТАННЯ';
+  // _t() returns fallback when key missing (I18n.t returns key string on miss)
+  const label = _t('cont_reading', 'ПРОДОВЖИТИ ЧИТАННЯ');
 
   return '<div class="sectionLabel" style="padding-top:18px">' + label + '</div>'
     + '<div class="cardWide" id="contReadCard" style="cursor:pointer">'
@@ -130,12 +158,12 @@ function _openUserMenu(anchorBtn){
   menu.className = 'userMenuDropdown';
   menu.innerHTML =
     '<div class="umSection">'
-    + '<div class="umLabel" id="umLangLabel">' + I18n.t('user_menu_lang') + '</div>'
+    + '<div class="umLabel" id="umLangLabel">' + _t('user_menu_lang','Мова') + '</div>'
     + '<div class="umLangRow">' + langOptions + '</div>'
     + '</div>'
     + '<div class="umDivider"></div>'
     + '<div class="umSection">'
-    + '<div class="umLabel" id="umFontLabel">' + I18n.t('user_menu_font') + '</div>'
+    + '<div class="umLabel" id="umFontLabel">' + _t('user_menu_font','Шрифт') + '</div>'
     + '<div class="umFontRow">'
     + '<button class="umFontBtn" id="umFontMinus" aria-label="Decrease font">A−</button>'
     + '<span class="umFontVal" id="umFontVal">' + curFontSize + 'px</span>'
@@ -207,9 +235,9 @@ function _updateUserMenuLabels(){
   const menu = document.getElementById('userMenuDropdown');
   if(!menu) return;
   const lbl = menu.querySelector('#umLangLabel');
-  if(lbl) lbl.textContent = I18n.t('user_menu_lang');
+  if(lbl) lbl.textContent = _t('user_menu_lang','Мова');
   const flbl = menu.querySelector('#umFontLabel');
-  if(flbl) flbl.textContent = I18n.t('user_menu_font');
+  if(flbl) flbl.textContent = _t('user_menu_font','Шрифт');
   const curLang = I18n.getUiLang();
   menu.querySelectorAll('.umLangBtn').forEach(b => b.classList.toggle('active', b.dataset.lang === curLang));
 }
