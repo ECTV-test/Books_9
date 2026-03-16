@@ -1045,7 +1045,58 @@ body{ background: var(--appBg); }
   opacity: 0.92;
 }
 [data-theme="night"] .appLogo { color: #fff; opacity: 1; }
-#appTopBarLogo { gap: 8px; }
+
+/* ── Topbar logo column ── */
+#appTopBarLogo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── "Continue reading" mini cover in topbar ── */
+.topMiniCont {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: none;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: block;
+}
+.topMiniCover {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.topMiniCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Chapter images in reader (from agent ZIP) ── */
+.chapterImgWrap {
+  margin: 12px 0 20px;
+  text-align: center;
+}
+.chapterImgWrap img {
+  width: 100%;
+  max-width: 640px;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 16px;
+  display: block;
+  margin: 0 auto;
+}
+@media (max-width: 640px) {
+  .chapterImgWrap img { max-height: 260px; border-radius: 12px; }
+}
 
 /* ── Sheets: anchor to top-right corner (under topbar buttons) ── */
 .sheet {
