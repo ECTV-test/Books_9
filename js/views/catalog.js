@@ -27,7 +27,7 @@ function _t(key, fallback){
  * @param {object|null} cont       — объект книги для мини-обложки
  * @param {boolean} hideMiniCont   — скрыть мини-обложку (показываем при скролле)
  */
-function _appTopBar(isCatalog, cont, hideMiniCont){
+function _appTopBar(isCatalog, cont, hideMiniCont, pct){
   const isNight = !!(typeof state !== 'undefined' && state.reading && state.reading.night);
   const themeIcon = isNight ? _SVG_SUN : _SVG_MOON;
 
@@ -36,11 +36,17 @@ function _appTopBar(isCatalog, cont, hideMiniCont){
     const coverSrc = cont.cover ? escapeHtml(cont.cover) : '';
     const titleAttr = escapeHtml((typeof getBookTitle === 'function' ? getBookTitle(cont) : cont.title_en) || 'Continue reading');
     const hideStyle = hideMiniCont ? ' style="display:none"' : '';
-    miniCont = '<button class="topMiniCont" id="topMiniCont" title="' + titleAttr + '"' + hideStyle + '>'
+    const pctNum = (typeof pct === 'number' && pct >= 0) ? Math.round(pct) : 0;
+    miniCont = '<div class="topMiniContWrap" id="topMiniContWrap"' + hideStyle + '>'
+      + '<button class="topMiniCont" id="topMiniCont" title="' + titleAttr + '">'
       + '<div class="topMiniCover">'
       + (coverSrc ? '<img src="' + coverSrc + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block;">' : '')
       + '</div>'
-      + '</button>';
+      + '</button>'
+      + '<div class="topMiniRing" style="--p:' + pctNum + '%">'
+      + '<span class="topMiniRingPct">' + pctNum + '%</span>'
+      + '</div>'
+      + '</div>';
   }
 
   return '<div class="appTopBar" id="appTopBar">'
@@ -351,9 +357,26 @@ function renderCatalog(){
       +'</div></div>';
   }).join('');
 
+  // Compute progress % for topbar ring
+  let contPct = 0;
+  try{
+    if(cont){
+      const _last2 = ProgressManager.getGlobalLastInteraction();
+      const _pkgs2 = ProgressManager.listPkgProgress(cont.id);
+      if(_pkgs2 && _pkgs2.length){
+        let _bp = _pkgs2[0];
+        if(_last2 && String(_last2.bookId)===String(cont.id)){
+          const _m = _pkgs2.find(p=>p.sourceLang===_last2.sourceLang && p.targetLang===_last2.targetLang);
+          if(_m) _bp = _m;
+        }
+        contPct = Math.round(Number(_bp.progress||0));
+      }
+    }
+  }catch(e){}
+
   app.innerHTML = `
     <div class="wrap homeScreen">
-      ${_appTopBar(true, cont, true)}
+      ${_appTopBar(true, cont, true, contPct)}
       ${cont ? _contCardHtml(cont) : ''}
       ${groupsHtml}
     </div>
@@ -373,12 +396,13 @@ function renderCatalog(){
     const mc = document.getElementById('topMiniCont');
     const contCardEl = document.getElementById('contReadCard');
     if(mc) mc.onclick = openCont;
-    if(mc && contCardEl){
+    const mw = document.getElementById('topMiniContWrap');
+    if(mw && contCardEl){
       function _scrollShowMini(){
         const r = contCardEl.getBoundingClientRect();
         const tb = document.getElementById('appTopBar');
         const barH = tb ? tb.offsetHeight : 56;
-        mc.style.display = (r.bottom < barH) ? '' : 'none';
+        mw.style.display = (r.bottom < barH) ? '' : 'none';
       }
       _tabsScrollHandler = _scrollShowMini;
       window.addEventListener('scroll', _scrollShowMini, { passive: true });
