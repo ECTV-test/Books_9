@@ -2296,7 +2296,7 @@ async function showLineCard(paraIdx){
   // Pause narration while popover is open
   try{ if(state.reading.isPlaying && openaiAudio && !openaiAudio.paused){ state.reading.wasPlayingBeforePopover=true; state.reading.pausedForPopover=true; openaiAudio.pause(); } }catch(e){}
 
-  popWord.textContent = raw;
+  popWord.textContent = _cleanChapterMarker(raw);
   popTrans.textContent = "Переклад…";
   popTrans.classList.add("loading");
 
