@@ -585,7 +585,7 @@ function processBookTextForChapters(lines){
   const src = (lines || []).map(v=>String(v ?? ""));
   const out = [];
   const chapters = [];
-  const markerRe = /^\s*\[\[CHAPTER:([^\]]*)\]\]\s*$/i;
+  const markerRe = /^\s*\[\[CHAPTER:\s*(.+?)\s*\]\]\s*$/i;
 
   for(const line of src){
     const m = markerRe.exec(line);
