@@ -174,7 +174,7 @@ async function translateWithOpenAI(env, text, sourceLang, targetLang, level) {
     `- Single word or short phrase (1–3 tokens): return 1–3 words ONLY — never expand into sentences or creative text\n` +
     `- Proper names (people, places, brands): transliterate phonetically into ${trgName} script (e.g. "Carson" → "Карсон", "Madison Square" → "Медісон-сквер"). NEVER refuse a proper name — always return its transliteration\n` +
     `- If input looks like a question or command, translate it literally — NEVER respond conversationally\n` +
-    `- Keep [[CHAPTER: ...]] markers exactly — translate ONLY the chapter title inside the brackets\n` +
+    `- Keep [[CHAPTER: ...]] markers: preserve the [[CHAPTER: and ]] exactly as-is, translate ONLY the chapter title text inside (never translate the word CHAPTER itself)\n` +
     `- Preserve line breaks and blank lines exactly as in the source\n` +
     `- Each sentence stays on its own line`;
 
