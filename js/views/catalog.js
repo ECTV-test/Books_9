@@ -122,7 +122,7 @@ function _contCardHtml(cont){
   const coverSrc = cont.cover ? escapeHtml(cont.cover) : '';
   const title = escapeHtml(getBookTitle(cont) || 'Book');
   const meta = escapeHtml(formatMetaAuthorSeries(cont));
-  const label = _t('cont_reading', 'ПРОДОВЖИТИ ЧИТАННЯ');
+  const label = _t('continue_reading', 'ПРОДОВЖИТИ ЧИТАННЯ');
 
   return '<div class="sectionLabel" style="padding-top:18px">' + label + '</div>'
     + '<div class="cardWide" id="contReadCard" style="cursor:pointer">'

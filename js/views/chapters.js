@@ -36,7 +36,8 @@ function renderChaptersList(){
   }catch(e){}
 
   chaptersList.innerHTML = ch.map((c, idx)=>{
-    const title = escapeHtml(String(c.title||"Chapter"));
+    const rawTitle = String(c.title||"").replace(/^\[\[[^\]]*:\s*/,'').replace(/\]\]\s*$/,'').trim() || ('Chapter ' + (idx + 1));
+    const title = escapeHtml(rawTitle);
     const isActive = idx === activeIdx;
     const isDone = idx < activeIdx;
     return `<button class="btn" style="text-align:left;justify-content:flex-start;gap:10px;position:relative;${isActive?'background:rgba(59,130,246,.14);':''}" data-chapter="${idx}">

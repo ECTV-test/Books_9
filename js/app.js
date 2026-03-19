@@ -585,7 +585,7 @@ function processBookTextForChapters(lines){
   const src = (lines || []).map(v=>String(v ?? ""));
   const out = [];
   const chapters = [];
-  const markerRe = /^\s*\[\[CHAPTER:\s*(.+?)\s*\]\]\s*$/i;
+  const markerRe = /^\s*\[\[CHAPTER:([^\]]*)\]\]\s*$/i;
 
   for(const line of src){
     const m = markerRe.exec(line);
@@ -1750,7 +1750,7 @@ function escapeHtml(s){
 }
 function _cleanChapterMarker(s){
   if(typeof s!=='string') return s;
-  return s.replace(/^\[\[CHAPTER:\s*/i,'').replace(/\]\]\s*$/,'').trim();
+  return s.replace(/^\[\[[^\]]*:\s*/,'').replace(/\]\]\s*$/,'').trim();
 }
 
 function buildTokenMap(){

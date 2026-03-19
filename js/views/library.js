@@ -10,6 +10,24 @@ const _SVG_BM_DEL   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="non
 function renderLibrary(){
   if(typeof _disconnectTabsObserver === 'function') _disconnectTabsObserver();
 
+  // Compute continue-reading book for topbar mini cover
+  let _libCont = null, _libContPct = 0;
+  try{
+    const _g = ProgressManager.getGlobalLastInteraction();
+    if(_g && _g.bookId) _libCont = (state.catalog||[]).find(b=>b.id===_g.bookId)||null;
+    if(_libCont){
+      const _pkgs = ProgressManager.listPkgProgress(_libCont.id);
+      if(_pkgs && _pkgs.length){
+        let _bp = _pkgs[0];
+        if(_g && String(_g.bookId)===String(_libCont.id)){
+          const _m = _pkgs.find(p=>p.sourceLang===_g.sourceLang&&p.targetLang===_g.targetLang);
+          if(_m) _bp = _m;
+        }
+        _libContPct = Math.round(Number(_bp.progress||0));
+      }
+    }
+  }catch(e){}
+
   const tab = state.ui?.libraryTab || "progress";
 
   const hasBookmarks = (bookId)=>{
@@ -153,7 +171,7 @@ function renderLibrary(){
 
   app.innerHTML = `
     <div class="wrap">
-      ${_appTopBar(false)}
+      ${_appTopBar(false, _libCont, false, _libContPct)}
       <div style="padding:12px 18px 8px 18px;">
         <div class="segmented">
           <button class="libSegBtn ${tab==="progress"?"active":""}" id="libInProgress">${I18n.t("lib_in_progress")}</button>

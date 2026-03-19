@@ -4,7 +4,7 @@
 
 /** Strip [[CHAPTER: Title]] → "Title" (or "Chapter N" if empty) */
 function _fmtChapterTitle(raw, chIdx) {
-  const m = raw.match(/^\[\[CHAPTER:\s*(.*?)\]\]\s*$/);
+  const m = raw.match(/^\[\[[^\]]*:\s*(.*?)\]\]\s*$/);
   if (!m) return raw;
   const title = (m[1] || '').trim();
   if (title) return title;
