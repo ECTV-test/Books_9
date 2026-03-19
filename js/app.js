@@ -592,9 +592,10 @@ function processBookTextForChapters(lines){
     if(m){
       const title = String(m[1]||"").trim() || "Chapter";
       chapters.push({ title, startIndex: out.length });
-      continue; // hide marker
+      out.push(line); // keep marker in text — reader renders it as chapter heading via _fmtChapterTitle
+    } else {
+      out.push(line);
     }
-    out.push(line);
   }
 
   // Hybrid fallback: if no explicit markers, infer chapter starts by "two empty lines" before a heading-like line.
